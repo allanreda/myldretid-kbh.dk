@@ -1,4 +1,5 @@
 from google.cloud import bigquery
+import pandas as pd
 import os
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
@@ -31,3 +32,4 @@ ON
 # Run the query and convert to DataFrame
 query_job = bq_client.query(query)
 raw_df = query_job.to_dataframe()
+
