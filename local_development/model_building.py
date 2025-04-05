@@ -33,3 +33,5 @@ ON
 query_job = bq_client.query(query)
 raw_df = query_job.to_dataframe()
 
+########################### DATA HANDLING ###########################
+
