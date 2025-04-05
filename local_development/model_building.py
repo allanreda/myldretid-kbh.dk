@@ -54,4 +54,36 @@ def rush_hour_period(time_column):
 cleaned_df["rush_hour_period"] = cleaned_df["time"].apply(rush_hour_period)
 
 
+def collapse_road_closure(values):
+    return "true" if "yes" in values.values else "false"
 
+def most_frequent_weather(values):
+    return values.mode().iloc[0] if not values.mode().empty else None
+
+def most_frequent_weather(values):
+    weather = values["weather_main"]
+    times = values["time"]
+
+    mode = weather.mode()
+
+    # If there's a single mode → return it
+    if len(mode) == 1:
+        return mode.iloc[0]
+    
+    # Tie: return the weather from the middle hour
+    # Define middle hours for each rush period
+    if "08:00" in times.values:
+        middle_time = "08:00"
+    elif "16:00" in times.values:
+        middle_time = "16:00"
+    else:
+        middle_time = times.values[len(times) // 2]  # fallback
+
+    # Find the weather at the middle time
+    try:
+        return weather[times == middle_time].values[0]
+    except IndexError:
+        return None
+
+
+test_df = cleaned_df.groupby(["geo_name", "date", "rush_hour_period"])["weather_main"].apply(most_frequent_weather)
