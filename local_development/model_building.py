@@ -29,9 +29,29 @@ ON
     AND weather.date = traffic.date
 """
 
-# Run the query and convert to DataFrame
+# Run the query and fetch data from BigQuery
 query_job = bq_client.query(query)
+# Convert to DataFrame
 raw_df = query_job.to_dataframe()
 
 ########################### DATA HANDLING ###########################
+
+# Copy raw dataframe to another one for cleaning 
+cleaned_df = raw_df.copy()
+
+# Define rush our times
+rush_hours = ["07:00", "08:00", "09:00", "15:00", "16:00", "17:00"]
+# Exctract the rush hour rows and remove the rest
+cleaned_df = cleaned_df[cleaned_df["time"].isin(rush_hours)]
+
+# Function to define morning and afternoon rush hours
+def rush_hour_period(time_column):
+    if time_column in ["07:00", "08:00", "09:00"]:
+        return "morning"
+    else:
+        return "afternoon"
+# Apply function row by row
+cleaned_df["rush_hour_period"] = cleaned_df["time"].apply(rush_hour_period)
+
+
 
