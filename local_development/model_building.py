@@ -58,9 +58,6 @@ def collapse_road_closure(values):
     return "true" if "yes" in values.values else "false"
 
 def most_frequent_weather(values):
-    return values.mode().iloc[0] if not values.mode().empty else None
-
-def most_frequent_weather(values):
     weather = values["weather_main"]
     times = values["time"]
 
@@ -87,3 +84,23 @@ def most_frequent_weather(values):
 
 
 test_df = cleaned_df.groupby(["geo_name", "date", "rush_hour_period"])["weather_main"].apply(most_frequent_weather)
+
+
+
+agg_df = cleaned_df.groupby(
+    ["geo_name", "date", "rush_hour_period"], as_index=False
+).agg({
+    "current_speed": "mean",                         
+    "free_flow_speed": "mean",                      
+    "current_travel_time": "mean",                 
+    "free_flow_travel_time": "mean",      
+    "road_closure": collapse_road_closure,      
+    "weather_main": most_frequent_weather,
+    "weather_description": most_frequent_weather,
+    "temperature": "mean",
+    "feels_like": "mean",
+    "humidity_percent": "mean",
+    "visibility": "mean",
+    "wind_speed": "mean",
+    "cloudiness_percent": "mean"
+})
