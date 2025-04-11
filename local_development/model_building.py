@@ -1,6 +1,8 @@
 from google.cloud import bigquery
 import pandas as pd
 import os
+import holidays
+import datetime
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
 
@@ -53,42 +55,33 @@ def rush_hour_period(time_column):
 # Apply function row by row
 cleaned_df["rush_hour_period"] = cleaned_df["time"].apply(rush_hour_period)
 
-
+# Function to collapse road_closure column in aggregation
 def collapse_road_closure(values):
     return "true" if "yes" in values.values else "false"
 
-def most_frequent_weather(values):
-    weather = values["weather_main"]
-    times = values["time"]
-
-    mode = weather.mode()
-
-    # If there's a single mode → return it
+def most_frequent_weather(series):
+    mode = series.mode()
     if len(mode) == 1:
         return mode.iloc[0]
-    
-    # Tie: return the weather from the middle hour
-    # Define middle hours for each rush period
-    if "08:00" in times.values:
-        middle_time = "08:00"
-    elif "16:00" in times.values:
-        middle_time = "16:00"
-    else:
-        middle_time = times.values[len(times) // 2]  # fallback
 
-    # Find the weather at the middle time
+    # Get time from index or fallback if not accessible
     try:
-        return weather[times == middle_time].values[0]
-    except IndexError:
+        # assumes '08:00' or '16:00' appear in the index (multiindex with time)
+        full_group = cleaned_df.loc[series.index]
+        if "08:00" in full_group["time"].values:
+            middle_time = "08:00"
+        elif "16:00" in full_group["time"].values:
+            middle_time = "16:00"
+        else:
+            middle_time = full_group["time"].values[len(full_group) // 2]
+
+        match = full_group[full_group["time"] == middle_time]
+        return match["weather_main"].iloc[0] if not match.empty else None
+    except:
         return None
 
-
-test_df = cleaned_df.groupby(["geo_name", "date", "rush_hour_period"])["weather_main"].apply(most_frequent_weather)
-
-
-
-agg_df = cleaned_df.groupby(
-    ["geo_name", "date", "rush_hour_period"], as_index=False
+grouped_df = cleaned_df.groupby(
+    ["date", "rush_hour_period"], as_index=False
 ).agg({
     "current_speed": "mean",                         
     "free_flow_speed": "mean",                      
@@ -104,3 +97,31 @@ agg_df = cleaned_df.groupby(
     "wind_speed": "mean",
     "cloudiness_percent": "mean"
 })
+
+
+
+
+grouped_df['date_dt'] = pd.to_datetime(grouped_df['date'])
+years = grouped_df['date_dt'].dt.year.unique()
+
+dk_holidays = holidays.Denmark(years=years)
+
+# Add single days
+custom_holidays_dict = {
+    (12, 31): "New Years Eve",
+    (2, 24): "Christmas Eve"  
+}
+
+custom_holidays = {}
+for year in years:
+    for (month, day), name in custom_holidays_dict.items():
+        custom_holidays[datetime.date(year, month, day)] = name
+
+dk_holidays.update(custom_holidays)
+
+holiday_map = {date: name for date, name in dk_holidays.items()}
+grouped_df['holiday_name'] = grouped_df['date_dt'].map(holiday_map)
+holiday_dummies = pd.get_dummies(grouped_df['holiday_name'])
+grouped_df = pd.concat([grouped_df, holiday_dummies], axis=1)
+
+
