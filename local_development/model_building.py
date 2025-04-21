@@ -100,27 +100,36 @@ grouped_df = cleaned_df.groupby(
 
 
 
-
+# Create a new column where the date is converted to datetime
 grouped_df['date_dt'] = pd.to_datetime(grouped_df['date'])
+# Get all years that are present in the dataframe
 years = grouped_df['date_dt'].dt.year.unique()
 
+# Get all Danish holidays from the holidays library
 dk_holidays = holidays.Denmark(years=years)
 
-# Add single days
+# Add date and name of custom holidays
+# (only add those which have the same date each year)
 custom_holidays_dict = {
     (12, 31): "New Years Eve",
-    (2, 24): "Christmas Eve"  
+    (12, 24): "Christmas Eve"  
 }
 
+# Empty list for custom holidays
 custom_holidays = {}
+# Loop to include the custom holidays for all relevant years
 for year in years:
     for (month, day), name in custom_holidays_dict.items():
         custom_holidays[datetime.date(year, month, day)] = name
 
+# Update dk_holidays with custom holidays
 dk_holidays.update(custom_holidays)
 
+# Map holidays into dataframe
 holiday_map = {date: name for date, name in dk_holidays.items()}
 grouped_df['holiday_name'] = grouped_df['date_dt'].map(holiday_map)
+
+# Create dummy columns for each holiday
 holiday_dummies = pd.get_dummies(grouped_df['holiday_name'])
 grouped_df = pd.concat([grouped_df, holiday_dummies], axis=1)
 
