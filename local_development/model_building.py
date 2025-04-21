@@ -130,7 +130,13 @@ holiday_map = {date: name for date, name in dk_holidays.items()}
 grouped_df['holiday_name'] = grouped_df['date_dt'].map(holiday_map)
 
 # Create dummy columns for each holiday
-holiday_dummies = pd.get_dummies(grouped_df['holiday_name'])
+holiday_dummies = pd.get_dummies(grouped_df['holiday_name'], prefix = 'holiday_')
 grouped_df = pd.concat([grouped_df, holiday_dummies], axis=1)
 
+# Create dummy columns for each category in weather_main column
+weather_main_dummies = pd.get_dummies(grouped_df['weather_main'], prefix = 'weather_main_')
+grouped_df = pd.concat([grouped_df, weather_main_dummies], axis=1)
 
+# Create dummy columns for each category in weather_description column
+weather_description_dummies = pd.get_dummies(grouped_df['weather_description'], prefix = 'weather_description_')
+grouped_df = pd.concat([grouped_df, weather_description_dummies], axis=1)
