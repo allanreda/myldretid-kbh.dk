@@ -140,3 +140,24 @@ grouped_df = pd.concat([grouped_df, weather_main_dummies], axis=1)
 # Create dummy columns for each category in weather_description column
 weather_description_dummies = pd.get_dummies(grouped_df['weather_description'], prefix = 'weather_description_')
 grouped_df = pd.concat([grouped_df, weather_description_dummies], axis=1)
+
+###########################  ###########################
+
+# Split dataframe into morning and afternoon
+morning_df = grouped_df[grouped_df["rush_hour_period"] == "morning"].copy()
+afternoon_df = grouped_df[grouped_df["rush_hour_period"] == "afternoon"].copy()
+
+# Drop rush_hour_period, date and holiday columns for the morning since they are the same as for afternoon
+morning_features = morning_df.drop(columns=["rush_hour_period"] + [col for col in morning_df.columns if col in holiday_dummies.columns])
+# Add prefix for morning features
+morning_features = morning_features.add_prefix("morning_") 
+# Rename date column
+morning_features = morning_features.rename(columns={"morning_date": "date"})
+
+# Merge afternoon_df with morning_features
+afternoon_df = pd.merge(
+    afternoon_df,
+    morning_features,
+    how="left",
+    on="date"
+)
