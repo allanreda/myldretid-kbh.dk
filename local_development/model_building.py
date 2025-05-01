@@ -84,7 +84,7 @@ grouped_df = cleaned_df.groupby(
     ["date", "rush_hour_period"], as_index=False
 ).agg({
 #    "current_speed": "mean",                         
-    "free_flow_speed": "mean"                      
+    "free_flow_speed": "mean",                      
 #    "current_travel_time": "mean",                 
 #    "free_flow_travel_time": "mean",      
 #    "road_closure": collapse_road_closure,      
@@ -128,6 +128,8 @@ dk_holidays.update(custom_holidays)
 # Map holidays into dataframe
 holiday_map = {date: name for date, name in dk_holidays.items()}
 grouped_df['holiday_name'] = grouped_df['date_dt'].map(holiday_map)
+# Drop column
+grouped_df = grouped_df.drop("date_dt", axis='columns')
 
 # Create dummy columns for each holiday
 holiday_dummies = pd.get_dummies(grouped_df['holiday_name'], prefix = 'holiday_')
@@ -141,7 +143,7 @@ grouped_df = pd.concat([grouped_df, weather_main_dummies], axis=1)
 weather_description_dummies = pd.get_dummies(grouped_df['weather_description'], prefix = 'weather_description_')
 grouped_df = pd.concat([grouped_df, weather_description_dummies], axis=1)
 
-###########################  ###########################
+########################### SPLIT DATA ###########################
 
 # Split dataframe into morning and afternoon
 morning_df = grouped_df[grouped_df["rush_hour_period"] == "morning"].copy()
@@ -161,3 +163,7 @@ afternoon_df = pd.merge(
     how="left",
     on="date"
 )
+
+# Drop rush_hour_period column for both dataframes
+morning_df = morning_df.drop("rush_hour_period", axis = "columns")
+afternoon_df = afternoon_df.drop("rush_hour_period", axis = "columns")
