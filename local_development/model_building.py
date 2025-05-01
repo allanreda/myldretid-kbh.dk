@@ -83,11 +83,11 @@ def most_frequent_weather(series):
 grouped_df = cleaned_df.groupby(
     ["date", "rush_hour_period"], as_index=False
 ).agg({
-    "current_speed": "mean",                         
-    "free_flow_speed": "mean",                      
-    "current_travel_time": "mean",                 
-    "free_flow_travel_time": "mean",      
-    "road_closure": collapse_road_closure,      
+#    "current_speed": "mean",                         
+    "free_flow_speed": "mean"                      
+#    "current_travel_time": "mean",                 
+#    "free_flow_travel_time": "mean",      
+#    "road_closure": collapse_road_closure,      
     "weather_main": most_frequent_weather,
     "weather_description": most_frequent_weather,
     "temperature": "mean",
@@ -96,7 +96,7 @@ grouped_df = cleaned_df.groupby(
     "visibility": "mean",
     "wind_speed": "mean",
     "cloudiness_percent": "mean"
-})
+ })
 
 
 
