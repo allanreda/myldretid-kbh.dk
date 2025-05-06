@@ -167,3 +167,16 @@ afternoon_df = pd.merge(
 # Drop rush_hour_period column for both dataframes
 morning_df = morning_df.drop("rush_hour_period", axis = "columns")
 afternoon_df = afternoon_df.drop("rush_hour_period", axis = "columns")
+
+# Drop all rows with missing values
+morning_df = morning_df.dropna(axis=1)
+afternoon_df = afternoon_df.dropna(axis=1)
+
+# Convert all boolean columns to 1/0
+morning_df[morning_df.select_dtypes(bool).columns] = morning_df.select_dtypes(bool).astype(int)
+afternoon_df[afternoon_df.select_dtypes(bool).columns] = afternoon_df.select_dtypes(bool).astype(int)
+
+########################### CORRELATION ###########################
+
+morning_df = morning_df.drop(columns=['date','weather_main','weather_description'])
+afternoon_df = afternoon_df.drop(columns=['date','weather_main','weather_description'])
