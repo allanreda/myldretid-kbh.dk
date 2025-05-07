@@ -1,5 +1,6 @@
 from google.cloud import bigquery
 import pandas as pd
+import numpy as np
 import os
 import holidays
 import datetime
@@ -180,3 +181,9 @@ afternoon_df[afternoon_df.select_dtypes(bool).columns] = afternoon_df.select_dty
 
 morning_df = morning_df.drop(columns=['date','weather_main','weather_description'])
 afternoon_df = afternoon_df.drop(columns=['date','weather_main','weather_description'])
+
+corr_matrix = morning_df.corr(numeric_only=True).abs()
+upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+
+# Find columns with high correlation
+to_drop_corr = [column for column in upper.columns if any(upper[column] > 0.9)]
