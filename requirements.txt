@@ -4,3 +4,4 @@ google-cloud-bigquery-storage
 pandas
 db_dtypes
 holidays
+statsmodels

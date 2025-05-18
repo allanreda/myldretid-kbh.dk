@@ -135,20 +135,27 @@ grouped_df = grouped_df.drop("date_dt", axis='columns')
 # Create dummy columns for each holiday
 holiday_dummies = pd.get_dummies(grouped_df['holiday_name'], prefix = 'holiday_')
 grouped_df = pd.concat([grouped_df, holiday_dummies], axis=1)
+grouped_df = grouped_df.drop("holiday_name", axis = "columns")
 
 # Create dummy columns for each category in weather_main column
 weather_main_dummies = pd.get_dummies(grouped_df['weather_main'], prefix = 'weather_main_')
 grouped_df = pd.concat([grouped_df, weather_main_dummies], axis=1)
+grouped_df = grouped_df.drop("weather_main", axis = "columns")
 
 # Create dummy columns for each category in weather_description column
 weather_description_dummies = pd.get_dummies(grouped_df['weather_description'], prefix = 'weather_description_')
 grouped_df = pd.concat([grouped_df, weather_description_dummies], axis=1)
+grouped_df = grouped_df.drop("weather_description", axis = "columns")
 
 ########################### SPLIT DATA ###########################
 
 # Split dataframe into morning and afternoon
 morning_df = grouped_df[grouped_df["rush_hour_period"] == "morning"].copy()
 afternoon_df = grouped_df[grouped_df["rush_hour_period"] == "afternoon"].copy()
+
+# Convert all boolean columns to 1/0
+morning_df[morning_df.select_dtypes(bool).columns] = morning_df.select_dtypes(bool).astype(int)
+afternoon_df[afternoon_df.select_dtypes(bool).columns] = afternoon_df.select_dtypes(bool).astype(int)
 
 # Drop rush_hour_period, date and holiday columns for the morning since they are the same as for afternoon
 morning_features = morning_df.drop(columns=["rush_hour_period"] + [col for col in morning_df.columns if col in holiday_dummies.columns])
@@ -165,36 +172,39 @@ afternoon_df = pd.merge(
     on="date"
 )
 
-# Drop rush_hour_period column for both dataframes
-morning_df = morning_df.drop("rush_hour_period", axis = "columns")
-afternoon_df = afternoon_df.drop("rush_hour_period", axis = "columns")
+# Drop rush_hour_period and date column for both dataframes
+morning_df = morning_df.drop(["rush_hour_period", "date"], axis = "columns")
+afternoon_df = afternoon_df.drop(["rush_hour_period", "date"], axis = "columns")
 
 # Drop all rows with missing values
-morning_df = morning_df.dropna(axis=1)
-afternoon_df = afternoon_df.dropna(axis=1)
-
-# Convert all boolean columns to 1/0
-morning_df[morning_df.select_dtypes(bool).columns] = morning_df.select_dtypes(bool).astype(int)
-afternoon_df[afternoon_df.select_dtypes(bool).columns] = afternoon_df.select_dtypes(bool).astype(int)
+morning_df = morning_df.dropna(axis=0)
+afternoon_df = afternoon_df.dropna(axis=0)
 
 ########################### CORRELATION ###########################
 
-morning_df = morning_df.drop(columns=['date','weather_main','weather_description'])
-afternoon_df = afternoon_df.drop(columns=['date','weather_main','weather_description'])
+# Function to check for mulitcollinearity and reduction where relevant
+def corr_matrix(df, target_column, corr_percentage = 0.8):
+    # Drop target column
+    X_df = df.drop(columns=[target_column])
 
-def corr_matrix(df, corr_percentage = 0.8):
     # Generate correlation matrix
-    corr_matrix = df.corr(numeric_only=True).abs()
+    corr_matrix = X_df.corr(numeric_only=True).abs()
     # Get the upper triangle of the correlation matrix
     upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
 
     # Find columns with high correlation
     to_drop_corr = [column for column in upper.columns if any(upper[column] > corr_percentage)]
     # Drop the higly correlated columns
-    df_reduced = df.drop(columns=to_drop_corr)
+    df_reduced = X_df.drop(columns=to_drop_corr)
 
     return df_reduced
 
-morning_reduced = corr_matrix(morning_df)
-afternoon_reduced = corr_matrix(afternoon_df)
+morning_reduced = corr_matrix(morning_df, "free_flow_speed")
+afternoon_reduced = corr_matrix(afternoon_df, "free_flow_speed")
 
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+from statsmodels.tools.tools import add_constant
+
+vif = pd.DataFrame()
+vif["feature"] = afternoon_reduced.columns
+vif["VIF"] = [variance_inflation_factor(afternoon_reduced.values, i) for i in range(afternoon_reduced.shape[1])]
