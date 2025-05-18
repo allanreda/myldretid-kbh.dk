@@ -182,8 +182,19 @@ afternoon_df[afternoon_df.select_dtypes(bool).columns] = afternoon_df.select_dty
 morning_df = morning_df.drop(columns=['date','weather_main','weather_description'])
 afternoon_df = afternoon_df.drop(columns=['date','weather_main','weather_description'])
 
-corr_matrix = morning_df.corr(numeric_only=True).abs()
-upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+def corr_matrix(df, corr_percentage = 0.8):
+    # Generate correlation matrix
+    corr_matrix = df.corr(numeric_only=True).abs()
+    # Get the upper triangle of the correlation matrix
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
 
-# Find columns with high correlation
-to_drop_corr = [column for column in upper.columns if any(upper[column] > 0.9)]
+    # Find columns with high correlation
+    to_drop_corr = [column for column in upper.columns if any(upper[column] > corr_percentage)]
+    # Drop the higly correlated columns
+    df_reduced = df.drop(columns=to_drop_corr)
+
+    return df_reduced
+
+morning_reduced = corr_matrix(morning_df)
+afternoon_reduced = corr_matrix(afternoon_df)
+
