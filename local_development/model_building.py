@@ -133,17 +133,17 @@ grouped_df['holiday_name'] = grouped_df['date_dt'].map(holiday_map)
 grouped_df = grouped_df.drop("date_dt", axis='columns')
 
 # Create dummy columns for each holiday
-holiday_dummies = pd.get_dummies(grouped_df['holiday_name'], prefix = 'holiday_')
+holiday_dummies = pd.get_dummies(grouped_df['holiday_name'], prefix = 'holiday_', drop_first=True)
 grouped_df = pd.concat([grouped_df, holiday_dummies], axis=1)
 grouped_df = grouped_df.drop("holiday_name", axis = "columns")
 
 # Create dummy columns for each category in weather_main column
-weather_main_dummies = pd.get_dummies(grouped_df['weather_main'], prefix = 'weather_main_')
+weather_main_dummies = pd.get_dummies(grouped_df['weather_main'], prefix = 'weather_main_', drop_first=True)
 grouped_df = pd.concat([grouped_df, weather_main_dummies], axis=1)
 grouped_df = grouped_df.drop("weather_main", axis = "columns")
 
 # Create dummy columns for each category in weather_description column
-weather_description_dummies = pd.get_dummies(grouped_df['weather_description'], prefix = 'weather_description_')
+weather_description_dummies = pd.get_dummies(grouped_df['weather_description'], prefix = 'weather_description_', drop_first=True)
 grouped_df = pd.concat([grouped_df, weather_description_dummies], axis=1)
 grouped_df = grouped_df.drop("weather_description", axis = "columns")
 
@@ -197,6 +197,9 @@ def corr_matrix(df, target_column, corr_percentage = 0.8):
     # Drop the higly correlated columns
     df_reduced = X_df.drop(columns=to_drop_corr)
 
+    # Convert all columns to float64
+    df_reduced = df_reduced.astype('float64')
+
     return df_reduced
 
 morning_reduced = corr_matrix(morning_df, "free_flow_speed")
@@ -206,5 +209,9 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
 
 vif = pd.DataFrame()
+afternoon_reduced = add_constant(afternoon_reduced) 
 vif["feature"] = afternoon_reduced.columns
 vif["VIF"] = [variance_inflation_factor(afternoon_reduced.values, i) for i in range(afternoon_reduced.shape[1])]
+
+print(vif)
+
