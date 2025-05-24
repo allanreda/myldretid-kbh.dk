@@ -4,6 +4,8 @@ import numpy as np
 import os
 import holidays
 import datetime
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+from statsmodels.tools.tools import add_constant
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
 
@@ -205,8 +207,6 @@ def corr_matrix(df, target_column, corr_percentage = 0.8):
 morning_reduced = corr_matrix(morning_df, "free_flow_speed")
 afternoon_reduced = corr_matrix(afternoon_df, "free_flow_speed")
 
-from statsmodels.stats.outliers_influence import variance_inflation_factor
-from statsmodels.tools.tools import add_constant
 
 vif = pd.DataFrame()
 afternoon_reduced = add_constant(afternoon_reduced) 
@@ -215,3 +215,24 @@ vif["VIF"] = [variance_inflation_factor(afternoon_reduced.values, i) for i in ra
 
 print(vif)
 
+def calculate_vif(df):
+    vif = pd.DataFrame()
+    df = add_constant(df) 
+    vif["feature"] = df.columns
+    vif["VIF"] = [variance_inflation_factor(df.values, i) for i in range(df.shape[1])]
+    return vif
+
+#TODO lav til en funktion også
+threshold = 10
+while True:
+    vif = calculate_vif(afternoon_reduced)
+
+    vif = vif[vif["feature"] != "const"]
+
+    max_vif = vif_df["VIF"].max()
+
+    if max_vif < threshold:
+        break
+
+    feature_to_drop = vif.sort_values("VIF", ascending=False)["feature"].iloc[0]
+    print(f"Dropping '{feature_to_drop}' with VIF = {max_vif:.2f}")
