@@ -197,24 +197,18 @@ def corr_matrix(df, target_column, corr_percentage = 0.8):
     # Find columns with high correlation
     to_drop_corr = [column for column in upper.columns if any(upper[column] > corr_percentage)]
     # Drop the higly correlated columns
-    df_reduced = X_df.drop(columns=to_drop_corr)
+    df = df.drop(columns=to_drop_corr)
 
     # Convert all columns to float64
-    df_reduced = df_reduced.astype('float64')
+    df = df.astype('float64')
 
-    return df_reduced
+    return df
 
 morning_reduced = corr_matrix(morning_df, "free_flow_speed")
 afternoon_reduced = corr_matrix(afternoon_df, "free_flow_speed")
 
 
-vif = pd.DataFrame()
-afternoon_reduced = add_constant(afternoon_reduced) 
-vif["feature"] = afternoon_reduced.columns
-vif["VIF"] = [variance_inflation_factor(afternoon_reduced.values, i) for i in range(afternoon_reduced.shape[1])]
-
-print(vif)
-
+# Function to calculate VIF
 def calculate_vif(df):
     vif = pd.DataFrame()
     df = add_constant(df) 
@@ -222,17 +216,37 @@ def calculate_vif(df):
     vif["VIF"] = [variance_inflation_factor(df.values, i) for i in range(df.shape[1])]
     return vif
 
-#TODO lav til en funktion også
-threshold = 10
-while True:
-    vif = calculate_vif(afternoon_reduced)
 
-    vif = vif[vif["feature"] != "const"]
+def drop_with_vif(df, target_column, threshold = 10):
+    # Drop target column
+    X_df = df.drop(columns=[target_column])
 
-    max_vif = vif_df["VIF"].max()
+    # While loop that keeps running until all the values are below the threshold
+    while True:
+        
+        # Calculate VIF for all the variables
+        vif = calculate_vif(X_df)
+        # Drop the const value
+        vif = vif[vif["feature"] != "const"]
+        # Get the variable with the highest VIF
+        max_vif = vif["VIF"].max()
 
-    if max_vif < threshold:
-        break
+        # If the highest VIF is below the threshold then break
+        if max_vif < threshold:
+            break
+        # Else, get the name 
+        feature_to_drop = vif.sort_values("VIF", ascending=False)["feature"].iloc[0]
+        # and drop it from the dataframe
+        try:
+            X_df = X_df.drop(columns=[feature_to_drop])
+            print(f"Dropping '{feature_to_drop}' with VIF = {max_vif:.2f}")
+        except Exception as e:
+            print(f"Could not drop feature in {df} because of the error: {e}")
+    
+    # Merge target column back into the original dataframe
+    X_df[target_column] = df[target_column]
+    return X_df
+ 
 
-    feature_to_drop = vif.sort_values("VIF", ascending=False)["feature"].iloc[0]
-    print(f"Dropping '{feature_to_drop}' with VIF = {max_vif:.2f}")
+morning_reduced = drop_with_vif(morning_reduced, "free_flow_speed")
+afternoon_reduced = drop_with_vif(afternoon_reduced, "free_flow_speed")
