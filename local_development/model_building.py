@@ -210,9 +210,15 @@ afternoon_reduced = corr_matrix(afternoon_df, "free_flow_speed")
 
 # Function to calculate VIF
 def calculate_vif(df):
+    # Drop constant columns (columns with on 0's)
+    df = df.loc[:, df.nunique() > 1]
+    # Create empty dataframe for VIF
     vif = pd.DataFrame()
+    # Add constant variable to the dataframe
     df = add_constant(df) 
+    # Get all columns names into VIF table
     vif["feature"] = df.columns
+    # Calculate VIF for each variable
     vif["VIF"] = [variance_inflation_factor(df.values, i) for i in range(df.shape[1])]
     return vif
 
