@@ -6,6 +6,15 @@ import holidays
 import datetime
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.svm import SVR
+import xgboost as xgb
+from sklearn.preprocessing import StandardScaler
+
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
 
@@ -17,7 +26,6 @@ query = """
 SELECT 
       traffic.*,
       weather.weather_main,
-      weather.weather_description,
       weather.temperature,
       weather.feels_like,
       weather.humidity_percent,
@@ -92,7 +100,7 @@ grouped_df = cleaned_df.groupby(
 #    "free_flow_travel_time": "mean",      
 #    "road_closure": collapse_road_closure,      
     "weather_main": most_frequent_weather,
-    "weather_description": most_frequent_weather,
+#    "weather_description": most_frequent_weather,
     "temperature": "mean",
     "feels_like": "mean",
     "humidity_percent": "mean",
@@ -145,9 +153,9 @@ grouped_df = pd.concat([grouped_df, weather_main_dummies], axis=1)
 grouped_df = grouped_df.drop("weather_main", axis = "columns")
 
 # Create dummy columns for each category in weather_description column
-weather_description_dummies = pd.get_dummies(grouped_df['weather_description'], prefix = 'weather_description_', drop_first=True)
-grouped_df = pd.concat([grouped_df, weather_description_dummies], axis=1)
-grouped_df = grouped_df.drop("weather_description", axis = "columns")
+# weather_description_dummies = pd.get_dummies(grouped_df['weather_description'], prefix = 'weather_description_', drop_first=True)
+# grouped_df = pd.concat([grouped_df, weather_description_dummies], axis=1)
+# grouped_df = grouped_df.drop("weather_description", axis = "columns")
 
 ########################### SPLIT DATA ###########################
 
@@ -182,10 +190,10 @@ afternoon_df = afternoon_df.drop(["rush_hour_period", "date"], axis = "columns")
 morning_df = morning_df.dropna(axis=0)
 afternoon_df = afternoon_df.dropna(axis=0)
 
-########################### CORRELATION ###########################
+########################### MULTICOLLINEARITY CHECK ###########################
 
 # Function to check for mulitcollinearity and reduction where relevant
-def corr_matrix(df, target_column, corr_percentage = 0.8):
+def corr_matrix(df, target_column, corr_percentage = 0.7):
     # Drop target column
     X_df = df.drop(columns=[target_column])
 
@@ -223,7 +231,7 @@ def calculate_vif(df):
     return vif
 
 
-def drop_with_vif(df, target_column, threshold = 10):
+def drop_with_vif(df, target_column, threshold = 5):
     # Drop target column
     X_df = df.drop(columns=[target_column])
 
@@ -256,3 +264,64 @@ def drop_with_vif(df, target_column, threshold = 10):
 
 morning_reduced = drop_with_vif(morning_reduced, "free_flow_speed")
 afternoon_reduced = drop_with_vif(afternoon_reduced, "free_flow_speed")
+
+###################### MACHINE LEARNING #############################
+
+df = morning_reduced
+
+# X = features, y = target
+X = df.drop(columns=['free_flow_speed'])
+y = df['free_flow_speed']
+
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+# Define models to try
+models = {
+    'Linear Regression': LinearRegression(),
+    'Ridge Regression': Ridge(),
+    'Lasso Regression': Lasso(),
+    'Decision Tree': DecisionTreeRegressor(),
+    'Random Forest': RandomForestRegressor(),
+    'Gradient Boosting': GradientBoostingRegressor(),
+    'XGBoost': xgb.XGBRegressor(),
+    'Support Vector Regressor': SVR()
+}
+
+# Evaluate each model
+results = []
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+    mae = mean_absolute_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+
+    results.append({
+        'Model': name,
+        'RMSE': rmse,
+        'MAE': mae,
+        'R²': r2
+    })
+
+# Display results
+results_df = pd.DataFrame(results).sort_values(by='RMSE')
+print(results_df)
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Check correlations
+correlation = df.corr(numeric_only=True)
+print(correlation['free_flow_speed'].sort_values(ascending=False))
+
+# Optional: Heatmap
+sns.heatmap(correlation, annot=True, cmap="coolwarm")
+plt.show()
+
+# Har lige fjernet weather_description

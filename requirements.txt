@@ -5,3 +5,7 @@ pandas
 db_dtypes
 holidays
 statsmodels
+scikit-learn
+xgboost
+seaborn
+matplotlib
