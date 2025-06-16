@@ -94,9 +94,9 @@ def most_frequent_weather(series):
 grouped_df = cleaned_df.groupby(
     ["date", "rush_hour_period"], as_index=False
 ).agg({
-#    "current_speed": "mean",                         
-    "free_flow_speed": "mean",                      
-#    "current_travel_time": "mean",                 
+    #"current_speed": "mean",                         
+    #"free_flow_speed": "mean",                      
+    "current_travel_time": "mean",                 
 #    "free_flow_travel_time": "mean",      
 #    "road_closure": collapse_road_closure,      
     "weather_main": most_frequent_weather,
@@ -139,13 +139,16 @@ dk_holidays.update(custom_holidays)
 # Map holidays into dataframe
 holiday_map = {date: name for date, name in dk_holidays.items()}
 grouped_df['holiday_name'] = grouped_df['date_dt'].map(holiday_map)
-# Drop column
-grouped_df = grouped_df.drop("date_dt", axis='columns')
+
+# Create a binary holiday column: 1 if holiday, 0 otherwise
+grouped_df['is_holiday'] = grouped_df['holiday_name'].notna().astype(int)
+# Drop columns
+grouped_df = grouped_df.drop(["date_dt", "holiday_name"], axis='columns')
 
 # Create dummy columns for each holiday
-holiday_dummies = pd.get_dummies(grouped_df['holiday_name'], prefix = 'holiday_', drop_first=True)
-grouped_df = pd.concat([grouped_df, holiday_dummies], axis=1)
-grouped_df = grouped_df.drop("holiday_name", axis = "columns")
+# holiday_dummies = pd.get_dummies(grouped_df['holiday_name'], prefix = 'holiday_', drop_first=True)
+# grouped_df = pd.concat([grouped_df, holiday_dummies], axis=1)
+# grouped_df = grouped_df.drop("holiday_name", axis = "columns")
 
 # Create dummy columns for each category in weather_main column
 weather_main_dummies = pd.get_dummies(grouped_df['weather_main'], prefix = 'weather_main_', drop_first=True)
@@ -156,6 +159,17 @@ grouped_df = grouped_df.drop("weather_main", axis = "columns")
 # weather_description_dummies = pd.get_dummies(grouped_df['weather_description'], prefix = 'weather_description_', drop_first=True)
 # grouped_df = pd.concat([grouped_df, weather_description_dummies], axis=1)
 # grouped_df = grouped_df.drop("weather_description", axis = "columns")
+
+# Convert date column to datetime if it isn't already
+grouped_df['date'] = pd.to_datetime(grouped_df['date'])
+# Extract day name (e.g., Monday, Tuesday)
+grouped_df['day_name'] = grouped_df['date'].dt.day_name()
+# Create dummy variables for day names
+day_dummies = pd.get_dummies(grouped_df['day_name'], prefix='day', drop_first=True)
+# Concatenate dummy columns to your DataFrame
+grouped_df = pd.concat([grouped_df, day_dummies], axis=1)
+# Drop column
+grouped_df = grouped_df.drop("day_name", axis = "columns")
 
 ########################### SPLIT DATA ###########################
 
@@ -168,7 +182,7 @@ morning_df[morning_df.select_dtypes(bool).columns] = morning_df.select_dtypes(bo
 afternoon_df[afternoon_df.select_dtypes(bool).columns] = afternoon_df.select_dtypes(bool).astype(int)
 
 # Drop rush_hour_period, date and holiday columns for the morning since they are the same as for afternoon
-morning_features = morning_df.drop(columns=["rush_hour_period"] + [col for col in morning_df.columns if col in holiday_dummies.columns])
+morning_features = morning_df.drop(columns=["rush_hour_period", "is_holiday"] + [col for col in morning_df.columns if col in holiday_dummies.columns] + [col for col in morning_df.columns if col in day_dummies.columns])
 # Add prefix for morning features
 morning_features = morning_features.add_prefix("morning_") 
 # Rename date column
@@ -204,6 +218,9 @@ def corr_matrix(df, target_column, corr_percentage = 0.7):
 
     # Find columns with high correlation
     to_drop_corr = [column for column in upper.columns if any(upper[column] > corr_percentage)]
+    
+    print(f"Dropping following columns: {to_drop_corr}")
+
     # Drop the higly correlated columns
     df = df.drop(columns=to_drop_corr)
 
@@ -212,8 +229,8 @@ def corr_matrix(df, target_column, corr_percentage = 0.7):
 
     return df
 
-morning_reduced = corr_matrix(morning_df, "free_flow_speed")
-afternoon_reduced = corr_matrix(afternoon_df, "free_flow_speed")
+morning_reduced = corr_matrix(morning_df, "current_travel_time")
+afternoon_reduced = corr_matrix(afternoon_df, "current_travel_time")
 
 
 # Function to calculate VIF
@@ -231,7 +248,7 @@ def calculate_vif(df):
     return vif
 
 
-def drop_with_vif(df, target_column, threshold = 5):
+def drop_with_vif(df, target_column, threshold = 10):
     # Drop target column
     X_df = df.drop(columns=[target_column])
 
@@ -262,16 +279,16 @@ def drop_with_vif(df, target_column, threshold = 5):
     return X_df
  
 
-morning_reduced = drop_with_vif(morning_reduced, "free_flow_speed")
-afternoon_reduced = drop_with_vif(afternoon_reduced, "free_flow_speed")
+morning_reduced = drop_with_vif(morning_reduced, "current_travel_time")
+afternoon_reduced = drop_with_vif(afternoon_reduced, "current_travel_time")
 
 ###################### MACHINE LEARNING #############################
 
 df = morning_reduced
 
 # X = features, y = target
-X = df.drop(columns=['free_flow_speed'])
-y = df['free_flow_speed']
+X = df.drop(columns=['current_travel_time'])
+y = df['current_travel_time']
 
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
@@ -313,15 +330,16 @@ results_df = pd.DataFrame(results).sort_values(by='RMSE')
 print(results_df)
 
 
-import seaborn as sns
-import matplotlib.pyplot as plt
+
 
 # Check correlations
 correlation = df.corr(numeric_only=True)
-print(correlation['free_flow_speed'].sort_values(ascending=False))
+print(correlation['current_travel_time'].sort_values(ascending=False))
 
-# Optional: Heatmap
-sns.heatmap(correlation, annot=True, cmap="coolwarm")
-plt.show()
 
 # Har lige fjernet weather_description
+
+
+sns.histplot(df['current_travel_time'], bins=30, kde=True)
+plt.title("Distribution of Current Travel Time")
+plt.show()
