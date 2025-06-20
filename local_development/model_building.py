@@ -6,13 +6,18 @@ import holidays
 import datetime
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVR
 import xgboost as xgb
+from sklearn.linear_model import ElasticNet
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.ensemble import ExtraTreesRegressor
+from lightgbm import LGBMRegressor
+from catboost import CatBoostRegressor
 from sklearn.preprocessing import StandardScaler
 
 
@@ -290,12 +295,6 @@ df = morning_reduced
 X = df.drop(columns=['current_travel_time'])
 y = df['current_travel_time']
 
-scaler = StandardScaler()
-X = scaler.fit_transform(X)
-
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
-
 # Define models to try
 models = {
     'Linear Regression': LinearRegression(),
@@ -305,18 +304,46 @@ models = {
     'Random Forest': RandomForestRegressor(),
     'Gradient Boosting': GradientBoostingRegressor(),
     'XGBoost': xgb.XGBRegressor(),
-    'Support Vector Regressor': SVR()
+    'Support Vector Regressor': SVR(),
+    'ElasticNet': ElasticNet(),
+    'KNN': KNeighborsRegressor(),
+    'Extra Trees': ExtraTreesRegressor(),
+    'CatBoost': CatBoostRegressor(verbose=0)
 }
 
-# Evaluate each model
-results = []
-for name, model in models.items():
-    model.fit(X_train, y_train)
-    y_pred = model.predict(X_test)
+#_____________________ KFold Cross Validation _______________________
 
-    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-    mae = mean_absolute_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
+# Cross-validation setup
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+results = []
+
+for name, model in models.items():
+    y_true_all = []
+    y_pred_all = []
+
+    for train_idx, test_idx in cv.split(X):
+        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+        y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+
+
+        # Scale features using training data only
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        # Fit and predict
+        model.fit(X_train_scaled, y_train)
+        y_pred = model.predict(X_test_scaled)
+
+        # Collect predictions and true values
+        y_true_all.extend(y_test)
+        y_pred_all.extend(y_pred)
+
+    # Evaluate on all combined predictions
+    rmse = np.sqrt(mean_squared_error(y_true_all, y_pred_all))
+    mae = mean_absolute_error(y_true_all, y_pred_all)
+    r2 = r2_score(y_true_all, y_pred_all)
 
     results.append({
         'Model': name,
@@ -332,6 +359,9 @@ print(results_df)
 
 
 
+
+
+
 # Check correlations
 correlation = df.corr(numeric_only=True)
 print(correlation['current_travel_time'].sort_values(ascending=False))
@@ -339,7 +369,3 @@ print(correlation['current_travel_time'].sort_values(ascending=False))
 
 # Har lige fjernet weather_description
 
-
-sns.histplot(df['current_travel_time'], bins=30, kde=True)
-plt.title("Distribution of Current Travel Time")
-plt.show()
