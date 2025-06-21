@@ -4,6 +4,8 @@ import numpy as np
 import os
 import holidays
 import datetime
+from astral.sun import sun
+from astral import LocationInfo
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
 from sklearn.model_selection import train_test_split, KFold
@@ -164,16 +166,34 @@ grouped_df = grouped_df.drop("weather_main", axis = "columns")
 # grouped_df = pd.concat([grouped_df, weather_description_dummies], axis=1)
 # grouped_df = grouped_df.drop("weather_description", axis = "columns")
 
-# Convert date column to datetime if it isn't already
+# Convert date column to datetime 
 grouped_df['date'] = pd.to_datetime(grouped_df['date'])
-# Extract day name (e.g., Monday, Tuesday)
+# Extract day name 
 grouped_df['day_name'] = grouped_df['date'].dt.day_name()
 # Create dummy variables for day names
 day_dummies = pd.get_dummies(grouped_df['day_name'], prefix='day', drop_first=True)
-# Concatenate dummy columns to your DataFrame
+# Concatenate dummy columns to dataframe
 grouped_df = pd.concat([grouped_df, day_dummies], axis=1)
 # Drop column
 grouped_df = grouped_df.drop("day_name", axis = "columns")
+
+
+# Define location
+city = LocationInfo("Copenhagen", "Denmark", "Europe/Copenhagen")
+
+# Calculate sunrise and sunset for each date
+def get_sun_times(date):
+    s = sun(city.observer, date=date, tzinfo=city.timezone)
+    return pd.Series({"sunrise": s["sunrise"].hour + s["sunrise"].minute/60,
+                      "sunset": s["sunset"].hour + s["sunset"].minute/60})
+
+grouped_df[['sunrise', 'sunset']] = grouped_df['date'].apply(get_sun_times)
+
+
+grouped_df = grouped_df.sort_values(["rush_hour_period", "date"])
+grouped_df["lag_1day"] = grouped_df.groupby("rush_hour_period")["current_travel_time"].shift(1)
+grouped_df["lag_7day"] = grouped_df.groupby("rush_hour_period")["current_travel_time"].shift(7)
+
 
 ########################### SPLIT DATA ###########################
 
@@ -186,7 +206,7 @@ morning_df[morning_df.select_dtypes(bool).columns] = morning_df.select_dtypes(bo
 afternoon_df[afternoon_df.select_dtypes(bool).columns] = afternoon_df.select_dtypes(bool).astype(int)
 
 # Drop rush_hour_period, date and holiday columns for the morning since they are the same as for afternoon
-morning_features = morning_df.drop(columns=["rush_hour_period", "is_holiday"] + [col for col in morning_df.columns if col in holiday_dummies.columns] + [col for col in morning_df.columns if col in day_dummies.columns])
+morning_features = morning_df.drop(columns=["rush_hour_period", "is_holiday", "sunrise", "sunset"] + [col for col in morning_df.columns if col in day_dummies.columns])
 # Add prefix for morning features
 morning_features = morning_features.add_prefix("morning_") 
 # Rename date column
@@ -380,11 +400,11 @@ grid.fit(X_scaled, y)
 print("Best params:", grid.best_params_)
 print("Best R²:", grid.best_score_)
 
-# Evaluate final model on full data
-best_ridge = Ridge(alpha=grid.best_params_['alpha'])
+# Evaluate final model 
+best_ridge = Ridge(**grid.best_params_)
 best_ridge.fit(X_scaled, y)
 
-# Inspect coefficients:
+# Inspect coefficients
 coefficients = pd.Series(best_ridge.coef_, index=X.columns)
 print(coefficients.sort_values(ascending=False))
 
