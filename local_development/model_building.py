@@ -8,17 +8,16 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import SVR
 import xgboost as xgb
-from sklearn.linear_model import ElasticNet
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import ExtraTreesRegressor
-from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import GridSearchCV
 
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
@@ -314,7 +313,7 @@ models = {
 #_____________________ KFold Cross Validation _______________________
 
 # Cross-validation setup
-cv = KFold(n_splits=5, shuffle=True, random_state=42)
+cv = KFold(n_splits=10, shuffle=True, random_state=42)
 
 results = []
 
@@ -355,6 +354,46 @@ for name, model in models.items():
 # Display results
 results_df = pd.DataFrame(results).sort_values(by='RMSE')
 print(results_df)
+
+#__________________ Hyper Parameter Tuning ________________________
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Define parameter grid
+param_grid = {
+    'alpha': [0.01, 0.1, 1, 10, 100],
+    'solver': ['auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg']
+}
+
+# Create Ridge model
+ridge = Ridge()
+
+# Grid search with CV
+grid = GridSearchCV(estimator=ridge,
+                    param_grid=param_grid,
+                    cv=5) 
+
+grid.fit(X_scaled, y)
+
+# Print best results
+print("Best params:", grid.best_params_)
+print("Best R²:", grid.best_score_)
+
+# Evaluate final model on full data
+best_ridge = Ridge(alpha=grid.best_params_['alpha'])
+best_ridge.fit(X_scaled, y)
+
+# Inspect coefficients:
+coefficients = pd.Series(best_ridge.coef_, index=X.columns)
+print(coefficients.sort_values(ascending=False))
+
+
+
+
+
+
+
 
 
 
