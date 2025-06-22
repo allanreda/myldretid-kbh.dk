@@ -308,7 +308,7 @@ afternoon_reduced = drop_with_vif(afternoon_reduced, "current_travel_time")
 
 ###################### MACHINE LEARNING #############################
 
-df = morning_reduced
+df = afternoon_reduced
 
 # X = features, y = target
 X = df.drop(columns=['current_travel_time'])
@@ -377,54 +377,82 @@ print(results_df)
 
 #__________________ Hyper Parameter Tuning ________________________
 
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
 
-# Define parameter grid
-param_grid = {
+def hyper_parameter_tuning(df, paramgrid, model_name):
+
+    # X = features, y = target
+    X = df.drop(columns=['current_travel_time'])
+    y = df['current_travel_time']
+
+    # Scale X variables
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    # Create Ridge model
+    model = model_name()
+
+    # Grid search with CV
+    grid = GridSearchCV(estimator=model,
+                        param_grid=paramgrid,
+                        cv=5) 
+
+    grid.fit(X_scaled, y)
+
+    # Evaluate final model 
+    best_model = model_name(**grid.best_params_)
+    best_model.fit(X_scaled, y)
+
+    # Handle coefficients or feature importances
+    if hasattr(best_model, 'coef_'):
+        values = pd.Series(best_model.coef_, index=X.columns)
+        values = values.sort_values(ascending=False)
+    elif hasattr(best_model, 'feature_importances_'):
+        values = pd.Series(best_model.feature_importances_, index=X.columns)
+        values = values.sort_values(ascending=False)
+    else:
+        values = "No coefficients or feature importances available"
+
+    return grid.best_params_, grid.best_score_, values
+
+#________________ Ridge Hyperparameter Tuning ________________
+
+# Define parameter grid for Ridge model
+ridge_param_grid = {
     'alpha': [0.01, 0.1, 1, 10, 100],
     'solver': ['auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg']
 }
 
-# Create Ridge model
-ridge = Ridge()
-
-# Grid search with CV
-grid = GridSearchCV(estimator=ridge,
-                    param_grid=param_grid,
-                    cv=5) 
-
-grid.fit(X_scaled, y)
+ridge_best_params, ridge_best_score, ridge_coefs = hyper_parameter_tuning(
+    morning_reduced, 
+    ridge_param_grid, 
+    Ridge
+)
 
 # Print best results
-print("Best params:", grid.best_params_)
-print("Best R²:", grid.best_score_)
+print("Best params:", ridge_best_params)
+print("Best R²:", ridge_best_score)
+print("Coefficients:", ridge_coefs)
 
-# Evaluate final model 
-best_ridge = Ridge(**grid.best_params_)
-best_ridge.fit(X_scaled, y)
+#________________ Extra Trees Hyperparameter Tuning ________________
 
-# Inspect coefficients
-coefficients = pd.Series(best_ridge.coef_, index=X.columns)
-print(coefficients.sort_values(ascending=False))
+# Define parameter grid for Extra Trees model
+extra_trees_param_grid = {
+    'n_estimators': [100, 200, 300],          # number of trees in the forest
+    'max_depth': [None, 10, 20, 30],          # maximum depth of the trees
+    'min_samples_split': [2, 5, 10],          # minimum number of samples required to split an internal node
+    'min_samples_leaf': [1, 2, 4],            # minimum number of samples required at a leaf node
+    'max_features': ['sqrt', 'log2', None]    # number of features to consider when looking for the best split
+}
 
+extra_trees_best_params, extra_trees_best_score, extra_trees_feature_importance = hyper_parameter_tuning(
+    afternoon_reduced, 
+    extra_trees_param_grid, 
+    ExtraTreesRegressor
+)
 
+# Print best results
+print("Best params:", extra_trees_best_params)
+print("Best R²:", extra_trees_best_score)
+print("Feature importance:", extra_trees_feature_importance)
 
-
-
-
-
-
-
-
-
-
-
-
-# Check correlations
-correlation = df.corr(numeric_only=True)
-print(correlation['current_travel_time'].sort_values(ascending=False))
-
-
-# Har lige fjernet weather_description
 
