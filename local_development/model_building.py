@@ -190,7 +190,9 @@ def get_sun_times(date):
 grouped_df[['sunrise', 'sunset']] = grouped_df['date'].apply(get_sun_times)
 
 
+# Sort values based on date and rush_hour_period
 grouped_df = grouped_df.sort_values(["rush_hour_period", "date"])
+# Get 1 and 7 day lags
 grouped_df["lag_1day"] = grouped_df.groupby("rush_hour_period")["current_travel_time"].shift(1)
 grouped_df["lag_7day"] = grouped_df.groupby("rush_hour_period")["current_travel_time"].shift(7)
 
@@ -205,20 +207,33 @@ afternoon_df = grouped_df[grouped_df["rush_hour_period"] == "afternoon"].copy()
 morning_df[morning_df.select_dtypes(bool).columns] = morning_df.select_dtypes(bool).astype(int)
 afternoon_df[afternoon_df.select_dtypes(bool).columns] = afternoon_df.select_dtypes(bool).astype(int)
 
-# Drop rush_hour_period, date and holiday columns for the morning since they are the same as for afternoon
-morning_features = morning_df.drop(columns=["rush_hour_period", "is_holiday", "sunrise", "sunset"] + [col for col in morning_df.columns if col in day_dummies.columns])
-# Add prefix for morning features
-morning_features = morning_features.add_prefix("morning_") 
-# Rename date column
-morning_features = morning_features.rename(columns={"morning_date": "date"})
+# Extract morning travel times
+morning_travel_time = morning_df[['date', 'current_travel_time']].rename(
+    columns={'current_travel_time': 'morning_travel_time'}
+)
 
-# Merge afternoon_df with morning_features
+# Merge morning travel times with afternoon_df
 afternoon_df = pd.merge(
     afternoon_df,
-    morning_features,
-    how="left",
-    on="date"
+    morning_travel_time,
+    on='date',
+    how='left'
 )
+
+# # Drop rush_hour_period, date and holiday columns for the morning since they are the same as for afternoon
+# morning_features = morning_df.drop(columns=["rush_hour_period", "is_holiday", "sunrise", "sunset"] + [col for col in morning_df.columns if col in day_dummies.columns])
+# # Add prefix for morning features
+# morning_features = morning_features.add_prefix("morning_") 
+# # Rename date column
+# morning_features = morning_features.rename(columns={"morning_date": "date"})
+
+# # Merge afternoon_df with morning_features
+# afternoon_df = pd.merge(
+#     afternoon_df,
+#     morning_features,
+#     how="left",
+#     on="date"
+# )
 
 # Drop rush_hour_period and date column for both dataframes
 morning_df = morning_df.drop(["rush_hour_period", "date"], axis = "columns")
@@ -394,7 +409,8 @@ def hyper_parameter_tuning(df, paramgrid, model_name):
     # Grid search with CV
     grid = GridSearchCV(estimator=model,
                         param_grid=paramgrid,
-                        cv=5) 
+                        cv=5,
+                        scoring='r2') 
 
     grid.fit(X_scaled, y)
 
@@ -437,11 +453,12 @@ print("Coefficients:", ridge_coefs)
 
 # Define parameter grid for Extra Trees model
 extra_trees_param_grid = {
-    'n_estimators': [100, 200, 300],          # number of trees in the forest
-    'max_depth': [None, 10, 20, 30],          # maximum depth of the trees
-    'min_samples_split': [2, 5, 10],          # minimum number of samples required to split an internal node
-    'min_samples_leaf': [1, 2, 4],            # minimum number of samples required at a leaf node
-    'max_features': ['sqrt', 'log2', None]    # number of features to consider when looking for the best split
+    'n_estimators': [100, 200],                 # 100 is default; 200 for slight boost
+    'max_depth': [None, 10, 20],                # None lets trees grow fully
+    'min_samples_split': [2, 5],                # 2 is default; 5 to regularize
+    'min_samples_leaf': [1, 2, 4],              # leaf size affects overfitting
+    'max_features': ['sqrt', 0.7, 1.0],         # 'sqrt' is standard; 0.7 and 1.0 give alternatives
+    'bootstrap': [False, True]                  # default is False, try both
 }
 
 extra_trees_best_params, extra_trees_best_score, extra_trees_feature_importance = hyper_parameter_tuning(
