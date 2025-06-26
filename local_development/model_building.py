@@ -99,14 +99,9 @@ def most_frequent_weather(series):
 
 grouped_df = cleaned_df.groupby(
     ["date", "rush_hour_period"], as_index=False
-).agg({
-    #"current_speed": "mean",                         
-    #"free_flow_speed": "mean",                      
-    "current_travel_time": "mean",                 
-#    "free_flow_travel_time": "mean",      
-#    "road_closure": collapse_road_closure,      
+).agg({                    
+    "current_travel_time": "mean",                
     "weather_main": most_frequent_weather,
-#    "weather_description": most_frequent_weather,
     "temperature": "mean",
     "feels_like": "mean",
     "humidity_percent": "mean",
@@ -151,20 +146,10 @@ grouped_df['is_holiday'] = grouped_df['holiday_name'].notna().astype(int)
 # Drop columns
 grouped_df = grouped_df.drop(["date_dt", "holiday_name"], axis='columns')
 
-# Create dummy columns for each holiday
-# holiday_dummies = pd.get_dummies(grouped_df['holiday_name'], prefix = 'holiday_', drop_first=True)
-# grouped_df = pd.concat([grouped_df, holiday_dummies], axis=1)
-# grouped_df = grouped_df.drop("holiday_name", axis = "columns")
-
 # Create dummy columns for each category in weather_main column
 weather_main_dummies = pd.get_dummies(grouped_df['weather_main'], prefix = 'weather_main_', drop_first=True)
 grouped_df = pd.concat([grouped_df, weather_main_dummies], axis=1)
 grouped_df = grouped_df.drop("weather_main", axis = "columns")
-
-# Create dummy columns for each category in weather_description column
-# weather_description_dummies = pd.get_dummies(grouped_df['weather_description'], prefix = 'weather_description_', drop_first=True)
-# grouped_df = pd.concat([grouped_df, weather_description_dummies], axis=1)
-# grouped_df = grouped_df.drop("weather_description", axis = "columns")
 
 # Convert date column to datetime 
 grouped_df['date'] = pd.to_datetime(grouped_df['date'])
@@ -219,21 +204,6 @@ afternoon_df = pd.merge(
     on='date',
     how='left'
 )
-
-# # Drop rush_hour_period, date and holiday columns for the morning since they are the same as for afternoon
-# morning_features = morning_df.drop(columns=["rush_hour_period", "is_holiday", "sunrise", "sunset"] + [col for col in morning_df.columns if col in day_dummies.columns])
-# # Add prefix for morning features
-# morning_features = morning_features.add_prefix("morning_") 
-# # Rename date column
-# morning_features = morning_features.rename(columns={"morning_date": "date"})
-
-# # Merge afternoon_df with morning_features
-# afternoon_df = pd.merge(
-#     afternoon_df,
-#     morning_features,
-#     how="left",
-#     on="date"
-# )
 
 # Drop rush_hour_period and date column for both dataframes
 morning_df = morning_df.drop(["rush_hour_period", "date"], axis = "columns")
@@ -434,7 +404,7 @@ def hyper_parameter_tuning(df, paramgrid, model_name):
 
 # Define parameter grid for Ridge model
 ridge_param_grid = {
-    'alpha': [0.01, 0.1, 1, 2, 3, 10, 100],
+    'alpha': [0.01, 0.1, 1, 10, 100],
     'solver': ['auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg']
 }
 
@@ -461,8 +431,6 @@ extra_trees_param_grid = {
     'bootstrap': [False],                 # Keep it False for ExtraTrees
     'criterion': ['squared_error'],       # Skip 'absolute_error' unless needed
 }
-
-
 
 extra_trees_best_params, extra_trees_best_score, extra_trees_feature_importance = hyper_parameter_tuning(
     afternoon_reduced, 
