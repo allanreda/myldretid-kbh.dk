@@ -8,7 +8,7 @@ from astral.sun import sun
 from astral import LocationInfo
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.tools.tools import add_constant
-from sklearn.model_selection import train_test_split, KFold
+from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
@@ -19,7 +19,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import ExtraTreesRegressor
 from catboost import CatBoostRegressor
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
@@ -323,7 +323,7 @@ afternoon_reduced = drop_with_vif(afternoon_reduced, "current_travel_time")
 
 ###################### MACHINE LEARNING #############################
 
-df = afternoon_reduced
+df = morning_reduced
 
 # X = features, y = target
 X = df.drop(columns=['current_travel_time'])
@@ -407,8 +407,8 @@ def hyper_parameter_tuning(df, paramgrid, model_name):
     model = model_name()
 
     # Grid search with CV
-    grid = GridSearchCV(estimator=model,
-                        param_grid=paramgrid,
+    grid = RandomizedSearchCV(estimator=model,
+                        param_distributions=paramgrid,
                         cv=5,
                         scoring='r2') 
 
@@ -434,7 +434,7 @@ def hyper_parameter_tuning(df, paramgrid, model_name):
 
 # Define parameter grid for Ridge model
 ridge_param_grid = {
-    'alpha': [0.01, 0.1, 1, 10, 100],
+    'alpha': [0.01, 0.1, 1, 2, 3, 10, 100],
     'solver': ['auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg']
 }
 
@@ -453,13 +453,16 @@ print("Coefficients:", ridge_coefs)
 
 # Define parameter grid for Extra Trees model
 extra_trees_param_grid = {
-    'n_estimators': [100, 200],                 # 100 is default; 200 for slight boost
-    'max_depth': [None, 10, 20],                # None lets trees grow fully
-    'min_samples_split': [2, 5],                # 2 is default; 5 to regularize
-    'min_samples_leaf': [1, 2, 4],              # leaf size affects overfitting
-    'max_features': ['sqrt', 0.7, 1.0],         # 'sqrt' is standard; 0.7 and 1.0 give alternatives
-    'bootstrap': [False, True]                  # default is False, try both
+    'n_estimators': [100, 200, 300],      # More trees is fine
+    'max_depth': [None, 30, 40],          # Allow fully grown trees or deep trees
+    'min_samples_split': [2, 5],          # 2 is default, 5 is mild regularization
+    'min_samples_leaf': [1, 2],           # Avoid 4 unless small datasets
+    'max_features': [1.0, 0.8],           # Stick to using most features
+    'bootstrap': [False],                 # Keep it False for ExtraTrees
+    'criterion': ['squared_error'],       # Skip 'absolute_error' unless needed
 }
+
+
 
 extra_trees_best_params, extra_trees_best_score, extra_trees_feature_importance = hyper_parameter_tuning(
     afternoon_reduced, 
@@ -473,3 +476,21 @@ print("Best R²:", extra_trees_best_score)
 print("Feature importance:", extra_trees_feature_importance)
 
 
+
+
+
+
+
+scores = cross_val_score(
+    Ridge(random_state=42),
+    X, y,
+    cv=KFold(n_splits=10, shuffle=True, random_state=42),
+    scoring='r2'
+)
+
+print(f"Cross-validated R² scores: {scores}")
+print(f"Mean R²: {scores.mean():.4f}")
+print(f"Std R²: {scores.std():.4f}")
+
+model = Ridge()
+print(model.get_params())
