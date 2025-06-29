@@ -120,13 +120,6 @@ years = grouped_df['date_dt'].dt.year.unique()
 # Get all Danish holidays from the holidays library
 dk_holidays = holidays.Denmark(years=years)
 
-# Add date and name of custom holidays
-# (only add those which have the same date each year)
-# custom_holidays_dict = {
-#     (12, 31): "New Years Eve",
-#     (12, 24): "Christmas Eve"  
-# }
-
 # Create set from public holidays
 public_holiday_dates = set(dk_holidays.keys())
 
@@ -174,25 +167,8 @@ grouped_df['date'] = pd.to_datetime(grouped_df['date'])
 # Create binary column: 1 if date is a holiday, 0 if not
 grouped_df['is_holiday'] = grouped_df['date'].dt.date.isin(all_holiday_dates).astype(int)
 
+grouped_df = grouped_df.drop("date_dt", axis = "columns")
 
-# # Empty list for custom holidays
-# custom_holidays = {}
-# # Loop to include the custom holidays for all relevant years
-# for year in years:
-#     for (month, day), name in custom_holidays_dict.items():
-#         custom_holidays[datetime.date(year, month, day)] = name
-
-# # Update dk_holidays with custom holidays
-# dk_holidays.update(custom_holidays)
-
-# # Map holidays into dataframe
-# holiday_map = {date: name for date, name in dk_holidays.items()}
-# grouped_df['holiday_name'] = grouped_df['date_dt'].map(holiday_map)
-
-# # Create a binary holiday column: 1 if holiday, 0 otherwise
-# grouped_df['is_holiday'] = grouped_df['holiday_name'].notna().astype(int)
-# # Drop columns
-# grouped_df = grouped_df.drop(["date_dt", "holiday_name"], axis='columns')
 
 # Create dummy columns for each category in weather_main column
 weather_main_dummies = pd.get_dummies(grouped_df['weather_main'], prefix = 'weather_main_', drop_first=True)
@@ -229,6 +205,20 @@ grouped_df = grouped_df.sort_values(["rush_hour_period", "date"])
 grouped_df["lag_1day"] = grouped_df.groupby("rush_hour_period")["current_travel_time"].shift(1)
 grouped_df["lag_7day"] = grouped_df.groupby("rush_hour_period")["current_travel_time"].shift(7)
 
+# Calculate 7 day rolling average
+
+# Set multi-index with rush_hour_period and date
+grouped_df_indexed = grouped_df.set_index(["rush_hour_period", "date"])
+# Perform rolling within each rush hour group
+rolling_avg = (
+    grouped_df_indexed.groupby(level=0)["current_travel_time"]
+    .rolling(window=7, min_periods=1)
+    .mean()
+    .reset_index(level=0, drop=True)  # Remove rush_hour_period from index after rolling
+)
+
+# Add the result as a new column
+grouped_df["rolling_avg_7day"] = rolling_avg.values
 
 ########################### SPLIT DATA ###########################
 
@@ -341,7 +331,7 @@ afternoon_reduced = drop_with_vif(afternoon_reduced, "current_travel_time")
 
 ###################### MACHINE LEARNING #############################
 
-df = morning_reduced
+df = afternoon_reduced
 
 # X = features, y = target
 X = df.drop(columns=['current_travel_time'])
@@ -497,16 +487,32 @@ print("Feature importance:", extra_trees_feature_importance)
 
 
 
-scores = cross_val_score(
-    Ridge(random_state=42),
-    X, y,
-    cv=KFold(n_splits=10, shuffle=True, random_state=42),
-    scoring='r2'
-)
+df = morning_reduced
 
-print(f"Cross-validated R² scores: {scores}")
-print(f"Mean R²: {scores.mean():.4f}")
-print(f"Std R²: {scores.std():.4f}")
+# X = features, y = target
+X = df.drop(columns=['current_travel_time'])
+y = df['current_travel_time']
 
-model = Ridge()
-print(model.get_params())
+# Scale the features (optional but fine for Extra Trees)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Fit Extra Trees on the full data
+extra_trees = ExtraTreesRegressor(random_state=42)
+extra_trees.fit(X_scaled, y)
+
+# Get feature importances
+feature_importances = pd.Series(extra_trees.feature_importances_, index=X.columns)
+
+# Sort and display
+feature_importances = feature_importances.sort_values(ascending=False)
+print(feature_importances)
+
+import matplotlib.pyplot as plt
+# Plot
+plt.figure(figsize=(8, 6))
+plt.barh(feature_importances.index, feature_importances.values)
+plt.xlabel("Feature Importance")
+plt.title("Feature Importance - Extra Trees Regressor")
+plt.tight_layout()
+plt.show()
