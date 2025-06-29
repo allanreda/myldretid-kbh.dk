@@ -122,29 +122,77 @@ dk_holidays = holidays.Denmark(years=years)
 
 # Add date and name of custom holidays
 # (only add those which have the same date each year)
-custom_holidays_dict = {
-    (12, 31): "New Years Eve",
-    (12, 24): "Christmas Eve"  
-}
+# custom_holidays_dict = {
+#     (12, 31): "New Years Eve",
+#     (12, 24): "Christmas Eve"  
+# }
 
-# Empty list for custom holidays
-custom_holidays = {}
-# Loop to include the custom holidays for all relevant years
-for year in years:
-    for (month, day), name in custom_holidays_dict.items():
-        custom_holidays[datetime.date(year, month, day)] = name
+# Create set from public holidays
+public_holiday_dates = set(dk_holidays.keys())
 
-# Update dk_holidays with custom holidays
-dk_holidays.update(custom_holidays)
+# Create manual holiday date ranges
+manual_holidays = [
+    ("2024-07-01", "2024-08-09"),
+    ("2024-10-14", "2024-10-18"),
+    ("2024-12-23", "2025-01-02"),
+    ("2025-02-10", "2025-02-14"),
+    ("2025-04-14", "2025-04-21"),
+    ("2025-05-01", "2025-05-01"),
+    ("2025-05-29", "2025-05-30"),
+    ("2025-06-05", "2025-06-05"),
+    ("2025-06-09", "2025-06-09"),
+    ("2025-06-30", "2025-08-08"),
+    ("2025-10-13", "2025-10-17"),
+    ("2025-11-18", "2025-11-18"),
+    ("2025-12-24", "2026-01-02"),
+    ("2026-02-09", "2026-02-13"),
+    ("2026-03-30", "2026-04-06"),
+    ("2026-05-01", "2026-05-01"),
+    ("2026-05-14", "2026-05-15"),
+    ("2026-05-24", "2026-05-25"),
+    ("2026-06-05", "2026-06-05"),
+    ("2026-06-29", "2026-08-10")
+]
 
-# Map holidays into dataframe
-holiday_map = {date: name for date, name in dk_holidays.items()}
-grouped_df['holiday_name'] = grouped_df['date_dt'].map(holiday_map)
+# Convert manual holidays into a set of dates
+manual_holiday_dates = set()
 
-# Create a binary holiday column: 1 if holiday, 0 otherwise
-grouped_df['is_holiday'] = grouped_df['holiday_name'].notna().astype(int)
-# Drop columns
-grouped_df = grouped_df.drop(["date_dt", "holiday_name"], axis='columns')
+for start_str, end_str in manual_holidays:
+    start = pd.to_datetime(start_str)
+    end = pd.to_datetime(end_str)
+    date_range = pd.date_range(start, end)
+
+    for date in date_range:
+        manual_holiday_dates.add(date.date())
+
+# Combine both public and manual holidays into one set
+all_holiday_dates = public_holiday_dates.union(manual_holiday_dates)
+
+# Make sure date column is datetime
+grouped_df['date'] = pd.to_datetime(grouped_df['date'])
+
+# Create binary column: 1 if date is a holiday, 0 if not
+grouped_df['is_holiday'] = grouped_df['date'].dt.date.isin(all_holiday_dates).astype(int)
+
+
+# # Empty list for custom holidays
+# custom_holidays = {}
+# # Loop to include the custom holidays for all relevant years
+# for year in years:
+#     for (month, day), name in custom_holidays_dict.items():
+#         custom_holidays[datetime.date(year, month, day)] = name
+
+# # Update dk_holidays with custom holidays
+# dk_holidays.update(custom_holidays)
+
+# # Map holidays into dataframe
+# holiday_map = {date: name for date, name in dk_holidays.items()}
+# grouped_df['holiday_name'] = grouped_df['date_dt'].map(holiday_map)
+
+# # Create a binary holiday column: 1 if holiday, 0 otherwise
+# grouped_df['is_holiday'] = grouped_df['holiday_name'].notna().astype(int)
+# # Drop columns
+# grouped_df = grouped_df.drop(["date_dt", "holiday_name"], axis='columns')
 
 # Create dummy columns for each category in weather_main column
 weather_main_dummies = pd.get_dummies(grouped_df['weather_main'], prefix = 'weather_main_', drop_first=True)
