@@ -72,9 +72,6 @@ def rush_hour_period(time_column):
 # Apply function row by row
 cleaned_df["rush_hour_period"] = cleaned_df["time"].apply(rush_hour_period)
 
-# Function to collapse road_closure column in aggregation
-def collapse_road_closure(values):
-    return "true" if "yes" in values.values else "false"
 
 def most_frequent_weather(series):
     mode = series.mode()

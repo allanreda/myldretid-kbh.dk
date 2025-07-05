@@ -22,6 +22,8 @@ forecast_list = data['list']
 # Normalize the nested structure
 df = pd.json_normalize(forecast_list)
 
+df['weather_main'] = [entry['weather'][0]['main'] for entry in forecast_list]
+
 # Optional: Rename relevant columns for clarity
 df = df.rename(columns={
     'dt_txt': 'datetime',
@@ -30,7 +32,6 @@ df = df.rename(columns={
     'main.pressure': 'pressure',
     'main.humidity': 'humidity',
     'weather[0].main': 'weather_main',
-    'weather[0].description': 'weather_description',
     'wind.speed': 'wind_speed',
     'wind.deg': 'wind_deg',
     'clouds.all': 'cloudiness_percent',
