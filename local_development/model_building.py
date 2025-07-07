@@ -328,7 +328,7 @@ afternoon_reduced = drop_with_vif(afternoon_reduced, "current_travel_time")
 
 ###################### MACHINE LEARNING #############################
 
-df = afternoon_reduced
+df = morning_reduced
 
 # X = features, y = target
 X = df.drop(columns=['current_travel_time'])

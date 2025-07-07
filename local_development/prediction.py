@@ -22,21 +22,21 @@ forecast_list = data['list']
 # Normalize the nested structure
 df = pd.json_normalize(forecast_list)
 
-df['weather_main'] = [entry['weather'][0]['main'] for entry in forecast_list]
+df['weather'] = [entry['weather'][0]['main'] for entry in forecast_list]
 
-# Optional: Rename relevant columns for clarity
+df = df.drop(['main.temp_kf','main.temp_min', 'main.temp_max', 'main.pressure',"dt","pop","wind.deg","main.grnd_level","main.sea_level","wind.gust","rain.3h","sys.pod"], axis="columns")
+
+# Rename relevant columns for clarity
 df = df.rename(columns={
-    'dt_txt': 'datetime',
-    'main.temp': 'temp',
-    'main.feels_like': 'feels_like',
-    'main.pressure': 'pressure',
-    'main.humidity': 'humidity',
-    'weather[0].main': 'weather_main',
-    'wind.speed': 'wind_speed',
-    'wind.deg': 'wind_deg',
-    'clouds.all': 'cloudiness_percent',
-    'rain.3h': 'rain_3h'
+    'weather': "weather_main", 
+    'dt_txt': "datetime", 
+    'main.temp': "temperature", 
+    'main.feels_like': "feels_like",
+    'main.humidity': "humidity_percent", 
+    'clouds.all': "cloudiness_percent", 
+    'wind.speed': "wind_speed"
 })
+
 
 # Convert datetime to pandas datetime object
 df['datetime'] = pd.to_datetime(df['datetime'])
