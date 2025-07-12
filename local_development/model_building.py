@@ -147,11 +147,12 @@ manual_holidays = [
 # Convert manual holidays into a set of dates
 manual_holiday_dates = set()
 
+# Get the date range for each holiday
 for start_str, end_str in manual_holidays:
     start = pd.to_datetime(start_str)
     end = pd.to_datetime(end_str)
     date_range = pd.date_range(start, end)
-
+    # Add each date in the date range to manual_holiday_dates
     for date in date_range:
         manual_holiday_dates.add(date.date())
 

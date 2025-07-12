@@ -1,6 +1,7 @@
 import os
 import holidays
 import datetime
+import pandas as pd
 from astral.sun import sun
 from astral import LocationInfo
 from statsmodels.stats.outliers_influence import variance_inflation_factor
@@ -64,7 +65,7 @@ class PreProcessing:
     
 
     # Function to find most frequent weather in a rush hour period 
-    def most_frequent_weather(self, series):
+    def most_frequent_weather(self, df, series):
         mode = series.mode()
         if len(mode) == 1:
             return mode.iloc[0]
@@ -72,7 +73,7 @@ class PreProcessing:
         # Get time from index or fallback if not accessible
         try:
             # assumes '08:00' or '16:00' appear in the index (multiindex with time)
-            full_group = cleaned_df.loc[series.index]
+            full_group = df.loc[series.index]
             if "08:00" in full_group["time"].values:
                 middle_time = "08:00"
             elif "16:00" in full_group["time"].values:
@@ -97,17 +98,56 @@ class PreProcessing:
         df["rush_hour_period"] = df["time"].apply(self.rush_hour_period)
 
         # Group the dataframe by rush_hour_period and aggregate columns
-        grouped_df = df.groupby(
-            ["date", "rush_hour_period"], as_index=False
-        ).agg({                    
-            "current_travel_time": "mean",                
-            "weather_main": self.most_frequent_weather,
-            "temperature": "mean",
-            "feels_like": "mean",
-            "humidity_percent": "mean",
-            "visibility": "mean",
-            "wind_speed": "mean",
-            "cloudiness_percent": "mean"
-        })
+        grouped_df = df.apply(lambda g: pd.Series({
+            "current_travel_time": g["current_travel_time"].mean(),
+            "weather_main": self.most_frequent_weather(df, g["weather_main"]),
+            "temperature": g["temperature"].mean(),
+            "feels_like": g["feels_like"].mean(),
+            "humidity_percent": g["humidity_percent"].mean(),
+            "visibility": g["visibility"].mean(),
+            "wind_speed": g["wind_speed"].mean(),
+            "cloudiness_percent": g["cloudiness_percent"].mean()
+        })).reset_index()
 
         return grouped_df
+
+    # Function to include holidays in the dataframe
+    def include_holidays(self, df, manual_holidays):
+        # Create a new column where the date is converted to datetime
+        df['date_dt'] = pd.to_datetime(df['date'])
+        # Get all years that are present in the dataframe
+        years = df['date_dt'].dt.year.unique()
+
+        # Get all Danish holidays from the holidays library
+        dk_holidays = holidays.Denmark(years=years)
+
+        # Create set from public holidays
+        public_holiday_dates = set(dk_holidays.keys())
+
+        # Convert manual holidays into a set of dates
+        manual_holiday_dates = set()
+
+        # Get the date range for each holiday
+        for start_str, end_str in manual_holidays:
+            start = pd.to_datetime(start_str)
+            end = pd.to_datetime(end_str)
+            date_range = pd.date_range(start, end)
+            # Add each date in the date range to manual_holiday_dates
+            for date in date_range:
+                manual_holiday_dates.add(date.date())
+
+        # Combine both public and manual holidays into one set
+        all_holiday_dates = public_holiday_dates.union(manual_holiday_dates)
+
+        # Make sure date column is datetime
+        df['date'] = pd.to_datetime(df['date'])
+
+        # Create binary column: 1 if date is a holiday, 0 if not
+        df['is_holiday'] = df['date'].dt.date.isin(all_holiday_dates).astype(int)
+
+        # Drop date_dt column
+        df = df.drop("date_dt", axis = "columns")
+
+        return df
+    
+
