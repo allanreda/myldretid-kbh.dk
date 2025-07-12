@@ -1,24 +1,8 @@
 import os
 import holidays
-import datetime
 import pandas as pd
 from astral.sun import sun
 from astral import LocationInfo
-from statsmodels.stats.outliers_influence import variance_inflation_factor
-from statsmodels.tools.tools import add_constant
-from sklearn.model_selection import train_test_split, KFold, cross_val_score
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.svm import SVR
-import xgboost as xgb
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.ensemble import ExtraTreesRegressor
-from catboost import CatBoostRegressor
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-
 
 class PreProcessing:
     def __init__(self, bq_client, openweather_api_key):
@@ -205,7 +189,15 @@ class PreProcessing:
 
         return df
     
-    
+    def minor_transformations(self, df):
+        
+        # Convert all boolean columns to 1/0
+        df[df.select_dtypes(bool).columns] = df.select_dtypes(bool).astype(int)
+        # Drop all rows with missing values
+        df = df.dropna(axis=0)
+
+        return df
+
 
 
 

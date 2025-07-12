@@ -224,10 +224,6 @@ grouped_df["rolling_avg_7day"] = rolling_avg.values
 morning_df = grouped_df[grouped_df["rush_hour_period"] == "morning"].copy()
 afternoon_df = grouped_df[grouped_df["rush_hour_period"] == "afternoon"].copy()
 
-# Convert all boolean columns to 1/0
-morning_df[morning_df.select_dtypes(bool).columns] = morning_df.select_dtypes(bool).astype(int)
-afternoon_df[afternoon_df.select_dtypes(bool).columns] = afternoon_df.select_dtypes(bool).astype(int)
-
 # Extract morning travel times
 morning_travel_time = morning_df[['date', 'current_travel_time']].rename(
     columns={'current_travel_time': 'morning_travel_time'}
@@ -244,6 +240,10 @@ afternoon_df = pd.merge(
 # Drop rush_hour_period and date column for both dataframes
 morning_df = morning_df.drop(["rush_hour_period", "date"], axis = "columns")
 afternoon_df = afternoon_df.drop(["rush_hour_period", "date"], axis = "columns")
+
+# Convert all boolean columns to 1/0
+morning_df[morning_df.select_dtypes(bool).columns] = morning_df.select_dtypes(bool).astype(int)
+afternoon_df[afternoon_df.select_dtypes(bool).columns] = afternoon_df.select_dtypes(bool).astype(int)
 
 # Drop all rows with missing values
 morning_df = morning_df.dropna(axis=0)
@@ -329,7 +329,7 @@ afternoon_reduced = drop_with_vif(afternoon_reduced, "current_travel_time")
 
 ###################### MACHINE LEARNING #############################
 
-df = morning_reduced
+df = afternoon_reduced
 
 # X = features, y = target
 X = df.drop(columns=['current_travel_time'])
