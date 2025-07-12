@@ -113,10 +113,10 @@ class PreProcessing:
 
     # Function to include holidays in the dataframe
     def include_holidays(self, df, manual_holidays):
-        # Create a new column where the date is converted to datetime
-        df['date_dt'] = pd.to_datetime(df['date'])
+        # Convert date column to datetime 
+        df['date'] = pd.to_datetime(df['date'])
         # Get all years that are present in the dataframe
-        years = df['date_dt'].dt.year.unique()
+        years = df['date'].dt.year.unique()
 
         # Get all Danish holidays from the holidays library
         dk_holidays = holidays.Denmark(years=years)
@@ -139,15 +139,73 @@ class PreProcessing:
         # Combine both public and manual holidays into one set
         all_holiday_dates = public_holiday_dates.union(manual_holiday_dates)
 
-        # Make sure date column is datetime
-        df['date'] = pd.to_datetime(df['date'])
-
         # Create binary column: 1 if date is a holiday, 0 if not
         df['is_holiday'] = df['date'].dt.date.isin(all_holiday_dates).astype(int)
 
-        # Drop date_dt column
-        df = df.drop("date_dt", axis = "columns")
+        return df
+    
+    # Function to create dummy columns
+    def create_dummies(self, df, column, prefix):
+
+        # Create dummy variables for day names
+        dummies = pd.get_dummies(df[column], prefix=prefix, drop_first=True)
+        
+        # Concatenate dummy columns to dataframe
+        df = pd.concat([df, dummies], axis=1)
+        
+        # Drop column
+        df = df.drop(column, axis = "columns")
 
         return df
     
+
+    # Calculate sunrise and sunset for each date
+    def get_cph_sun_times(self, date):
+        # Define location
+        city = LocationInfo("Copenhagen", "Denmark", "Europe/Copenhagen")
+        
+        s = sun(city.observer, date=date, tzinfo=city.timezone)
+        return pd.Series({"sunrise": s["sunrise"].hour + s["sunrise"].minute/60,
+                        "sunset": s["sunset"].hour + s["sunset"].minute/60})
+
+
+    # Map sunrise and sunset for each date into dataframe
+    def map_sun_times(self, df):
+        
+        # Apply get_sun_times function to each row in dataframe
+        df[['sunrise', 'sunset']] = df['date'].apply(self.get_cph_sun_times)
+
+        return df
+    
+    # Function to calculate travel time lag by x amount of days
+    def calculate_travel_time_lag(self, df, lag, column_name):
+        
+        # Sort values based on date and rush_hour_period
+        df = df.sort_values(["rush_hour_period", "date"])
+
+        # Calculate lag and input in dataframe
+        df[column_name] = df.groupby("rush_hour_period")["current_travel_time"].shift(lag)
+
+        return df
+
+    # Function to calculate rolling average of travel time by x amount of time
+    def calculate_rolling_avg(self, df, window, column_name):
+        # Set multi-index with rush_hour_period and date
+        df_indexed = df.set_index(["rush_hour_period", "date"])
+        # Perform rolling within each rush hour group
+        rolling_avg = (
+            df_indexed.groupby(level=0)["current_travel_time"]
+            .rolling(window=window, min_periods=1)
+            .mean()
+            .reset_index(level=0, drop=True)  # Remove rush_hour_period from index after rolling
+        )
+
+        # Add the result as a new column
+        df[column_name] = rolling_avg.values
+
+        return df
+    
+    
+
+
 
