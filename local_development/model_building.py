@@ -46,12 +46,14 @@ ON
     weather.geo_name = traffic.geo_name 
     AND weather.time = traffic.time
     AND weather.date = traffic.date
+WHERE 
+    DATE(traffic.date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 YEAR)
 """
 
 # Run the query and fetch data from BigQuery
 query_job = bq_client.query(query)
 # Convert to DataFrame
-raw_df = query_job.to_dataframe()
+test1 = query_job.to_dataframe()
 
 ########################### DATA HANDLING ###########################
 
