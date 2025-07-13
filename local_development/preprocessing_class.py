@@ -91,6 +91,7 @@ class PreProcessing:
                 "cloudiness_percent": g["cloudiness_percent"].mean()
             })).reset_index()
 
+            logger.info("Preprocessing: Succesfully grouped data by rush hour")
             return grouped_df
         
         except Exception as e:
@@ -128,7 +129,8 @@ class PreProcessing:
 
             # Create binary column: 1 if date is a holiday, 0 if not
             df['is_holiday'] = df['date'].dt.date.isin(all_holiday_dates).astype(int)
-        
+            
+            logger.info("Preprocessing: Succesfully included holidays into dataframe.")
             return df
         
         except Exception as e:
@@ -147,11 +149,27 @@ class PreProcessing:
             
             # Drop column
             df = df.drop(column, axis = "columns")
-
+            
+            logger.info(f"Preprocessing: Succesfully created dummy-columns for column {column}.")
             return df
         
         except Exception as e:
             logger.error(f"Preprocessing: Error occured in creating dummies for column '{column}': {e}")
+            return None
+        
+    def create_dayname_dummies(self, df):
+        try:
+            # Convert date column to datetime 
+            df['date'] = pd.to_datetime(df['date'])
+            # Extract day name 
+            df['day_name'] = df['date'].dt.day_name()
+            # Create day name dummies
+            df = self.create_dummies(df, 'day_name', 'day')
+
+            return df
+        
+        except Exception as e:
+            logger.error(f"Preprocessing: Error occured in creating day name dummies: {e}")
             return None
 
     # Calculate sunrise and sunset for each date
@@ -166,49 +184,90 @@ class PreProcessing:
 
     # Map sunrise and sunset for each date into dataframe
     def map_sun_times(self, df):
-        
-        # Apply get_sun_times function to each row in dataframe
-        df[['sunrise', 'sunset']] = df['date'].apply(self.get_cph_sun_times)
+        try:
+            # Apply get_sun_times function to each row in dataframe
+            df[['sunrise', 'sunset']] = df['date'].apply(self.get_cph_sun_times)
 
-        return df
+            logger.info("Preprocessing: Succesfully mapped sun times into dataframe.")
+            return df
+        
+        except Exception as e:
+            logger.error(f"Preprocessing: Error occured in mapping sun times: {e}")
+            return None
     
     # Function to calculate travel time lag by x amount of days
     def calculate_travel_time_lag(self, df, lag, column_name):
+        try:
+            # Sort values based on date and rush_hour_period
+            df = df.sort_values(["rush_hour_period", "date"])
+
+            # Calculate lag and input in dataframe
+            df[column_name] = df.groupby("rush_hour_period")["current_travel_time"].shift(lag)
+
+            logger.info(f"Preprocessing: Succesfully calculated and mapped {lag} day lag.")
+            return df
         
-        # Sort values based on date and rush_hour_period
-        df = df.sort_values(["rush_hour_period", "date"])
-
-        # Calculate lag and input in dataframe
-        df[column_name] = df.groupby("rush_hour_period")["current_travel_time"].shift(lag)
-
-        return df
+        except Exception as e:
+            logger.error(f"Preprocessing: Error occured in calculating and mapping {lag} day lag: {e}")
+            return None
 
     # Function to calculate rolling average of travel time by x amount of time
     def calculate_rolling_avg(self, df, window, column_name):
-        # Set multi-index with rush_hour_period and date
-        df_indexed = df.set_index(["rush_hour_period", "date"])
-        # Perform rolling within each rush hour group
-        rolling_avg = (
-            df_indexed.groupby(level=0)["current_travel_time"]
-            .rolling(window=window, min_periods=1)
-            .mean()
-            .reset_index(level=0, drop=True)  # Remove rush_hour_period from index after rolling
-        )
+        try:
+            # Set multi-index with rush_hour_period and date
+            df_indexed = df.set_index(["rush_hour_period", "date"])
+            # Perform rolling within each rush hour group
+            rolling_avg = (
+                df_indexed.groupby(level=0)["current_travel_time"]
+                .rolling(window=window, min_periods=1)
+                .mean()
+                .reset_index(level=0, drop=True)  # Remove rush_hour_period from index after rolling
+            )
 
-        # Add the result as a new column
-        df[column_name] = rolling_avg.values
+            # Add the result as a new column
+            df[column_name] = rolling_avg.values
 
-        return df
-    
+            logger.info(f"Preprocessing: Succesfully calculated and mapped {window} day rolling average.")
+            return df
+
+        except Exception as e:
+            logger.error(f"Preprocessing: Error occured in calculating and mapping {window} day rolling average: {e}")
+            return None
+
+
     def minor_transformations(self, df):
+        try:
+            # Convert all boolean columns to 1/0
+            df[df.select_dtypes(bool).columns] = df.select_dtypes(bool).astype(int)
+            # Drop all rows with missing values
+            df = df.dropna(axis=0)
+
+            logger.info(f"Preprocessing: Succesfully performed minor data transformations.")
+            return df
         
-        # Convert all boolean columns to 1/0
-        df[df.select_dtypes(bool).columns] = df.select_dtypes(bool).astype(int)
-        # Drop all rows with missing values
-        df = df.dropna(axis=0)
+        except Exception as e:
+            logger.error(f"Preprocessing: Error occured in performing minor data transformations: {e}")
+            return None
 
-        return df
+    def training_preprocessing(self, raw_df, manual_holidays):
 
-    def training_preprocessing(self, )
+        df = self.group_by_rush_hour(raw_df)
+
+        df = self.include_holidays(df, manual_holidays)
+
+        df = self.create_dummies(df, 'weather_main', 'weather_main')
+
+        df = self.create_dayname_dummies(df)
+
+        df = self.map_sun_times(df)
+
+        df = self.calculate_travel_time_lag(df, 1, 'lag_1day')
+        df = self.calculate_travel_time_lag(df, 7, 'lag_7day')
+
+        df = self.calculate_rolling_avg(df, 7, 'rolling_avg_7day')
+
+
+
+
 
 

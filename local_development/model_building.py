@@ -53,7 +53,7 @@ WHERE
 # Run the query and fetch data from BigQuery
 query_job = bq_client.query(query)
 # Convert to DataFrame
-test1 = query_job.to_dataframe()
+raw_df = query_job.to_dataframe()
 
 ########################### DATA HANDLING ###########################
 
