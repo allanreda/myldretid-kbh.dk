@@ -75,7 +75,6 @@ class PreProcessing:
     
 
     def group_by_rush_hour(self, df):
-
         try:
             # Define rush our times
             rush_hours = ["07:00", "08:00", "09:00", "15:00", "16:00", "17:00"]
@@ -86,16 +85,18 @@ class PreProcessing:
             df["rush_hour_period"] = df["time"].apply(self.rush_hour_period)
 
             # Group the dataframe by rush_hour_period and aggregate columns
-            grouped_df = df.apply(lambda g: pd.Series({
-                "current_travel_time": g["current_travel_time"].mean(),
-                "weather_main": self.most_frequent_weather(df, g["weather_main"]),
-                "temperature": g["temperature"].mean(),
-                "feels_like": g["feels_like"].mean(),
-                "humidity_percent": g["humidity_percent"].mean(),
-                "visibility": g["visibility"].mean(),
-                "wind_speed": g["wind_speed"].mean(),
-                "cloudiness_percent": g["cloudiness_percent"].mean()
-            })).reset_index()
+            grouped_df = df.groupby(
+                ["date", "rush_hour_period"], as_index=False
+            ).agg({
+                "current_travel_time": "mean",
+                "weather_main": lambda x: self.most_frequent_weather(df, x),
+                "temperature": "mean",
+                "feels_like": "mean",
+                "humidity_percent": "mean",
+                "visibility": "mean",
+                "wind_speed": "mean",
+                "cloudiness_percent": "mean"
+            })
 
             logger.info("Preprocessing: Succesfully grouped data by rush hour")
             return grouped_df
