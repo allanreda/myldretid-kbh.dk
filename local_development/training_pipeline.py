@@ -2,6 +2,7 @@ import os
 from google.cloud import bigquery
 from pathlib import Path
 from local_development.preprocessing_class import PreProcessing
+from local_development.multicollinearity_reduction_class import MulticollinearityReducer
 
 # Initialize the BigQuery client
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
@@ -58,8 +59,14 @@ manual_holidays = [
 ]
 
 # Instantiate PreProcessing class
-PreProcessingClass = PreProcessing(bq_client, openweather_api_key)
+preprocesser = PreProcessing(bq_client, openweather_api_key)
+# Instantiate Reducer class
+reducer = MulticollinearityReducer(target_column = "current_travel_time")
 
-raw_df = PreProcessingClass.pull_historical_data(query)
-
-morning_df, afternoon_df = PreProcessingClass.training_preprocessing(raw_df, manual_holidays)
+# Pull historical data from bigquery
+raw_df = preprocesser.pull_historical_data(query)
+# Run the preprocessing pipeline for the historical data
+morning_df, afternoon_df = preprocesser.training_preprocessing(raw_df, manual_holidays)
+# Run the multicollinearity reduction pipeline on both dataframes
+morning_df = reducer.execute_reduction(morning_df)
+afternoon_df = reducer.execute_reduction(afternoon_df)
