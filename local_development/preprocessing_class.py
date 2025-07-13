@@ -12,8 +12,14 @@ logger = logging.getLogger(__name__)
 
 class PreProcessing:
     def __init__(self, bq_client, openweather_api_key):
-        self.bq_client
-        self.openweather_api_key
+        self.bq_client = bq_client
+        self.openweather_api_key = openweather_api_key
+    
+    # Function to validate each step of the pipeline
+    def validate_step(self, df, step_name):
+        if df is None:
+            raise ValueError(f"Step '{step_name}' failed and returned None.")
+        return df
     
     # Function to fetch historical weather and traffic data from BigQuery
     def pull_historical_data(self, sql_query):
@@ -248,26 +254,60 @@ class PreProcessing:
         except Exception as e:
             logger.error(f"Preprocessing: Error occured in performing minor data transformations: {e}")
             return None
+    
+    # Function to split dataframe into morning and afternoon dataframes
+    def split_data(self, df):
+        try:
+            # Split dataframe by the rush_hour_period column
+            morning_df = df[df["rush_hour_period"] == "morning"].copy()
+            afternoon_df = df[df["rush_hour_period"] == "afternoon"].copy()
 
+            # Extract morning travel times
+            morning_travel_time = morning_df[['date', 'current_travel_time']].rename(
+                columns={'current_travel_time': 'morning_travel_time'}
+            )
+
+            # Merge morning travel times with afternoon_df
+            afternoon_df = pd.merge(
+                afternoon_df,
+                morning_travel_time,
+                on='date',
+                how='left'
+            )
+
+            # Drop rush_hour_period and date column for both dataframes
+            morning_df = morning_df.drop(["rush_hour_period", "date"], axis = "columns")
+            afternoon_df = afternoon_df.drop(["rush_hour_period", "date"], axis = "columns")
+
+            logger.info("Preprocessing: Successfully split dataframe")
+            return morning_df, afternoon_df
+        
+        except Exception as e:
+            logger.error(f"Preprocessing: Error occured in splitting dataframe: {e}")
+            return None, None
+
+    # Wrapper function for training pipeline
     def training_preprocessing(self, raw_df, manual_holidays):
+        try:
+            df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
+            df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
+            df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
+            df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
+            df = self.validate_step(self.map_sun_times(df), "map_sun_times")
+            df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
+            df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
+            df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
 
-        df = self.group_by_rush_hour(raw_df)
+            morning_df, afternoon_df = self.split_data(df)
+            if morning_df is None or afternoon_df is None:
+                raise ValueError("split_data failed")
 
-        df = self.include_holidays(df, manual_holidays)
+            morning_df = self.validate_step(self.minor_transformations(morning_df), "minor_transformations_morning")
+            afternoon_df = self.validate_step(self.minor_transformations(afternoon_df), "minor_transformations_afternoon")
 
-        df = self.create_dummies(df, 'weather_main', 'weather_main')
+            logger.info("Preprocessing: Successfully completed full training pipeline.")
+            return morning_df, afternoon_df
 
-        df = self.create_dayname_dummies(df)
-
-        df = self.map_sun_times(df)
-
-        df = self.calculate_travel_time_lag(df, 1, 'lag_1day')
-        df = self.calculate_travel_time_lag(df, 7, 'lag_7day')
-
-        df = self.calculate_rolling_avg(df, 7, 'rolling_avg_7day')
-
-
-
-
-
-
+        except Exception as e:
+            logger.error(f"Preprocessing pipeline failed: {e}")
+            return None, None
