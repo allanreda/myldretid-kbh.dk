@@ -1,8 +1,10 @@
 import os
 from google.cloud import bigquery
 from pathlib import Path
+from sklearn.ensemble import ExtraTreesRegressor
 from local_development.preprocessing_class import PreProcessing
 from local_development.multicollinearity_reduction_class import MulticollinearityReducer
+from local_development.machine_learning_class import MachineLearning
 
 # Initialize the BigQuery client
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
@@ -62,11 +64,22 @@ manual_holidays = [
 preprocesser = PreProcessing(bq_client, openweather_api_key)
 # Instantiate Reducer class
 reducer = MulticollinearityReducer(target_column = "current_travel_time")
+# Instantiate MachineLearning class
+machinelearning = MachineLearning(model = ExtraTreesRegressor(), target_column = "current_travel_time")
 
 # Pull historical data from bigquery
 raw_df = preprocesser.pull_historical_data(query)
 # Run the preprocessing pipeline for the historical data
 morning_df, afternoon_df = preprocesser.training_preprocessing(raw_df, manual_holidays)
+
 # Run the multicollinearity reduction pipeline on both dataframes
 morning_df = reducer.execute_reduction(morning_df)
 afternoon_df = reducer.execute_reduction(afternoon_df)
+
+# Validate model performance on both dataframes
+morning_results = machinelearning.validate_model(morning_df, "morning_df")
+afternoon_results = machinelearning.validate_model(afternoon_df, "afternoon_df")
+# Train models on full data of both dataframes
+morning_model = machinelearning.train_model(morning_df, "morning_df")
+afternoon_model = machinelearning.train_model(afternoon_df, "afternoon_df")
+

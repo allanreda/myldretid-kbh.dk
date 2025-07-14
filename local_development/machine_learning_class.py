@@ -21,7 +21,7 @@ class MachineLearning:
             X = df.drop(columns=[self.target_column])
             y = df[self.target_column]
 
-            # Scale the features (optional but fine for Extra Trees)
+            # Scale the features 
             scaler = StandardScaler()
             X_scaled = scaler.fit_transform(X)
 
@@ -68,5 +68,27 @@ class MachineLearning:
                 "all_r2": r2_scores
             }
         except Exception as e:
-            logger.error(f"Error occured when validating model on {df_name}")
+            logger.error(f"Error occured when validating model on {df_name}: {e}")
+            return None
+        
+    # Function to train the model on the full dataset
+    def train_model(self, df, df_name):
+        try:
+            # X = features, y = target
+            X = df.drop(columns=[self.target_column])
+            y = df[self.target_column]
+
+            # Scale the features 
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(X)
+
+            # Initiate and fit model
+            model = self.model
+            model.fit(X_scaled, y)
+
+            logger.info(f"Sucessfully trained model on {df_name}")
+            return model
+        
+        except Exception as e:
+            logger.error(f"Error occured when training model on {df_name}: {e}")
             return None
