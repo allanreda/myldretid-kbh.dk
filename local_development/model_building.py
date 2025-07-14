@@ -501,6 +501,10 @@ X_scaled = scaler.fit_transform(X)
 extra_trees = ExtraTreesRegressor(random_state=42)
 extra_trees.fit(X_scaled, y)
 
+
+
+
+
 # Get feature importances
 feature_importances = pd.Series(extra_trees.feature_importances_, index=X.columns)
 
