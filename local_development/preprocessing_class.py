@@ -5,6 +5,8 @@ from astral.sun import sun
 from astral import LocationInfo
 import logging
 import sys
+import json
+import requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -41,7 +43,6 @@ class PreProcessing:
         except Exception as e:
             logger.error(f"Error occured when fetching historical data from BigQuery: {e}")
             return None
-    
 
     # Function to define morning and afternoon rush hours
     def rush_hour_period(self, time_column):
@@ -85,18 +86,35 @@ class PreProcessing:
             df["rush_hour_period"] = df["time"].apply(self.rush_hour_period)
 
             # Group the dataframe by rush_hour_period and aggregate columns
-            grouped_df = df.groupby(
-                ["date", "rush_hour_period"], as_index=False
-            ).agg({
-                "current_travel_time": "mean",
-                "weather_main": lambda x: self.most_frequent_weather(df, x),
-                "temperature": "mean",
-                "feels_like": "mean",
-                "humidity_percent": "mean",
-                "visibility": "mean",
-                "wind_speed": "mean",
-                "cloudiness_percent": "mean"
-            })
+            # grouped_df = df.groupby(
+            #     ["date", "rush_hour_period"], as_index=False
+            # ).agg({
+            #     "current_travel_time": "mean",
+            #     "weather_main": lambda x: self.most_frequent_weather(df, x),
+            #     "temperature": "mean",
+            #     "feels_like": "mean",
+            #     "humidity_percent": "mean",
+            #     "visibility": "mean",
+            #     "wind_speed": "mean",
+            #     "cloudiness_percent": "mean"
+            # })
+            
+            group_keys = ["date", "rush_hour_period"]
+            numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
+
+            # Build aggregation dict
+            agg_dict = {}
+
+            for col in df.columns:
+                if col in group_keys or col == "time":
+                    continue
+                elif col == "weather_main":
+                    agg_dict[col] = lambda x: self.most_frequent_weather(df, x)
+                elif col in numeric_cols:
+                    agg_dict[col] = "mean"
+
+            # Group and aggregate
+            grouped_df = df.groupby(group_keys, as_index=False).agg(agg_dict)
 
             logger.info("Preprocessing: Succesfully grouped data by rush hour")
             return grouped_df
@@ -298,6 +316,73 @@ class PreProcessing:
             df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
             df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
             df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
+
+            morning_df, afternoon_df = self.split_data(df)
+            if morning_df is None or afternoon_df is None:
+                raise ValueError("split_data failed")
+
+            morning_df = self.validate_step(self.minor_transformations(morning_df), "minor_transformations_morning")
+            afternoon_df = self.validate_step(self.minor_transformations(afternoon_df), "minor_transformations_afternoon")
+
+            logger.info("Preprocessing: Successfully completed full training pipeline.")
+            return morning_df, afternoon_df
+
+        except Exception as e:
+            logger.error(f"Preprocessing pipeline failed: {e}")
+            return None, None
+
+
+    def pull_weather_forecast(self):
+        try:
+            response = requests.get(f'https://api.openweathermap.org/data/2.5/forecast?q=Copenhagen,DK&appid={self.openweather_api_key}')
+
+            if response.status_code == 200:
+                # Transform json response
+                data = json.loads(response.content)
+                # Extract the forecast list
+                forecast_list = data['list']
+                # Normalize the nested structure
+                df = pd.json_normalize(forecast_list)
+
+                # Convert datetime column to datetime object and split
+                df['dt_txt'] = pd.to_datetime(df['dt_txt'])
+                df['date'] = df['dt_txt'].dt.date
+                df['time'] = df['dt_txt'].dt.strftime("%H:%M")
+                # Transform nested weather column
+                df['weather'] = [entry['weather'][0]['main'] for entry in forecast_list]
+                # Drop irrelevant columns
+                df = df.drop(['dt_txt','main.temp_kf','main.temp_min', 'main.temp_max', 'main.pressure',"dt","pop","wind.deg","main.grnd_level","main.sea_level","wind.gust","rain.3h","sys.pod"], axis="columns")
+
+                # Rename relevant columns for clarity
+                df = df.rename(columns={
+                    'weather': "weather_main", 
+                    'main.temp': "temperature", 
+                    'main.feels_like': "feels_like",
+                    'main.humidity': "humidity_percent", 
+                    'clouds.all': "cloudiness_percent", 
+                    'wind.speed': "wind_speed"
+                })
+
+                logger.info("Successfully fetched weather forecast data")
+                return df
+            else:
+                logger.error("Fetching weather forecast data failed")
+        
+        except Exception as e:
+            logger.error(f"Error occured when fetching and normalizing weather forecast: {e}")
+            return None
+
+    # Wrapper function for prediction pipeline
+    def prediction_preprocessing(self, raw_df, manual_holidays):
+        try:
+            df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
+            df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
+            df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
+            df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
+            df = self.validate_step(self.map_sun_times(df), "map_sun_times")
+            df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
+            df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
+            #df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
 
             morning_df, afternoon_df = self.split_data(df)
             if morning_df is None or afternoon_df is None:

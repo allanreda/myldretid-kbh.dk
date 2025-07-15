@@ -2,9 +2,13 @@ import os
 from google.cloud import bigquery
 from pathlib import Path
 from sklearn.ensemble import ExtraTreesRegressor
+import importlib # Remove in prod
+import local_development.preprocessing_class  # Remove in prod
+importlib.reload(local_development.preprocessing_class)  # Remove in prod
 from local_development.preprocessing_class import PreProcessing
 from local_development.multicollinearity_reduction_class import MulticollinearityReducer
 from local_development.machine_learning_class import MachineLearning
+import joblib
 
 # Initialize the BigQuery client
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
@@ -80,6 +84,18 @@ afternoon_df = reducer.execute_reduction(afternoon_df)
 morning_results = machinelearning.validate_model(morning_df, "morning_df")
 afternoon_results = machinelearning.validate_model(afternoon_df, "afternoon_df")
 # Train models on full data of both dataframes
-morning_model = machinelearning.train_model(morning_df, "morning_df")
-afternoon_model = machinelearning.train_model(afternoon_df, "afternoon_df")
+morning_model, morning_scaler, morning_columns = machinelearning.train_model(morning_df, "morning_df")
+afternoon_model, afternoon_scaler, afternoon_columns = machinelearning.train_model(afternoon_df, "afternoon_df")
 
+# Save model, scaler, and columns to joblib files
+joblib.dump({
+    "model": morning_model,
+    "scaler": morning_scaler,
+    "columns": morning_columns
+}, "morning_model.joblib")
+
+joblib.dump({
+    "model": afternoon_model,
+    "scaler": afternoon_scaler,
+    "columns": afternoon_columns
+}, "afternoon_model.joblib")

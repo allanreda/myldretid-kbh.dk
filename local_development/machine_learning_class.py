@@ -87,7 +87,7 @@ class MachineLearning:
             model.fit(X_scaled, y)
 
             logger.info(f"Sucessfully trained model on {df_name}")
-            return model
+            return model, scaler, X.columns.tolist() 
         
         except Exception as e:
             logger.error(f"Error occured when training model on {df_name}: {e}")
