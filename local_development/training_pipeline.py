@@ -9,6 +9,12 @@ from local_development.preprocessing_class import PreProcessing
 from local_development.multicollinearity_reduction_class import MulticollinearityReducer
 from local_development.machine_learning_class import MachineLearning
 import joblib
+import logging
+import sys
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Initialize the BigQuery client
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
@@ -17,10 +23,44 @@ bq_client = bigquery.Client()
 # Import OpenWeather API key
 openweather_api_key = Path("C:/Users/allan/Desktop/Personlige projekter/openweather_api_key.txt").read_text()
 
+def run_training_pipeline(raw_df, joblib_filename, preprocesser_pipeline):
+    try:
+        # Run the preprocessing pipeline for the historical data
+        morning_df, afternoon_df = preprocesser_pipeline(raw_df, manual_holidays)
+
+        # Run the multicollinearity reduction pipeline on both dataframes
+        morning_df = reducer.execute_reduction(morning_df)
+        afternoon_df = reducer.execute_reduction(afternoon_df)
+
+        # Validate model performance on both dataframes
+        morning_results = machinelearning.validate_model(morning_df, "morning_df")
+        afternoon_results = machinelearning.validate_model(afternoon_df, "afternoon_df")
+        # Train models on full data of both dataframes
+        morning_model, morning_scaler, morning_columns = machinelearning.train_model(morning_df, "morning_df")
+        afternoon_model, afternoon_scaler, afternoon_columns = machinelearning.train_model(afternoon_df, "afternoon_df")
+
+        # Save model, scaler, and columns to joblib file
+        joblib.dump({
+            "morning_model": morning_model,
+            "morning_scaler": morning_scaler,
+            "morning_results": morning_results,
+            "morning_columns": morning_columns,
+            "afternoon_model": afternoon_model,
+            "afternoon_scaler": afternoon_scaler,
+            "afternoon_results": afternoon_results,
+            "afternoon_columns": afternoon_columns
+        }, f"{joblib_filename}.joblib")
+
+    except Exception as e:
+        logger.error(f"Error occured in training pipeline for {joblib_filename}: {e}")
+
+
 # Define SQL query to fetch historical data from Bigquery
 query = """
 SELECT 
-      traffic.*,
+      traffic.current_travel_time,
+      traffic.date,
+      traffic.time,
       weather.weather_main,
       weather.temperature,
       weather.feels_like,
@@ -73,29 +113,12 @@ machinelearning = MachineLearning(model = ExtraTreesRegressor(), target_column =
 
 # Pull historical data from bigquery
 raw_df = preprocesser.pull_historical_data(query)
-# Run the preprocessing pipeline for the historical data
-morning_df, afternoon_df = preprocesser.training_preprocessing(raw_df, manual_holidays)
 
-# Run the multicollinearity reduction pipeline on both dataframes
-morning_df = reducer.execute_reduction(morning_df)
-afternoon_df = reducer.execute_reduction(afternoon_df)
 
-# Validate model performance on both dataframes
-morning_results = machinelearning.validate_model(morning_df, "morning_df")
-afternoon_results = machinelearning.validate_model(afternoon_df, "afternoon_df")
-# Train models on full data of both dataframes
-morning_model, morning_scaler, morning_columns = machinelearning.train_model(morning_df, "morning_df")
-afternoon_model, afternoon_scaler, afternoon_columns = machinelearning.train_model(afternoon_df, "afternoon_df")
+run_training_pipeline(raw_df, 
+                      '1_day_prediction_model', 
+                      preprocesser.execute_preprocessing_1_day)
 
-# Save model, scaler, and columns to joblib files
-joblib.dump({
-    "model": morning_model,
-    "scaler": morning_scaler,
-    "columns": morning_columns
-}, "morning_model.joblib")
-
-joblib.dump({
-    "model": afternoon_model,
-    "scaler": afternoon_scaler,
-    "columns": afternoon_columns
-}, "afternoon_model.joblib")
+run_training_pipeline(raw_df, 
+                      '2_day_prediction_model', 
+                      preprocesser.execute_preprocessing_2_day)

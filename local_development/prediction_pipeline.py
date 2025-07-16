@@ -6,6 +6,7 @@ from local_development.preprocessing_class import PreProcessing
 import os
 from google.cloud import bigquery
 from pathlib import Path
+import pandas as pd
 
 # Initialize the BigQuery client
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
@@ -16,9 +17,6 @@ openweather_api_key = Path("C:/Users/allan/Desktop/Personlige projekter/openweat
 
 # Instantiate PreProcessing class
 preprocesser = PreProcessing(bq_client, openweather_api_key)
-
-fetched_df = preprocesser.pull_weather_forecast()
-
 
 # Create manual holiday date ranges
 manual_holidays = [
@@ -44,8 +42,53 @@ manual_holidays = [
     ("2026-06-29", "2026-08-10")
 ]
 
-morning_df, afternoon_df = preprocesser.training_preprocessing(fetched_df, manual_holidays)
+# Define SQL query to fetch historical data from Bigquery
+query = """
+SELECT 
+      traffic.current_travel_time,
+      traffic.date,
+      traffic.time,
+      weather.weather_main,
+      weather.temperature,
+      weather.feels_like,
+      weather.humidity_percent,
+      weather.visibility,
+      weather.wind_speed,
+      weather.cloudiness_percent
+FROM 
+    `sylvan-mode-413619.copenhagen_data.weather_table` AS weather
+INNER JOIN 
+    `sylvan-mode-413619.copenhagen_data.traffic_table` AS traffic
+ON 
+    weather.geo_name = traffic.geo_name 
+    AND weather.time = traffic.time
+    AND weather.date = traffic.date
+WHERE 
+    DATE(traffic.date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 8 DAY)
+ORDER BY traffic.date, traffic.time DESC
 
+"""
+
+# Pull historical data from bigquery
+historical_df = preprocesser.pull_historical_data(query)
+
+forecast_df = preprocesser.pull_weather_forecast()
+
+# Reorder forecast_df columns to match historical_df (excluding the missing column)
+common_columns = [col for col in historical_df.columns if col in forecast_df.columns]
+# Add the missing column to forecast_df with NaN values
+if 'current_travel_time' not in forecast_df.columns:
+    forecast_df['current_travel_time'] = pd.NA
+# Reorder columns to match historical_df
+forecast_df = forecast_df[historical_df.columns]
+# Combine using pd.concat (acts like SQL UNION ALL)
+combined_df = pd.concat([historical_df, forecast_df], ignore_index=True)
+
+
+
+morning_df, afternoon_df = preprocesser.execute_preprocessing_1_day(combined_df, manual_holidays)
+
+morning_df, afternoon_df = preprocesser.execute_preprocessing_2_day(combined_df, manual_holidays)
 
 
 

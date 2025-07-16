@@ -18,6 +18,9 @@ class MulticollinearityReducer:
     # Function to check for mulitcollinearity and reduce where relevant
     def reduce_by_correlation(self, df):
         try:
+            # Drop all rows with missing values
+            df = df.dropna(axis=0)
+
             # Drop target column
             X_df = df.drop(columns=[self.target_column])
 
@@ -46,6 +49,8 @@ class MulticollinearityReducer:
     # Function to calculate VIF
     def calculate_vif(self, df):
         try:
+            # Drop all rows with missing values
+            df = df.dropna(axis=0)
             # Drop constant columns (columns with on 0's)
             df = df.loc[:, df.nunique() > 1]
             # Create empty dataframe for VIF

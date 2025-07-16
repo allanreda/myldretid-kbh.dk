@@ -36,7 +36,7 @@ class PreProcessing:
             raw_df = query_job.to_dataframe()
 
             # Ensure dataframe exists and actually contains data
-            if len(raw_df) > 10000:
+            if not raw_df.empty:
                 logger.info(f"Succesfully fetched {len(raw_df)} rows of historical data from BigQuery")
                 return raw_df
             
@@ -236,7 +236,7 @@ class PreProcessing:
             logger.error(f"Preprocessing: Error occured in calculating and mapping {lag} day lag: {e}")
             return None
 
-    # Function to calculate rolling average of travel time by x amount of time
+    # # Function to calculate rolling average of travel time by x amount of time
     def calculate_rolling_avg(self, df, window, column_name):
         try:
             # Set multi-index with rush_hour_period and date
@@ -260,19 +260,30 @@ class PreProcessing:
             return None
 
 
-    def minor_transformations(self, df):
+    def convert_booleans(self, df):
         try:
             # Convert all boolean columns to 1/0
             df[df.select_dtypes(bool).columns] = df.select_dtypes(bool).astype(int)
-            # Drop all rows with missing values
-            df = df.dropna(axis=0)
 
-            logger.info(f"Preprocessing: Succesfully performed minor data transformations.")
+            logger.info(f"Preprocessing: Succesfully converted boolean columns.")
             return df
         
         except Exception as e:
-            logger.error(f"Preprocessing: Error occured in performing minor data transformations: {e}")
+            logger.error(f"Preprocessing: Error occured when converting boolean columns: {e}")
             return None
+    
+    def drop_na_rows(self, df):
+        try:
+            # Drop all rows with missing values
+            df = df.dropna(axis=0)
+
+            logger.info(f"Preprocessing: Succesfully dropped all rows containing NaN values.")
+            return df
+        
+        except Exception as e:
+            logger.error(f"Preprocessing: Error occured in dropping all rows containing NaN values.: {e}")
+            return None
+    
     
     # Function to split dataframe into morning and afternoon dataframes
     def split_data(self, df):
@@ -304,34 +315,7 @@ class PreProcessing:
         except Exception as e:
             logger.error(f"Preprocessing: Error occured in splitting dataframe: {e}")
             return None, None
-
-    # Wrapper function for training pipeline
-    def training_preprocessing(self, raw_df, manual_holidays):
-        try:
-            df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
-            df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
-            df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
-            df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
-            df = self.validate_step(self.map_sun_times(df), "map_sun_times")
-            df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
-            df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
-            df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
-
-            morning_df, afternoon_df = self.split_data(df)
-            if morning_df is None or afternoon_df is None:
-                raise ValueError("split_data failed")
-
-            morning_df = self.validate_step(self.minor_transformations(morning_df), "minor_transformations_morning")
-            afternoon_df = self.validate_step(self.minor_transformations(afternoon_df), "minor_transformations_afternoon")
-
-            logger.info("Preprocessing: Successfully completed full training pipeline.")
-            return morning_df, afternoon_df
-
-        except Exception as e:
-            logger.error(f"Preprocessing pipeline failed: {e}")
-            return None, None
-
-
+        
     def pull_weather_forecast(self):
         try:
             response = requests.get(f'https://api.openweathermap.org/data/2.5/forecast?q=Copenhagen,DK&appid={self.openweather_api_key}')
@@ -372,8 +356,8 @@ class PreProcessing:
             logger.error(f"Error occured when fetching and normalizing weather forecast: {e}")
             return None
 
-    # Wrapper function for prediction pipeline
-    def prediction_preprocessing(self, raw_df, manual_holidays):
+    # Wrapper function for training pipeline
+    def execute_preprocessing(self, raw_df, manual_holidays):
         try:
             df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
             df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
@@ -382,14 +366,73 @@ class PreProcessing:
             df = self.validate_step(self.map_sun_times(df), "map_sun_times")
             df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
             df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
+            df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
+
+            morning_df, afternoon_df = self.split_data(df)
+            if morning_df is None or afternoon_df is None:
+                raise ValueError("split_data failed")
+
+            morning_df = self.validate_step(self.convert_booleans(morning_df), "convert_booleans")
+            afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
+            morning_df = self.validate_step(self.drop_na_rows(morning_df), "convert_booleans")
+            afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
+
+            logger.info("Preprocessing: Successfully completed full training pipeline.")
+            return morning_df, afternoon_df
+
+        except Exception as e:
+            logger.error(f"Preprocessing pipeline failed: {e}")
+            return None, None
+
+    # Wrapper function for training pipeline
+    # Can be used to train models to predict 1 day in the future
+    def execute_preprocessing_1_day(self, raw_df, manual_holidays):
+        try:
+            df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
+            df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
+            df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
+            df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
+            df = self.validate_step(self.map_sun_times(df), "map_sun_times")
+            df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
+            df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
+            df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
+            morning_df, afternoon_df = self.split_data(df)
+            if morning_df is None or afternoon_df is None:
+                raise ValueError("split_data failed")
+
+            morning_df = self.validate_step(self.convert_booleans(morning_df), "convert_booleans")
+            afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
+            #morning_df = self.validate_step(self.drop_na_rows(morning_df), "convert_booleans")
+            #afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
+
+            logger.info("Preprocessing: Successfully completed full training pipeline.")
+            return morning_df, afternoon_df
+
+        except Exception as e:
+            logger.error(f"Preprocessing pipeline failed: {e}")
+            return None, None
+
+    # Wrapper function for prediction pipeline
+    # Can be used to train models to predict 2 days and more in the future
+    def execute_preprocessing_2_day(self, raw_df, manual_holidays):
+        try:
+            df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
+            df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
+            df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
+            df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
+            df = self.validate_step(self.map_sun_times(df), "map_sun_times")
+            #df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
+            df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
             #df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
 
             morning_df, afternoon_df = self.split_data(df)
             if morning_df is None or afternoon_df is None:
                 raise ValueError("split_data failed")
 
-            morning_df = self.validate_step(self.minor_transformations(morning_df), "minor_transformations_morning")
-            afternoon_df = self.validate_step(self.minor_transformations(afternoon_df), "minor_transformations_afternoon")
+            morning_df = self.validate_step(self.convert_booleans(morning_df), "convert_booleans")
+            afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
+            #morning_df = self.validate_step(self.drop_na_rows(morning_df), "convert_booleans")
+            #afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
 
             logger.info("Preprocessing: Successfully completed full training pipeline.")
             return morning_df, afternoon_df
