@@ -85,8 +85,28 @@ forecast_df = forecast_df[historical_df.columns]
 combined_df = pd.concat([historical_df, forecast_df], ignore_index=True)
 
 
-
+# Dataframes to predict the next 1 day only (contains lag_1day and rolling_avg_7day)
 morning_df, afternoon_df = preprocesser.execute_preprocessing_1_day(combined_df, manual_holidays)
+
+next_morning = morning_df.iloc[[-5]]
+
+# Load joblib files from the training pipeline
+one_day_prediction_bundle = joblib.load("1_day_prediction_model.joblib")
+one_day_morning_model = one_day_prediction_bundle["morning_model"]
+one_day_morning_scaler = one_day_prediction_bundle["morning_scaler"]
+one_day_morning_expected_columns = one_day_prediction_bundle["morning_columns"]
+
+# Reindex to match the expected column order from training
+# Ensure all expected columns are present (adds missing columns with 0)
+next_morning_aligned = next_morning.reindex(columns=one_day_morning_expected_columns, fill_value=0)
+X_scaled = one_day_morning_scaler.transform(next_morning_aligned)
+prediction = one_day_morning_model.predict(X_scaled)
+
+
+print(next_morning_aligned.dtypes)
+
+
+
 
 morning_df, afternoon_df = preprocesser.execute_preprocessing_2_day(combined_df, manual_holidays)
 

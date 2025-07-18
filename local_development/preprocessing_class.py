@@ -347,6 +347,10 @@ class PreProcessing:
                     'wind.speed': "wind_speed"
                 })
 
+                # Convert Kelvin to Celcius
+                df['temperature'] = df['temperature'] - 273.15 
+                df['feels_like'] = df['feels_like'] - 273.15
+
                 logger.info("Successfully fetched weather forecast data")
                 return df
             else:

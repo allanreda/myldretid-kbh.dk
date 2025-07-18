@@ -77,10 +77,12 @@ class MachineLearning:
             # X = features, y = target
             X = df.drop(columns=[self.target_column])
             y = df[self.target_column]
-
+            logger.info(f"{X.shape[1]}")
+            logger.info(f"{X.columns.tolist()}")
             # Scale the features 
             scaler = StandardScaler()
             X_scaled = scaler.fit_transform(X)
+            logger.info(f"Number of columns after scaling: {X_scaled.shape[1]}")
 
             # Initiate and fit model
             model = self.model
