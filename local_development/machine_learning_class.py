@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.ensemble import ExtraTreesRegressor
 import logging
 import sys
 
@@ -10,8 +11,7 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s -
 logger = logging.getLogger(__name__)
 
 class MachineLearning:
-    def __init__(self, model, target_column):
-        self.model = model
+    def __init__(self, target_column):
         self.target_column = target_column
     
     def validate_model(self, df, df_name):
@@ -39,7 +39,7 @@ class MachineLearning:
                 y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
                 # Initiate and fit model
-                model = self.model
+                model = ExtraTreesRegressor()
                 model.fit(X_train, y_train)
                 # Predict on test data
                 y_pred = model.predict(X_test)
@@ -85,7 +85,7 @@ class MachineLearning:
             logger.info(f"Number of columns after scaling: {X_scaled.shape[1]}")
 
             # Initiate and fit model
-            model = self.model
+            model = ExtraTreesRegressor()
             model.fit(X_scaled, y)
 
             logger.info(f"Sucessfully trained model on {df_name}")

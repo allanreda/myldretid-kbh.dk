@@ -102,16 +102,26 @@ next_morning_aligned = next_morning.reindex(columns=one_day_morning_expected_col
 X_scaled = one_day_morning_scaler.transform(next_morning_aligned)
 prediction = one_day_morning_model.predict(X_scaled)
 
+#TODO Lav næste aften også (skal laves før kl 15)
 
-print(next_morning_aligned.dtypes)
-
-
-
-
+#______________________
+# Dataframes to predict the day after tomorrow and 3 days forwad
 morning_df, afternoon_df = preprocesser.execute_preprocessing_2_day(combined_df, manual_holidays)
 
 
+next_4_mornings = morning_df.iloc[-4:]
 
+# Load joblib files from the training pipeline
+two_day_prediction_bundle = joblib.load("2_day_prediction_model.joblib")
+two_day_morning_model = two_day_prediction_bundle["morning_model"]
+two_day_morning_scaler = two_day_prediction_bundle["morning_scaler"]
+two_day_morning_expected_columns = two_day_prediction_bundle["morning_columns"]
+
+# Reindex to match the expected column order from training
+# Ensure all expected columns are present (adds missing columns with 0)
+next_4_mornings_aligned = next_4_mornings.reindex(columns=two_day_morning_expected_columns, fill_value=0)
+X_scaled = two_day_morning_scaler.transform(next_4_mornings_aligned)
+prediction = two_day_morning_model.predict(X_scaled)
 
 
 

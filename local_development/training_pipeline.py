@@ -109,7 +109,7 @@ preprocesser = PreProcessing(bq_client, openweather_api_key)
 # Instantiate Reducer class
 reducer = MulticollinearityReducer(target_column = "current_travel_time")
 # Instantiate MachineLearning class
-machinelearning = MachineLearning(model = ExtraTreesRegressor(), target_column = "current_travel_time")
+machinelearning = MachineLearning(target_column = "current_travel_time")
 
 # Pull historical data from bigquery
 raw_df = preprocesser.pull_historical_data(query)
