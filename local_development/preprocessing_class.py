@@ -360,33 +360,33 @@ class PreProcessing:
             logger.error(f"Error occured when fetching and normalizing weather forecast: {e}")
             return None
 
-    # Wrapper function for training pipeline
-    def execute_preprocessing(self, raw_df, manual_holidays):
-        try:
-            df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
-            df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
-            df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
-            df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
-            df = self.validate_step(self.map_sun_times(df), "map_sun_times")
-            df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
-            df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
-            df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
+    # # Wrapper function for training pipeline
+    # def execute_preprocessing(self, raw_df, manual_holidays):
+    #     try:
+    #         df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
+    #         df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
+    #         df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
+    #         df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
+    #         df = self.validate_step(self.map_sun_times(df), "map_sun_times")
+    #         df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
+    #         df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
+    #         df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
 
-            morning_df, afternoon_df = self.split_data(df)
-            if morning_df is None or afternoon_df is None:
-                raise ValueError("split_data failed")
+    #         morning_df, afternoon_df = self.split_data(df)
+    #         if morning_df is None or afternoon_df is None:
+    #             raise ValueError("split_data failed")
 
-            morning_df = self.validate_step(self.convert_booleans(morning_df), "convert_booleans")
-            afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
-            morning_df = self.validate_step(self.drop_na_rows(morning_df), "convert_booleans")
-            afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
+    #         morning_df = self.validate_step(self.convert_booleans(morning_df), "convert_booleans")
+    #         afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
+    #         morning_df = self.validate_step(self.drop_na_rows(morning_df), "convert_booleans")
+    #         afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
 
-            logger.info("Preprocessing: Successfully completed full training pipeline.")
-            return morning_df, afternoon_df
+    #         logger.info("Preprocessing: Successfully completed full training pipeline.")
+    #         return morning_df, afternoon_df
 
-        except Exception as e:
-            logger.error(f"Preprocessing pipeline failed: {e}")
-            return None, None
+    #     except Exception as e:
+    #         logger.error(f"Preprocessing pipeline failed: {e}")
+    #         return None, None
 
     # Wrapper function for training pipeline
     # Can be used to train models to predict 1 day in the future

@@ -105,14 +105,15 @@ class MulticollinearityReducer:
             return None
     
     # Wrapper function to run the reduction pipeline
-    def execute_reduction(self, df):
+    def execute_reduction(self, df, df_name):
         try:
+            logger.info(f"Started multicollinearity reduction pipeline for {df_name}")
             df = self.reduce_by_correlation(df)
             df = self.reduce_by_vif(df)
 
-            logger.info("Multicollinearity Reduction: Successfully completed multicollinearity reduction pipeline.")
+            logger.info(f"Multicollinearity Reduction: Successfully completed multicollinearity reduction pipeline for {df_name}")
             return df
         
         except Exception as e:
-            logger.error(f"Multicollinearity reduction pipeline failed: {e}")
+            logger.error(f"Multicollinearity reduction pipeline for {df_name} failed: {e}")
             return None

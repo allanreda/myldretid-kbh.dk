@@ -74,16 +74,13 @@ class MachineLearning:
     # Function to train the model on the full dataset
     def train_model(self, df, df_name):
         try:
+            logger.info(f"Training model on {df_name}")
             # X = features, y = target
             X = df.drop(columns=[self.target_column])
             y = df[self.target_column]
-            logger.info(f"{X.shape[1]}")
-            logger.info(f"{X.columns.tolist()}")
             # Scale the features 
             scaler = StandardScaler()
             X_scaled = scaler.fit_transform(X)
-            logger.info(f"Number of columns after scaling: {X_scaled.shape[1]}")
-
             # Initiate and fit model
             model = ExtraTreesRegressor()
             model.fit(X_scaled, y)
