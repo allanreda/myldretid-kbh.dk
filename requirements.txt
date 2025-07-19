@@ -12,3 +12,4 @@ matplotlib
 lightgbm
 catboost
 astral
+plotly

@@ -1,21 +1,17 @@
 import os
 from google.cloud import bigquery
 from pathlib import Path
-from sklearn.ensemble import ExtraTreesRegressor
+import sys
 import importlib # Remove in prod
-import local_development.preprocessing_class  # Remove in prod
-importlib.reload(local_development.preprocessing_class)  # Remove in prod
+importlib.reload(sys.modules['local_development.preprocessing_class'])
+importlib.reload(sys.modules['local_development.multicollinearity_reduction_class'])
+importlib.reload(sys.modules['local_development.machine_learning_class'])
+importlib.reload(sys.modules['local_development.training_pipeline_class'])
+
 from local_development.preprocessing_class import PreProcessing
 from local_development.multicollinearity_reduction_class import MulticollinearityReducer
 from local_development.machine_learning_class import MachineLearning
 from local_development.training_pipeline_class import TrainingPipeline
-import joblib
-import logging
-import sys
-
-# Configure logging
-logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 # Initialize the BigQuery client
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'

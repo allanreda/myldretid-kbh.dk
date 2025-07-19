@@ -1,6 +1,7 @@
 import os
 import holidays
 import pandas as pd
+pd.options.mode.chained_assignment = None  # Turn off warning
 from astral.sun import sun
 from astral import LocationInfo
 import logging
@@ -410,7 +411,7 @@ class PreProcessing:
             #afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
 
             logger.info("Preprocessing: Successfully completed full training pipeline.")
-            return morning_df, afternoon_df
+            return morning_df, afternoon_df, morning_df['current_travel_time'].mean(), afternoon_df['current_travel_time'].mean()
 
         except Exception as e:
             logger.error(f"Preprocessing pipeline failed: {e}")
@@ -439,7 +440,7 @@ class PreProcessing:
             #afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
 
             logger.info("Preprocessing: Successfully completed full training pipeline.")
-            return morning_df, afternoon_df
+            return morning_df, afternoon_df, morning_df['current_travel_time'].mean(), afternoon_df['current_travel_time'].mean()
 
         except Exception as e:
             logger.error(f"Preprocessing pipeline failed: {e}")

@@ -18,7 +18,7 @@ class TrainingPipeline:
             current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             logger.info(f"Started training pipeline for {joblib_filename} on {current_datetime}.")
             # Run the preprocessing pipeline for the historical data
-            morning_df, afternoon_df = preprocesser_pipeline(historical_weather_data, manual_holidays)
+            morning_df, afternoon_df, avg_morning_traveltime, avg_afternoon_traveltime = preprocesser_pipeline(historical_weather_data, manual_holidays)
 
             # Run the multicollinearity reduction pipeline on both dataframes
             morning_df = self.reducer.execute_reduction(morning_df, 'morning_df')
@@ -37,10 +37,12 @@ class TrainingPipeline:
                 "morning_scaler": morning_scaler,
                 "morning_results": morning_results,
                 "morning_columns": morning_columns,
+                "avg_morning_traveltime": avg_morning_traveltime,
                 "afternoon_model": afternoon_model,
                 "afternoon_scaler": afternoon_scaler,
                 "afternoon_results": afternoon_results,
-                "afternoon_columns": afternoon_columns
+                "afternoon_columns": afternoon_columns,
+                "avg_afternoon_traveltime": avg_afternoon_traveltime
             }, f"{joblib_filename}.joblib")
 
             logger.info(f"Successfully completed training pipeline for {joblib_filename}.")
