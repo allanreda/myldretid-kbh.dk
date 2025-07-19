@@ -75,7 +75,7 @@ historical_df = preprocesser.pull_historical_data(query)
 forecast_df = preprocesser.pull_weather_forecast()
 
 # Reorder forecast_df columns to match historical_df (excluding the missing column)
-common_columns = [col for col in historical_df.columns if col in forecast_df.columns]
+#common_columns = [col for col in historical_df.columns if col in forecast_df.columns]
 # Add the missing column to forecast_df with NaN values
 if 'current_travel_time' not in forecast_df.columns:
     forecast_df['current_travel_time'] = pd.NA
@@ -175,47 +175,3 @@ next_4_afternoons_prediction = two_day_afternoon_model.predict(next_4_afternoons
 
 
 
-
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import plotly.io as pio
-pio.renderers.default = "browser"
-
-# Your data (converted to float for plotting)
-values = [-0.24, -1.72, -7.49, -6.08]
-
-# Create a subplot with 4 gauge charts side by side
-fig = make_subplots(
-    rows=1, cols=4,
-    specs=[[{'type': 'indicator'}]*4],
-    subplot_titles=["Day 1", "Day 2", "Day 3", "Day 4"]
-)
-
-# Create a gauge for each value
-for i, val in enumerate(values):
-    fig.add_trace(go.Indicator(
-        mode="gauge+number+delta",
-        value=val,
-        number={'suffix': '%'},
-        delta={'reference': 0, 'relative': False},
-        gauge={
-            'axis': {'range': [-20, 5], 'tickwidth': 1, 'tickcolor': "darkblue"},
-            'bar': {'color': "royalblue"},
-            'bgcolor': "white",
-            'borderwidth': 2,
-            'bordercolor': "gray",
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': 0
-            }
-        },
-        domain={'row': 0, 'column': i}
-    ), row=1, col=i+1)
-
-fig.update_layout(
-    title_text="Next 4 Mornings Compared to Avg Travel Time",
-    height=300
-)
-
-fig.show()
