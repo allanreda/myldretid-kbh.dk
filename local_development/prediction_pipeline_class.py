@@ -91,3 +91,21 @@ class TrainingPipeline:
         except Exception as e:
             logger.error(f"Error occured in prediction pipeline for next {rush_hour_period}: {e}")
             return None
+        
+    
+    def predict_next_4_rush_hour_periods(self, joblib_filename, rush_hour_period, X_values)
+        try:
+            logger.info(f"Started prediction pipeline for next {rush_hour_period}.")
+            # Load elements from joblib file
+            model, scaler, expected_columns, avg_traveltime = self.load_model_bundle(joblib_filename, rush_hour_period)
+            # Predict next rush hour period
+            prediction = self.predict(X_values, model, scaler, expected_columns, rush_hour_period)
+            # Calculate how many percent prediction differs from average
+            percentage_diff_list = self.calculate_percentage_diff_4_days(prediction, avg_traveltime)
+            
+            logger.info(f"Successfully finished prediction pipeline for next {rush_hour_period}.")
+            return percentage_diff_list
+        
+        except Exception as e:
+            logger.error(f"Error occured in prediction pipeline for next {rush_hour_period}: {e}")
+            return None
