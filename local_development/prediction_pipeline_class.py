@@ -7,9 +7,9 @@ import pandas as pd
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class TrainingPipeline:
-    def __init__(self, preprocesser_class):
-        self.preprocesser = preprocesser_class
+class PredictionPipeline:
+    def __init__(self):
+        pass
 
     def combine_historical_with_forecast(self, historical_df, forecast_df):
         try:
@@ -49,7 +49,7 @@ class TrainingPipeline:
             model = prediction_bundle[f"{rush_hour_period}_model"]
             scaler = prediction_bundle[f"{rush_hour_period}_scaler"]
             expected_columns = prediction_bundle[f"{rush_hour_period}_columns"]
-            avg_traveltime = prediction_bundle[f"{rush_hour_period}_traveltime"]
+            avg_traveltime = prediction_bundle[f"avg_{rush_hour_period}_traveltime"]
 
             logger.info(f"Successfully loaded file {joblib_filename}.joblib and relevant elements for {rush_hour_period} period")
             return model, scaler, expected_columns, avg_traveltime
@@ -75,7 +75,7 @@ class TrainingPipeline:
             logger.error(f"Error occured when predicting for next {rush_hour_period}: {e}")
             return None
         
-    def predict_next_rush_hour_period(self, joblib_filename, rush_hour_period, X_values)
+    def predict_next_rush_hour_period(self, joblib_filename, rush_hour_period, X_values):
         try:
             logger.info(f"Started prediction pipeline for next {rush_hour_period}.")
             # Load elements from joblib file
@@ -93,9 +93,9 @@ class TrainingPipeline:
             return None
         
     
-    def predict_next_4_rush_hour_periods(self, joblib_filename, rush_hour_period, X_values)
+    def predict_next_4_rush_hour_periods(self, joblib_filename, rush_hour_period, X_values):
         try:
-            logger.info(f"Started prediction pipeline for next {rush_hour_period}.")
+            logger.info(f"Started prediction pipeline for next 4 {rush_hour_period}.")
             # Load elements from joblib file
             model, scaler, expected_columns, avg_traveltime = self.load_model_bundle(joblib_filename, rush_hour_period)
             # Predict next rush hour period
@@ -103,9 +103,9 @@ class TrainingPipeline:
             # Calculate how many percent prediction differs from average
             percentage_diff_list = self.calculate_percentage_diff_4_days(prediction, avg_traveltime)
             
-            logger.info(f"Successfully finished prediction pipeline for next {rush_hour_period}.")
+            logger.info(f"Successfully finished prediction pipeline for next 4 {rush_hour_period}.")
             return percentage_diff_list
         
         except Exception as e:
-            logger.error(f"Error occured in prediction pipeline for next {rush_hour_period}: {e}")
+            logger.error(f"Error occured in prediction pipeline for next 4 {rush_hour_period}: {e}")
             return None

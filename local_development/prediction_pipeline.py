@@ -1,12 +1,14 @@
 import joblib
 import sys
-import importlib # Remove in prod
 import os
 from google.cloud import bigquery
 from pathlib import Path
 import pandas as pd
+import importlib # Remove in prod
 importlib.reload(sys.modules['local_development.preprocessing_class'])
+importlib.reload(sys.modules['local_development.prediction_pipeline_class'])
 from local_development.preprocessing_class import PreProcessing
+from local_development.prediction_pipeline_class import PredictionPipeline
 
 # Initialize the BigQuery client
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
@@ -17,6 +19,8 @@ openweather_api_key = Path("C:/Users/allan/Desktop/Personlige projekter/openweat
 
 # Instantiate PreProcessing class
 preprocesser = PreProcessing(bq_client, openweather_api_key)
+# Instantiate PredictionPipeline class
+predict = PredictionPipeline()
 
 # Create manual holiday date ranges
 manual_holidays = [
@@ -71,8 +75,28 @@ ORDER BY traffic.date, traffic.time DESC
 
 # Pull historical data from bigquery
 historical_df = preprocesser.pull_historical_data(query)
-
+# Pull weather forecast for next 5 days
 forecast_df = preprocesser.pull_weather_forecast()
+
+# Combine historical data with forecast data
+combined_df = predict.combine_historical_with_forecast(historical_df, forecast_df)
+
+# Dataframes to predict the next 1 day only (contains lag_1day and rolling_avg_7day)
+morning_df, afternoon_df, _, _ = preprocesser.execute_preprocessing_1_day(combined_df, manual_holidays)
+
+# Get next days values
+next_morning = morning_df.iloc[[-5]]
+next_afternoon = afternoon_df.iloc[[-5]]
+
+# Predict next mornings traveltime and compare to average traveltime
+next_morning_traffic = predict.predict_next_rush_hour_period('1_day_prediction_model', 'morning', next_morning)
+# Predict next afternoons traveltime and compare to average traveltime
+# Note: Should ideally be run before 15 but after 9 to get the morning_traveltime variable included.
+# Otherwise morning_traveltime will default to 0.
+next_afternoon_traffic = predict.predict_next_rush_hour_period('1_day_prediction_model', 'afternoon', next_afternoon)
+
+
+
 
 # Reorder forecast_df columns to match historical_df (excluding the missing column)
 #common_columns = [col for col in historical_df.columns if col in forecast_df.columns]
