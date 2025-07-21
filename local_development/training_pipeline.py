@@ -78,16 +78,16 @@ machinelearning = MachineLearning(target_column = "current_travel_time")
 # Instantiate TrainingPipeline class
 training = TrainingPipeline(reducer, preprocesser, machinelearning)
 
-# Pull historical data from bigquery
-historical_weather_data = preprocesser.pull_historical_data(query)
+# Pull historical traffic and weather data from bigquery
+historical_data = preprocesser.pull_historical_data(query)
 
 
-training.run_training_pipeline(historical_weather_data, 
+training.run_training_pipeline(historical_data, 
                                manual_holidays,
                                '1_day_prediction_model', 
                                 preprocesser.execute_preprocessing_1_day)
 
-training.run_training_pipeline(historical_weather_data, 
+training.run_training_pipeline(historical_data, 
                                manual_holidays,
                                 '2_day_prediction_model', 
                                 preprocesser.execute_preprocessing_2_day)

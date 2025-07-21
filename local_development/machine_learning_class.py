@@ -85,9 +85,19 @@ class MachineLearning:
             model = ExtraTreesRegressor()
             model.fit(X_scaled, y)
 
-            logger.info(f"Sucessfully trained model on {df_name}")
-            return model, scaler, X.columns.tolist() 
+            # Get and sort feature importances
+            importances = model.feature_importances_
+            feature_names = X.columns
+            sorted_importances = sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True)
+
+            logger.info(f"Feature importances for model trained on {df_name}:")
+            for feature, importance in sorted_importances:
+                logger.info(f"  {feature}: {importance:.4f}")
+
+            feature_importance = dict(sorted_importances)
+            
+            return model, scaler, X.columns.tolist(), feature_importance
         
         except Exception as e:
             logger.error(f"Error occured when training model on {df_name}: {e}")
-            return None
+            return None, None, None, None

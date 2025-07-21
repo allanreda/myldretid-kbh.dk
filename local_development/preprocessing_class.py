@@ -87,19 +87,6 @@ class PreProcessing:
             df["rush_hour_period"] = df["time"].apply(self.rush_hour_period)
 
             # Group the dataframe by rush_hour_period and aggregate columns
-            # grouped_df = df.groupby(
-            #     ["date", "rush_hour_period"], as_index=False
-            # ).agg({
-            #     "current_travel_time": "mean",
-            #     "weather_main": lambda x: self.most_frequent_weather(df, x),
-            #     "temperature": "mean",
-            #     "feels_like": "mean",
-            #     "humidity_percent": "mean",
-            #     "visibility": "mean",
-            #     "wind_speed": "mean",
-            #     "cloudiness_percent": "mean"
-            # })
-            
             group_keys = ["date", "rush_hour_period"]
             numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
 
@@ -237,7 +224,7 @@ class PreProcessing:
             logger.error(f"Preprocessing: Error occured in calculating and mapping {lag} day lag: {e}")
             return None
 
-    # # Function to calculate rolling average of travel time by x amount of time
+    # Function to calculate rolling average of travel time by x amount of time
     def calculate_rolling_avg(self, df, window, column_name):
         try:
             # Set multi-index with rush_hour_period and date
@@ -360,34 +347,24 @@ class PreProcessing:
         except Exception as e:
             logger.error(f"Error occured when fetching and normalizing weather forecast: {e}")
             return None
+    
+    # Function to remove outliers
+    def remove_outliers_5pct(self, df, column):
+        try:
+            # Define upper and lower bounds
+            lower_bound = df[column].quantile(0.05)
+            upper_bound = df[column].quantile(0.95)
 
-    # # Wrapper function for training pipeline
-    # def execute_preprocessing(self, raw_df, manual_holidays):
-    #     try:
-    #         df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
-    #         df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
-    #         df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
-    #         df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
-    #         df = self.validate_step(self.map_sun_times(df), "map_sun_times")
-    #         df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
-    #         df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
-    #         df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
+            # Filter the dataframe based on the defined bounds
+            filtered_df = df[(df[column] >= lower_bound) & (df[column] <= upper_bound)]
 
-    #         morning_df, afternoon_df = self.split_data(df)
-    #         if morning_df is None or afternoon_df is None:
-    #             raise ValueError("split_data failed")
+            logger.info(f"Preprocessing: Removed outliers from column '{column}' (kept middle 94%).")
+            return filtered_df
 
-    #         morning_df = self.validate_step(self.convert_booleans(morning_df), "convert_booleans")
-    #         afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
-    #         morning_df = self.validate_step(self.drop_na_rows(morning_df), "convert_booleans")
-    #         afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
+        except Exception as e:
+            logger.error(f"Preprocessing: Error occurred while removing outliers from column '{column}': {e}")
+            return None
 
-    #         logger.info("Preprocessing: Successfully completed full training pipeline.")
-    #         return morning_df, afternoon_df
-
-    #     except Exception as e:
-    #         logger.error(f"Preprocessing pipeline failed: {e}")
-    #         return None, None
 
     # Wrapper function for training pipeline
     # Can be used to train models to predict 1 day in the future
@@ -409,6 +386,10 @@ class PreProcessing:
             afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
             #morning_df = self.validate_step(self.drop_na_rows(morning_df), "convert_booleans")
             #afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
+
+            morning_df = self.validate_step(self.remove_outliers_5pct(morning_df, 'current_travel_time'), "remove_outliers_morning")
+            afternoon_df = self.validate_step(self.remove_outliers_5pct(afternoon_df, 'current_travel_time'), "remove_outliers_afternoon")
+
 
             logger.info("Preprocessing: Successfully completed full training pipeline.")
             return morning_df, afternoon_df, morning_df['current_travel_time'].mean(), afternoon_df['current_travel_time'].mean()
@@ -438,6 +419,9 @@ class PreProcessing:
             afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
             #morning_df = self.validate_step(self.drop_na_rows(morning_df), "convert_booleans")
             #afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
+
+            morning_df = self.validate_step(self.remove_outliers_5pct(morning_df, 'current_travel_time'), "remove_outliers_morning")
+            afternoon_df = self.validate_step(self.remove_outliers_5pct(afternoon_df, 'current_travel_time'), "remove_outliers_afternoon")
 
             logger.info("Preprocessing: Successfully completed full training pipeline.")
             return morning_df, afternoon_df, morning_df['current_travel_time'].mean(), afternoon_df['current_travel_time'].mean()

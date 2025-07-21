@@ -108,7 +108,7 @@ next_4_mornings = next_4_morning_df.iloc[-4:]
 next_4_afternoons = next_4_afternoon_df.iloc[-4:]
 
 # Predict next 4 days traveltime and compare to average traveltime
-next_morning_traffic = predict.predict_next_rush_hour_period('2_day_prediction_model', 'morning', next_4_mornings)
-next_afternoon_traffic = predict.predict_next_rush_hour_period('2_day_prediction_model', 'afternoon', next_4_afternoons)
+next_4_mornings_traffic = predict.predict_next_4_rush_hour_periods('2_day_prediction_model', 'morning', next_4_mornings)
+next_4_afternoons_traffic = predict.predict_next_4_rush_hour_periods('2_day_prediction_model', 'afternoon', next_4_afternoons)
 
 

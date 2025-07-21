@@ -28,8 +28,8 @@ class TrainingPipeline:
             morning_results = self.machinelearning.validate_model(morning_df, "morning_df")
             afternoon_results = self.machinelearning.validate_model(afternoon_df, "afternoon_df")
             # Train models on full data of both dataframes
-            morning_model, morning_scaler, morning_columns = self.machinelearning.train_model(morning_df, "morning_df")
-            afternoon_model, afternoon_scaler, afternoon_columns = self.machinelearning.train_model(afternoon_df, "afternoon_df")
+            morning_model, morning_scaler, morning_columns, morning_feature_importance  = self.machinelearning.train_model(morning_df, "morning_df")
+            afternoon_model, afternoon_scaler, afternoon_columns, afternoon_feature_importance  = self.machinelearning.train_model(afternoon_df, "afternoon_df")
 
             # Save model, scaler, and columns to joblib file
             joblib.dump({
@@ -38,11 +38,13 @@ class TrainingPipeline:
                 "morning_results": morning_results,
                 "morning_columns": morning_columns,
                 "avg_morning_traveltime": avg_morning_traveltime,
+                "morning_feature_importance": morning_feature_importance,
                 "afternoon_model": afternoon_model,
                 "afternoon_scaler": afternoon_scaler,
                 "afternoon_results": afternoon_results,
                 "afternoon_columns": afternoon_columns,
-                "avg_afternoon_traveltime": avg_afternoon_traveltime
+                "avg_afternoon_traveltime": avg_afternoon_traveltime,
+                "afternoon_feature_importance": afternoon_feature_importance
             }, f"{joblib_filename}.joblib")
 
             logger.info(f"Successfully completed training pipeline for {joblib_filename}.")
