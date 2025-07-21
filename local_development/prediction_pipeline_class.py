@@ -62,6 +62,7 @@ class PredictionPipeline:
     def predict(self, X_values, model, scaler, expected_columns, rush_hour_period):
         try:
             # Reindex to match the expected column order from training
+            # Also removes columns that are not existing in expected_columns
             X_aligned = X_values.reindex(columns=expected_columns, fill_value=0)
             
             # Scale X columns and predict

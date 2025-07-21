@@ -88,114 +88,27 @@ morning_df, afternoon_df, _, _ = preprocesser.execute_preprocessing_1_day(combin
 next_morning = morning_df.iloc[[-5]]
 next_afternoon = afternoon_df.iloc[[-5]]
 
+# Calculate avg morning travel time for next_afternoon.
+# This will make it possible to run the 1_day_prediction_model that has both lag_1_day and rolling_avg variables.
+# 1_day_prediction_model requires the morning_travel_time variable
+next_afternoon['morning_travel_time'] = morning_df['current_travel_time'].dropna().mean()
+
 # Predict next mornings traveltime and compare to average traveltime
 next_morning_traffic = predict.predict_next_rush_hour_period('1_day_prediction_model', 'morning', next_morning)
 # Predict next afternoons traveltime and compare to average traveltime
-# Note: Should ideally be run before 15 but after 9 to get the morning_traveltime variable included.
-# Otherwise morning_traveltime will default to 0.
+# Note: Should ideally be run before 15 but after 9 to get the correct morning_traveltime value included.
 next_afternoon_traffic = predict.predict_next_rush_hour_period('1_day_prediction_model', 'afternoon', next_afternoon)
 
 
-
-
-# Reorder forecast_df columns to match historical_df (excluding the missing column)
-#common_columns = [col for col in historical_df.columns if col in forecast_df.columns]
-# Add the missing column to forecast_df with NaN values
-if 'current_travel_time' not in forecast_df.columns:
-    forecast_df['current_travel_time'] = pd.NA
-# Reorder columns to match historical_df
-forecast_df = forecast_df[historical_df.columns]
-# Combine using pd.concat (acts like SQL UNION ALL)
-combined_df = pd.concat([historical_df, forecast_df], ignore_index=True)
-
-def calculate_percentage_diff(predicted, average):
-    percentage_diff = ((predicted - average) / average) * 100
-    return percentage_diff
-
-########## Next DAY ############
-# Dataframes to predict the next 1 day only (contains lag_1day and rolling_avg_7day)
-morning_df, afternoon_df, _, _ = preprocesser.execute_preprocessing_1_day(combined_df, manual_holidays)
-
-next_morning = morning_df.iloc[[-5]]
-
-# Load joblib files from the training pipeline
-one_day_prediction_bundle = joblib.load("1_day_prediction_model.joblib")
-one_day_morning_model = one_day_prediction_bundle["morning_model"]
-one_day_morning_scaler = one_day_prediction_bundle["morning_scaler"]
-one_day_morning_expected_columns = one_day_prediction_bundle["morning_columns"]
-avg_morning_traveltime = one_day_prediction_bundle["avg_morning_traveltime"]
-
-# Reindex to match the expected column order from training
-# Ensure all expected columns are present (adds missing columns with 0)
-next_morning_aligned = next_morning.reindex(columns=one_day_morning_expected_columns, fill_value=0)
-next_morning_X_scaled = one_day_morning_scaler.transform(next_morning_aligned)
-next_morning_prediction = one_day_morning_model.predict(next_morning_X_scaled)
-
-next_morning_compared_to_avg = calculate_percentage_diff(next_morning_prediction, avg_morning_traveltime)
-
-
-#TODO Lav næste aften også (skal laves før kl 15)
-next_afternoon = afternoon_df.iloc[[-5]]
-
-# Load joblib files from the training pipeline
-one_day_prediction_bundle = joblib.load("1_day_prediction_model.joblib")
-one_day_afternoon_model = one_day_prediction_bundle["afternoon_model"]
-one_day_afternoon_scaler = one_day_prediction_bundle["afternoon_scaler"]
-one_day_afternoon_expected_columns = one_day_prediction_bundle["afternoon_columns"]
-avg_afternoon_traveltime = one_day_prediction_bundle["avg_afternoon_traveltime"]
-
-# Reindex to match the expected column order from training
-# Ensure all expected columns are present (adds missing columns with 0)
-next_afternoon_aligned = next_afternoon.reindex(columns=one_day_afternoon_expected_columns, fill_value=0)
-next_afternoon_X_scaled = one_day_afternoon_scaler.transform(next_afternoon_aligned)
-next_afternoon_prediction = one_day_afternoon_model.predict(next_afternoon_X_scaled)
-
-next_afternoon_compared_to_avg = calculate_percentage_diff(next_afternoon_prediction, avg_afternoon_traveltime)
-
-
-#______________________
 # Dataframes to predict the day after tomorrow and 3 days forwad
-two_day_morning_df, two_day_afternoon_df, _, _ = preprocesser.execute_preprocessing_2_day(combined_df, manual_holidays)
+next_4_morning_df, next_4_afternoon_df, _, _ = preprocesser.execute_preprocessing_2_day(combined_df, manual_holidays)
 
+# Get values for the next 4 days
+next_4_mornings = next_4_morning_df.iloc[-4:]
+next_4_afternoons = next_4_afternoon_df.iloc[-4:]
 
-next_4_mornings = two_day_morning_df.iloc[-4:]
-
-# Load joblib files from the training pipeline
-two_day_prediction_bundle = joblib.load("2_day_prediction_model.joblib")
-two_day_morning_model = two_day_prediction_bundle["morning_model"]
-two_day_morning_scaler = two_day_prediction_bundle["morning_scaler"]
-two_day_morning_expected_columns = two_day_prediction_bundle["morning_columns"]
-avg_morning_traveltime = two_day_prediction_bundle["avg_morning_traveltime"]
-
-
-# Reindex to match the expected column order from training
-# Ensure all expected columns are present (adds missing columns with 0)
-next_4_mornings_aligned = next_4_mornings.reindex(columns=two_day_morning_expected_columns, fill_value=0)
-next_4_mornings_X_scaled = two_day_morning_scaler.transform(next_4_mornings_aligned)
-next_4_mornings_prediction = two_day_morning_model.predict(next_4_mornings_X_scaled)
-
-next_4_mornings_compared_to_avg = []
-for prediction in next_4_mornings_prediction:
-    pred = calculate_percentage_diff(prediction, avg_morning_traveltime)
-    next_4_mornings_compared_to_avg.append(pred)
-
-
-#TODO Lav næste 4 aftener også (skal laves før kl 15)
-next_4_afternoons= two_day_afternoon_df.iloc[-4:]
-
-# Load joblib files from the training pipeline
-two_day_prediction_bundle = joblib.load("2_day_prediction_model.joblib")
-two_day_afternoon_model = two_day_prediction_bundle["afternoon_model"]
-two_day_afternoon_scaler = two_day_prediction_bundle["afternoon_scaler"]
-two_day_afternoon_expected_columns = two_day_prediction_bundle["afternoon_columns"]
-
-# Reindex to match the expected column order from training
-# Ensure all expected columns are present (adds missing columns with 0)
-next_4_afternoons_aligned = next_4_mornings.reindex(columns=two_day_afternoon_expected_columns, fill_value=0)
-next_4_afternoons_X_scaled = two_day_afternoon_scaler.transform(next_4_afternoons_aligned)
-next_4_afternoons_prediction = two_day_afternoon_model.predict(next_4_afternoons_X_scaled)
-
-
-
+# Predict next 4 days traveltime and compare to average traveltime
+next_morning_traffic = predict.predict_next_rush_hour_period('2_day_prediction_model', 'morning', next_4_mornings)
+next_afternoon_traffic = predict.predict_next_rush_hour_period('2_day_prediction_model', 'afternoon', next_4_afternoons)
 
 
