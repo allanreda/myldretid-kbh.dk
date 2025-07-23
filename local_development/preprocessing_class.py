@@ -140,9 +140,12 @@ class PreProcessing:
             # Combine both public and manual holidays into one set
             all_holiday_dates = public_holiday_dates.union(manual_holiday_dates)
 
+            # Mark weekends as holidays too
+            is_weekend = df['date'].dt.weekday >= 5  # 5 = Saturday, 6 = Sunday
+            is_holiday = df['date'].dt.date.isin(all_holiday_dates)
             # Create binary column: 1 if date is a holiday, 0 if not
-            df['is_holiday'] = df['date'].dt.date.isin(all_holiday_dates).astype(int)
-            
+            df['is_holiday'] = ((is_holiday) | (is_weekend)).astype(int)
+
             logger.info("Preprocessing: Succesfully included holidays into dataframe.")
             return df
         
@@ -351,19 +354,26 @@ class PreProcessing:
     # Function to remove outliers
     def remove_outliers_5pct(self, df, column):
         try:
-            # Define upper and lower bounds
-            lower_bound = df[column].quantile(0.05)
-            upper_bound = df[column].quantile(0.95)
+            # Identify rows that are NOT NaN in the column
+            non_na = df[column].notna()
+            
+            # Compute bounds using only non-NaN values
+            lower_bound = df.loc[non_na, column].quantile(0.05)
+            upper_bound = df.loc[non_na, column].quantile(0.95)
+            
+            # Keep NaNs, and keep non-NaNs within bounds
+            mask = non_na & df[column].between(lower_bound, upper_bound)
+            mask |= df[column].isna()  # Keep NaNs
+            
+            filtered_df = df[mask]
 
-            # Filter the dataframe based on the defined bounds
-            filtered_df = df[(df[column] >= lower_bound) & (df[column] <= upper_bound)]
-
-            logger.info(f"Preprocessing: Removed outliers from column '{column}' (kept middle 94%).")
+            logger.info(f"Preprocessing: Removed outliers from '{column}' (kept NaNs and middle 90% of values).")
             return filtered_df
 
         except Exception as e:
-            logger.error(f"Preprocessing: Error occurred while removing outliers from column '{column}': {e}")
+            logger.error(f"Error while removing outliers from '{column}': {e}")
             return None
+
 
 
     # Wrapper function for training pipeline
