@@ -2,6 +2,7 @@ import joblib
 import logging
 import sys
 import pandas as pd
+from datetime import date, datetime, timedelta
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -110,3 +111,29 @@ class PredictionPipeline:
         except Exception as e:
             logger.error(f"Error occured in prediction pipeline for next 4 {rush_hour_period}: {e}")
             return None
+        
+    def define_dates(self, all_morning_predictions, all_afternoon_predictions):
+        try:
+            # Get todays date + 4 next dates
+            today = date.today()
+            dates = [today + timedelta(days=i) for i in range(5)]
+
+            # If the time is between 9 and 15, then add 1 day to the dates for the morning predictions only
+            if datetime.now().hour >= 9 and datetime.now().hour < 15:
+                morning_prediction_dict = dict(zip([d + timedelta(days=1) for d in dates], all_morning_predictions))
+                afternoon_prediction_dict = dict(zip(dates, all_afternoon_predictions))
+            # If the time is above 15, then add 1 day to the dates of both the morning and afternoon predictions
+            elif datetime.now().hour >=15:
+                morning_prediction_dict = dict(zip([d + timedelta(days=1) for d in dates], all_morning_predictions))
+                afternoon_prediction_dict = dict(zip([d + timedelta(days=1) for d in dates], all_afternoon_predictions))
+            else:
+                morning_prediction_dict = dict(zip(dates, all_morning_predictions))
+                afternoon_prediction_dict = dict(zip(dates, all_afternoon_predictions))
+
+            logger.info("Succesfully defined and mapped dates to predictions.")
+            return morning_prediction_dict, afternoon_prediction_dict
+        
+        except Exception as e:
+            logger.error(f"Error occured in defining and mapping dates to predictions: {e}")
+            return None, None
+        
