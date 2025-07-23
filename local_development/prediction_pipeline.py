@@ -117,7 +117,7 @@ next_4_afternoons = next_4_afternoon_df.iloc[-4:]
 next_4_mornings_traffic = predict.predict_next_4_rush_hour_periods('2_day_prediction_model', 'morning', next_4_mornings)
 next_4_afternoons_traffic = predict.predict_next_4_rush_hour_periods('2_day_prediction_model', 'afternoon', next_4_afternoons)
 
-
+# Concatenate all dates
 all_morning_predictions = np.concatenate([next_morning_traffic, next_4_mornings_traffic])
 all_afternoon_predictions = np.concatenate([next_afternoon_traffic, next_4_afternoons_traffic])
 
@@ -138,11 +138,8 @@ else:
     afternoon_prediction_dict = dict(zip(dates, all_afternoon_predictions))
 
 
-
-
-
 def plot_gauges(morning_prediction_dict, afternoon_prediction_dict):
-
+    # Define weekday and month translations from English to Danish
     weekdays = {
         "Monday": "Mandag", "Tuesday": "Tirsdag", "Wednesday": "Onsdag",
         "Thursday": "Torsdag", "Friday": "Fredag", "Saturday": "Lørdag", "Sunday": "Søndag"
@@ -153,6 +150,7 @@ def plot_gauges(morning_prediction_dict, afternoon_prediction_dict):
         "September": "September", "October": "Oktober", "November": "November", "December": "December"
     }
 
+    # Convert a date to a Danish-formatted string
     def to_danish_date(d):
         english = d.strftime("%A, %d. %B %Y")
         for en, dk in weekdays.items():
@@ -161,11 +159,13 @@ def plot_gauges(morning_prediction_dict, afternoon_prediction_dict):
             english = english.replace(en, dk)
         return english
 
+    # Create a label for the gauge including icon and Danish date
     def format_label(d, period):
         icon = "🌅" if period == "morning" else "🌇"
         label = "Morgen" if period == "morning" else "Eftermiddag"
         return f"{icon} {to_danish_date(d)} {label}"
 
+    # Choose color based on how much faster/slower traffic is
     def get_color_gradient(val):
         if val < -15:
             return "#05f545"  
@@ -183,7 +183,7 @@ def plot_gauges(morning_prediction_dict, afternoon_prediction_dict):
             return "#f70525" 
 
 
-
+    # Generate a text description based on the value
     def get_description(val):
         if val < -15:
             return "🚀 Meget hurtigere end normalt"
@@ -217,11 +217,11 @@ def plot_gauges(morning_prediction_dict, afternoon_prediction_dict):
     # Combine all for plotting
     all_predictions = first_two + remaining_mornings + remaining_afternoons
 
-    # Extract values and labels
+    # Extract values and labels for the plot
     values = [v for _, _, v in all_predictions]
     labels = [format_label(d, p) for d, p, _ in all_predictions]
 
-    # Build figure layout
+    # Layout: 2 gauges on top row, 4 per row below
     specs = [
         [None, {"type": "indicator"}, {"type": "indicator"}, None],
         [{"type": "indicator"} for _ in range(4)],
@@ -230,6 +230,7 @@ def plot_gauges(morning_prediction_dict, afternoon_prediction_dict):
 
     fig = make_subplots(rows=3, cols=4, specs=specs, subplot_titles=[""] * 10)
 
+    # Place each gauge in its correct subplot cell
     for i, (val, label) in enumerate(zip(values, labels)):
         if i == 0:
             row, col = 1, 2
@@ -261,8 +262,7 @@ def plot_gauges(morning_prediction_dict, afternoon_prediction_dict):
             }
         ), row=row, col=col)
 
-    today_str = to_danish_date(date.today())
-
+    # Define layout
     fig.update_layout(
         height=320 * 3,
         margin=dict(t=140, l=40, r=40, b=40),
@@ -277,10 +277,7 @@ plot_gauges(morning_prediction_dict, afternoon_prediction_dict)
 
 
 def plot_gauges_mobile(morning_prediction_dict, afternoon_prediction_dict):
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-    from datetime import date, datetime, timedelta
-
+    # Define weekday and month translations from English to Danish
     weekdays = {
         "Monday": "Mandag", "Tuesday": "Tirsdag", "Wednesday": "Onsdag",
         "Thursday": "Torsdag", "Friday": "Fredag", "Saturday": "Lørdag", "Sunday": "Søndag"
@@ -291,6 +288,7 @@ def plot_gauges_mobile(morning_prediction_dict, afternoon_prediction_dict):
         "September": "September", "October": "Oktober", "November": "November", "December": "December"
     }
 
+    # Convert a date to a Danish-formatted string
     def to_danish_date(d):
         english = d.strftime("%A, %d. %B %Y")
         for en, dk in weekdays.items():
@@ -299,27 +297,31 @@ def plot_gauges_mobile(morning_prediction_dict, afternoon_prediction_dict):
             english = english.replace(en, dk)
         return english
 
+    # Create a label for the gauge including icon and Danish date
     def format_label(d, period):
         icon = "🌅" if period == "morning" else "🌇"
         label = "Morgen" if period == "morning" else "Eftermiddag"
         return f"{icon} {to_danish_date(d)} {label}"
 
+    # Choose color based on how much faster/slower traffic is
     def get_color_gradient(val):
         if val < -15:
-            return "#05f545"
+            return "#05f545"  
         elif val < -10:
-            return "#1abc9c"
+            return "#1abc9c"  
         elif val < -5:
-            return "#37c477"
+            return "#37c477"  
         elif val < 5:
-            return "#f4f4f4"
+            return "#f4f4f4"  
         elif val < 10:
-            return "#f39c12"
+            return "#f39c12"  
         elif val < 15:
-            return "#e67e22"
+            return "#e67e22" 
         else:
-            return "#f70525"
+            return "#f70525" 
 
+
+    # Generate a text description based on the value
     def get_description(val):
         if val < -15:
             return "🚀 Meget hurtigere end normalt"
@@ -336,23 +338,27 @@ def plot_gauges_mobile(morning_prediction_dict, afternoon_prediction_dict):
         else:
             return "🪦 Meget langsommere end normalt"
 
+    # Combine all into one list with (date, period, value)
     combined = [(d, "morning", v) for d, v in morning_prediction_dict.items()] + \
                [(d, "afternoon", v) for d, v in afternoon_prediction_dict.items()]
+
+    # Sort by date first
     combined_sorted = sorted(combined, key=lambda x: (x[0], 0 if x[1] == "morning" else 1))
 
-    first_two = combined_sorted[:2]
-    remaining_mornings = [x for x in combined_sorted if x[1] == "morning" and x not in first_two][:4]
-    remaining_afternoons = [x for x in combined_sorted if x[1] == "afternoon" and x not in first_two][:4]
+    # Take all 10 sorted predictions chronologically
+    all_predictions = combined_sorted[:10]
 
-    all_predictions = first_two + remaining_mornings + remaining_afternoons
+    # Extract values and formatted labels
     values = [v for _, _, v in all_predictions]
     labels = [format_label(d, p) for d, p, _ in all_predictions]
 
+    # Determine number of rows (2 gauges per row)
     rows = (len(values) + 1) // 2
     specs = [[{"type": "indicator"}, {"type": "indicator"}] for _ in range(rows)]
 
     fig = make_subplots(rows=rows, cols=2, specs=specs, subplot_titles=[""] * len(values))
 
+    # Add each gauge
     for i, (val, label) in enumerate(zip(values, labels)):
         row = i // 2 + 1
         col = i % 2 + 1
@@ -378,8 +384,7 @@ def plot_gauges_mobile(morning_prediction_dict, afternoon_prediction_dict):
             }
         ), row=row, col=col)
 
-    today_str = to_danish_date(date.today())
-
+    # Define layout
     fig.update_layout(
         height=350 * rows,
         margin=dict(t=140, l=30, r=30, b=40),

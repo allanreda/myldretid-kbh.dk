@@ -263,19 +263,6 @@ class PreProcessing:
             logger.error(f"Preprocessing: Error occured when converting boolean columns: {e}")
             return None
     
-    def drop_na_rows(self, df):
-        try:
-            # Drop all rows with missing values
-            df = df.dropna(axis=0)
-
-            logger.info(f"Preprocessing: Succesfully dropped all rows containing NaN values.")
-            return df
-        
-        except Exception as e:
-            logger.error(f"Preprocessing: Error occured in dropping all rows containing NaN values.: {e}")
-            return None
-    
-    
     # Function to split dataframe into morning and afternoon dataframes
     def split_data(self, df):
         try:
@@ -394,8 +381,6 @@ class PreProcessing:
 
             morning_df = self.validate_step(self.convert_booleans(morning_df), "convert_booleans")
             afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
-            #morning_df = self.validate_step(self.drop_na_rows(morning_df), "convert_booleans")
-            #afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
 
             morning_df = self.validate_step(self.remove_outliers_5pct(morning_df, 'current_travel_time'), "remove_outliers_morning")
             afternoon_df = self.validate_step(self.remove_outliers_5pct(afternoon_df, 'current_travel_time'), "remove_outliers_afternoon")
@@ -427,8 +412,6 @@ class PreProcessing:
 
             morning_df = self.validate_step(self.convert_booleans(morning_df), "convert_booleans")
             afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
-            #morning_df = self.validate_step(self.drop_na_rows(morning_df), "convert_booleans")
-            #afternoon_df = self.validate_step(self.drop_na_rows(afternoon_df), "convert_booleans")
 
             morning_df = self.validate_step(self.remove_outliers_5pct(morning_df, 'current_travel_time'), "remove_outliers_morning")
             afternoon_df = self.validate_step(self.remove_outliers_5pct(afternoon_df, 'current_travel_time'), "remove_outliers_afternoon")
