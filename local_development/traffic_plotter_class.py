@@ -69,7 +69,11 @@ class TrafficGaugePlotter:
         combined = [(d, "morning", v) for d, v in morning_prediction_dict.items()] + \
                    [(d, "afternoon", v) for d, v in afternoon_prediction_dict.items()]
         combined_sorted = sorted(combined, key=lambda x: (x[0], 0 if x[1] == "morning" else 1))
-        all_predictions = combined_sorted[:10]
+        first_two = combined_sorted[:2]
+        remaining_mornings = [x for x in combined_sorted if x[1] == "morning" and x not in first_two][:4]
+        remaining_afternoons = [x for x in combined_sorted if x[1] == "afternoon" and x not in first_two][:4]
+        all_predictions = first_two + remaining_mornings + remaining_afternoons
+
         values = [v for _, _, v in all_predictions]
         labels = [self.format_label(d, p) for d, p, _ in all_predictions]
 

@@ -1,6 +1,6 @@
-spyder-kernels==2.5.*
 google-cloud-bigquery
 google-cloud-bigquery-storage
+google-cloud-storage
 pandas
 db_dtypes
 holidays

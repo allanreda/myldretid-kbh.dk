@@ -1,5 +1,5 @@
 import os
-from google.cloud import bigquery
+from google.cloud import bigquery, storage
 from pathlib import Path
 import sys
 import importlib # Remove in prod
@@ -7,15 +7,19 @@ importlib.reload(sys.modules['local_development.preprocessing_class'])
 importlib.reload(sys.modules['local_development.multicollinearity_reduction_class'])
 importlib.reload(sys.modules['local_development.machine_learning_class'])
 importlib.reload(sys.modules['local_development.training_pipeline_class'])
+importlib.reload(sys.modules['local_development.cloud_utils_class'])
 
 from local_development.preprocessing_class import PreProcessing
 from local_development.multicollinearity_reduction_class import MulticollinearityReducer
 from local_development.machine_learning_class import MachineLearning
 from local_development.training_pipeline_class import TrainingPipeline
+from local_development.cloud_utils_class import CloudUtils
+
 
 # Initialize the BigQuery client
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/myldretid-kbh-test_service_account.json'
 bq_client = bigquery.Client()
+storage_client = storage.Client()
 
 # Import OpenWeather API key
 openweather_api_key = Path("C:/Users/allan/Desktop/Personlige projekter/openweather_api_key.txt").read_text()
@@ -70,24 +74,32 @@ manual_holidays = [
 ]
 
 # Instantiate PreProcessing class
-preprocesser = PreProcessing(bq_client, openweather_api_key)
+preprocesser = PreProcessing(openweather_api_key)
 # Instantiate Reducer class
 reducer = MulticollinearityReducer(target_column = "current_travel_time")
 # Instantiate MachineLearning class
 machinelearning = MachineLearning(target_column = "current_travel_time")
+# Instantiate CloudUtils class
+cloud_utils = CloudUtils(bq_client, storage_client)
 # Instantiate TrainingPipeline class
-training = TrainingPipeline(reducer, preprocesser, machinelearning)
+training = TrainingPipeline(reducer, preprocesser, machinelearning, cloud_utils)
 
 # Pull historical traffic and weather data from bigquery
-historical_data = preprocesser.pull_historical_data(query)
+historical_data = cloud_utils.pull_historical_data(query)
 
 
 training.run_training_pipeline(historical_data, 
                                manual_holidays,
-                               '1_day_prediction_model', 
-                                preprocesser.execute_preprocessing_1_day)
+                               'execute_preprocessing_1_day',
+                               'myldretid-kbh-test',
+                               'prediction_models/',
+                               '1_day_prediction_model',
+                               'joblib')
 
 training.run_training_pipeline(historical_data, 
                                manual_holidays,
-                                '2_day_prediction_model', 
-                                preprocesser.execute_preprocessing_2_day)
+                               'execute_preprocessing_2_day',
+                               'myldretid-kbh-test',
+                               'prediction_models/',
+                               '2_day_prediction_model',
+                               'joblib')

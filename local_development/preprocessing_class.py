@@ -14,8 +14,7 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s -
 logger = logging.getLogger(__name__)
 
 class PreProcessing:
-    def __init__(self, bq_client, openweather_api_key):
-        self.bq_client = bq_client
+    def __init__(self, openweather_api_key):
         self.openweather_api_key = openweather_api_key
     
     # Function to validate each step of the pipeline
@@ -23,27 +22,6 @@ class PreProcessing:
         if df is None:
             raise ValueError(f"Step '{step_name}' failed and returned None.")
         return df
-    
-    # Function to fetch historical weather and traffic data from BigQuery
-    def pull_historical_data(self, sql_query):
-        try:
-            # Define SQL query
-            query = sql_query
-
-            # Run the query and fetch data from BigQuery
-            query_job = self.bq_client.query(query)
-
-            # Convert to DataFrame
-            raw_df = query_job.to_dataframe()
-
-            # Ensure dataframe exists and actually contains data
-            if not raw_df.empty:
-                logger.info(f"Succesfully fetched {len(raw_df)} rows of historical data from BigQuery")
-                return raw_df
-            
-        except Exception as e:
-            logger.error(f"Error occured when fetching historical data from BigQuery: {e}")
-            return None
 
     # Function to define morning and afternoon rush hours
     def rush_hour_period(self, time_column):

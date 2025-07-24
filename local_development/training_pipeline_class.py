@@ -2,23 +2,26 @@ import joblib
 import logging
 import sys
 from datetime import datetime
+import io
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class TrainingPipeline:
-    def __init__(self, reducer_class, preprocesser_class, machinelearning_class):
+    def __init__(self, reducer_class, preprocesser_class, machinelearning_class, gcp_utils_class):
         self.reducer = reducer_class
         self.preprocesser = preprocesser_class
         self.machinelearning = machinelearning_class
+        self.gcp_utils = gcp_utils_class
+    
 
-    def run_training_pipeline(self, historical_weather_data, manual_holidays, joblib_filename, preprocesser_pipeline):
+    def run_training_pipeline(self, historical_weather_data, manual_holidays, preprocesser_pipeline, bucket_name, gcs_folder_name, joblib_filename, filetype):
         try:
             current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            logger.info(f"Started training pipeline for {joblib_filename} on {current_datetime}.")
+            logger.info(f"Started training pipeline for {joblib_filename}.{filetype} on {current_datetime}.")
             # Run the preprocessing pipeline for the historical data
-            morning_df, afternoon_df, avg_morning_traveltime, avg_afternoon_traveltime = preprocesser_pipeline(historical_weather_data, manual_holidays)
+            morning_df, afternoon_df, avg_morning_traveltime, avg_afternoon_traveltime = getattr(self.preprocesser, preprocesser_pipeline)(historical_weather_data, manual_holidays)
 
             # Run the multicollinearity reduction pipeline on both dataframes
             morning_df = self.reducer.execute_reduction(morning_df, 'morning_df')
@@ -30,6 +33,9 @@ class TrainingPipeline:
             # Train models on full data of both dataframes
             morning_model, morning_scaler, morning_columns, morning_feature_importance  = self.machinelearning.train_model(morning_df, "morning_df")
             afternoon_model, afternoon_scaler, afternoon_columns, afternoon_feature_importance  = self.machinelearning.train_model(afternoon_df, "afternoon_df")
+
+            # Create an in-memory buffer
+            buffer = io.BytesIO()
 
             # Save model, scaler, and columns to joblib file
             joblib.dump({
@@ -45,10 +51,12 @@ class TrainingPipeline:
                 "afternoon_columns": afternoon_columns,
                 "avg_afternoon_traveltime": avg_afternoon_traveltime,
                 "afternoon_feature_importance": afternoon_feature_importance
-            }, f"{joblib_filename}.joblib")
+            }, buffer)
 
-            logger.info(f"Successfully completed training pipeline for {joblib_filename}.")
+            self.gcp_utils.upload_to_gcs(buffer, bucket_name, gcs_folder_name, joblib_filename, filetype)
+
+            logger.info(f"Successfully completed training pipeline for {joblib_filename}.{filetype}")
 
         except Exception as e:
-            logger.error(f"Error occured in training pipeline for {joblib_filename}: {e}")
+            logger.error(f"Error occured in training pipeline for {joblib_filename}.{filetype}: {e}")
 

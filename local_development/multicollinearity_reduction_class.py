@@ -16,7 +16,7 @@ class MulticollinearityReducer:
         self.vif_threshold = vif_threshold
 
     # Function to check for mulitcollinearity and reduce where relevant
-    def reduce_by_correlation(self, df):
+    def reduce_by_correlation(self, df, df_name):
         try:
             # Drop all rows with missing values
             df = df.dropna(axis=0)
@@ -30,8 +30,10 @@ class MulticollinearityReducer:
             upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
 
             # Find columns with high correlation
-            to_drop_corr = [column for column in upper.columns if any(upper[column] > self.corr_threshold)]
-
+            to_drop_corr = [column for column in upper.columns if any(upper[column] > self.corr_threshold) 
+                            # Exclude morning_travel_time from being dropped
+                            and not (df_name == 'afternoon_df' and column == 'morning_travel_time')]
+            
             # Drop the higly correlated columns
             df = df.drop(columns=to_drop_corr)
 
@@ -68,11 +70,13 @@ class MulticollinearityReducer:
             return None
     
     # Function to check VIF and drop where relevant
-    def reduce_by_vif(self, df):
+    def reduce_by_vif(self, df, df_name):
         try:
-            # Drop target column
-            X_df = df.drop(columns=[self.target_column])
-
+            # Protect the 'morning_travel_time' column if its afternoon_df
+            if df_name == 'afternoon_df':
+                X_df = df.drop(columns=[self.target_column, 'morning_travel_time'])
+            else: # Otherwise just drop the target column
+                X_df = df.drop(columns=[self.target_column])
             # While loop that keeps running until all the values are below the threshold
             while True:
                 # Calculate VIF for all the variables
@@ -94,8 +98,12 @@ class MulticollinearityReducer:
                 except Exception as e:
                     logger.error(f"Could not drop feature in {df} because of the error: {e}")
             
-            # Merge target column back into the original dataframe
-            X_df[self.target_column] = df[self.target_column]
+            # Merge target column and morning_travel_time back into the original dataframe if its afternoon_df
+            if df_name == 'afternoon_df':
+                X_df[self.target_column] = df[self.target_column]
+                X_df['morning_travel_time'] = df['morning_travel_time']
+            else:# Otherwise just merge target column back
+                X_df[self.target_column] = df[self.target_column]
             
             logger.info(f"Multicollinearity Reduction: Successfully finished VIF reduction.")
             return X_df
@@ -108,8 +116,8 @@ class MulticollinearityReducer:
     def execute_reduction(self, df, df_name):
         try:
             logger.info(f"Started multicollinearity reduction pipeline for {df_name}")
-            df = self.reduce_by_correlation(df)
-            df = self.reduce_by_vif(df)
+            df = self.reduce_by_correlation(df, df_name)
+            df = self.reduce_by_vif(df, df_name)
 
             logger.info(f"Multicollinearity Reduction: Successfully completed multicollinearity reduction pipeline for {df_name}")
             return df
