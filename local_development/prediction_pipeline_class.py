@@ -9,8 +9,8 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s -
 logger = logging.getLogger(__name__)
 
 class PredictionPipeline:
-    def __init__(self):
-        pass
+    def __init__(self, cloud_utils_class):
+        self.cloud_utils = cloud_utils_class
 
     def combine_historical_with_forecast(self, historical_df, forecast_df):
         try:
@@ -41,23 +41,23 @@ class PredictionPipeline:
             percentage_diff_list.append(pred)
         return percentage_diff_list
 
-    # Function to load elements from joblib created by training pipeline
-    def load_model_bundle(self, joblib_filename, rush_hour_period):
-        try:
-            # Load joblib file
-            prediction_bundle = joblib.load(f"{joblib_filename}.joblib")
-            # Load relevant elements of the joblib file
-            model = prediction_bundle[f"{rush_hour_period}_model"]
-            scaler = prediction_bundle[f"{rush_hour_period}_scaler"]
-            expected_columns = prediction_bundle[f"{rush_hour_period}_columns"]
-            avg_traveltime = prediction_bundle[f"avg_{rush_hour_period}_traveltime"]
+    # # Function to load elements from joblib created by training pipeline
+    # def load_model_bundle(self, joblib_filename, rush_hour_period):
+    #     try:
+    #         # Load joblib file
+    #         prediction_bundle = joblib.load(f"{joblib_filename}.joblib")
+    #         # Load relevant elements of the joblib file
+    #         model = prediction_bundle[f"{rush_hour_period}_model"]
+    #         scaler = prediction_bundle[f"{rush_hour_period}_scaler"]
+    #         expected_columns = prediction_bundle[f"{rush_hour_period}_columns"]
+    #         avg_traveltime = prediction_bundle[f"avg_{rush_hour_period}_traveltime"]
 
-            logger.info(f"Successfully loaded file {joblib_filename}.joblib and relevant elements for {rush_hour_period} period")
-            return model, scaler, expected_columns, avg_traveltime
+    #         logger.info(f"Successfully loaded file {joblib_filename}.joblib and relevant elements for {rush_hour_period} period")
+    #         return model, scaler, expected_columns, avg_traveltime
         
-        except Exception as e:
-            logger.error(f"Error occured when loading file {joblib_filename}.joblib and relevant elements for {rush_hour_period} period: {e}")
-            return None, None, None, None
+    #     except Exception as e:
+    #         logger.error(f"Error occured when loading file {joblib_filename}.joblib and relevant elements for {rush_hour_period} period: {e}")
+    #         return None, None, None, None
 
     # Function to predict a rush hour period 
     def predict(self, X_values, model, scaler, expected_columns, rush_hour_period):
@@ -77,11 +77,11 @@ class PredictionPipeline:
             logger.error(f"Error occured when predicting for next {rush_hour_period}: {e}")
             return None
         
-    def predict_next_rush_hour_period(self, joblib_filename, rush_hour_period, X_values):
+    def predict_next_rush_hour_period(self, bucket_name, joblib_filename, rush_hour_period, X_values):
         try:
             logger.info(f"Started prediction pipeline for next {rush_hour_period}.")
             # Load elements from joblib file
-            model, scaler, expected_columns, avg_traveltime = self.load_model_bundle(joblib_filename, rush_hour_period)
+            model, scaler, expected_columns, avg_traveltime = self.cloud_utils.load_model_from_gcs(bucket_name, joblib_filename, rush_hour_period)
             # Predict next rush hour period
             prediction = self.predict(X_values, model, scaler, expected_columns, rush_hour_period)
             # Calculate how many percent prediction differs from average
@@ -95,11 +95,11 @@ class PredictionPipeline:
             return None
         
     
-    def predict_next_4_rush_hour_periods(self, joblib_filename, rush_hour_period, X_values):
+    def predict_next_4_rush_hour_periods(self, bucket_name, joblib_filename, rush_hour_period, X_values):
         try:
             logger.info(f"Started prediction pipeline for next 4 {rush_hour_period}.")
             # Load elements from joblib file
-            model, scaler, expected_columns, avg_traveltime = self.load_model_bundle(joblib_filename, rush_hour_period)
+            model, scaler, expected_columns, avg_traveltime = self.cloud_utils.load_model_from_gcs(bucket_name, joblib_filename, rush_hour_period)
             # Predict next rush hour period
             prediction = self.predict(X_values, model, scaler, expected_columns, rush_hour_period)
             # Calculate how many percent prediction differs from average

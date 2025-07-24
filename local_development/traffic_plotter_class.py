@@ -1,9 +1,12 @@
 from datetime import date
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+import plotly.io as pio
+pio.renderers.default = "browser"
 
 class TrafficGaugePlotter:
     def __init__(self):
+        pass
         # Weekday and month names in Danish
         self.weekdays = {
             "Monday": "Mandag", "Tuesday": "Tirsdag", "Wednesday": "Onsdag",

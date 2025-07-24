@@ -92,7 +92,7 @@ training.run_training_pipeline(historical_data,
                                manual_holidays,
                                'execute_preprocessing_1_day',
                                'myldretid-kbh-test',
-                               'prediction_models/',
+                               'prediction_models',
                                '1_day_prediction_model',
                                'joblib')
 
@@ -100,6 +100,6 @@ training.run_training_pipeline(historical_data,
                                manual_holidays,
                                'execute_preprocessing_2_day',
                                'myldretid-kbh-test',
-                               'prediction_models/',
+                               'prediction_models',
                                '2_day_prediction_model',
                                'joblib')

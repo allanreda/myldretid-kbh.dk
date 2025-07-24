@@ -1,4 +1,6 @@
 from google.cloud import bigquery, storage
+import joblib
+import io
 import logging
 import sys
 
@@ -46,3 +48,30 @@ class CloudUtils:
         
         except Exception as e:
             logger.error(f"Error occured when uploading file: {filename}.{filetype} to folder: {gcs_folder_name} in bucket: {bucket_name}: {e}")
+
+    def load_model_from_gcs(self, bucket_name, filename, rush_hour_period):
+        try:
+            # Initialize bucket and define blob
+            bucket = self.storage_client.bucket(bucket_name)
+            blob = bucket.blob(f'prediction_models/{filename}.joblib')
+
+            # Download blob into memory
+            buffer = io.BytesIO()
+            blob.download_to_file(buffer)
+            buffer.seek(0)  # Reset pointer to start of buffer
+
+            # Load the prediction bundle from buffer
+            prediction_bundle = joblib.load(buffer)
+
+            # Extract required components
+            model = prediction_bundle[f"{rush_hour_period}_model"]
+            scaler = prediction_bundle[f"{rush_hour_period}_scaler"]
+            expected_columns = prediction_bundle[f"{rush_hour_period}_columns"]
+            avg_traveltime = prediction_bundle[f"avg_{rush_hour_period}_traveltime"]
+
+            logger.info(f"Successfully loaded model bundle from gs://{bucket_name}/prediction_models/{filename}.joblib for {rush_hour_period}")
+            return model, scaler, expected_columns, avg_traveltime
+
+        except Exception as e:
+            logger.error(f"Error loading model bundle from GCS (gs://{bucket_name}/prediction_models/{filename}.joblib) for {rush_hour_period}: {e}")
+            return None, None, None, None

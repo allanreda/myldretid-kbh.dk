@@ -13,3 +13,4 @@ lightgbm
 catboost
 astral
 plotly
+nbformat

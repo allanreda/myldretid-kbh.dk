@@ -1,30 +1,35 @@
 import joblib
 import sys
 import os
-from google.cloud import bigquery
+from google.cloud import bigquery, storage
 from pathlib import Path
 import pandas as pd
 import importlib # Remove in prod
 importlib.reload(sys.modules['local_development.preprocessing_class'])
 importlib.reload(sys.modules['local_development.prediction_pipeline_class'])
 importlib.reload(sys.modules['local_development.traffic_plotter_class'])
+importlib.reload(sys.modules['local_development.cloud_utils_class'])
 from local_development.preprocessing_class import PreProcessing
 from local_development.prediction_pipeline_class import PredictionPipeline
+from local_development.cloud_utils_class import CloudUtils
 from local_development.traffic_plotter_class import TrafficGaugePlotter
 import numpy as np
 from datetime import date, datetime
 
 # Initialize the BigQuery client
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/hyggeskyen_service_account.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/myldretid-kbh-test_service_account.json'
 bq_client = bigquery.Client()
+storage_client = storage.Client()
 
 # Import OpenWeather API key
 openweather_api_key = Path("C:/Users/allan/Desktop/Personlige projekter/openweather_api_key.txt").read_text()
 
+# Instantiate CloudUtils class
+cloud_utils = CloudUtils(bq_client, storage_client)
 # Instantiate PreProcessing class
-preprocesser = PreProcessing(bq_client, openweather_api_key)
+preprocesser = PreProcessing(openweather_api_key)
 # Instantiate PredictionPipeline class
-predict = PredictionPipeline()
+predict = PredictionPipeline(cloud_utils)
 # Instantiate TrafficGaugePlotter class
 plotter = TrafficGaugePlotter()
 
@@ -80,8 +85,8 @@ ORDER BY traffic.date, traffic.time DESC
 """
 
 
-# Pull historical data from bigquery
-historical_df = preprocesser.pull_historical_data(query)
+# Pull historical traffic and weather data from bigquery
+historical_df = cloud_utils.pull_historical_data(query)
 # Pull weather forecast for next 5 days
 forecast_df = preprocesser.pull_weather_forecast()
 
@@ -102,10 +107,16 @@ if datetime.now().hour <= 8 or datetime.now().hour > 15:
     next_afternoon['morning_travel_time'] = morning_df['current_travel_time'].dropna().mean()
 
 # Predict next mornings traveltime and compare to average traveltime
-next_morning_traffic = predict.predict_next_rush_hour_period('1_day_prediction_model', 'morning', next_morning)
+next_morning_traffic = predict.predict_next_rush_hour_period('myldretid-kbh-test',
+                                                             '1_day_prediction_model', 
+                                                             'morning', 
+                                                             next_morning)
 # Predict next afternoons traveltime and compare to average traveltime
 # Note: Should ideally be run before 15 but after 9 to get the correct morning_traveltime value included.
-next_afternoon_traffic = predict.predict_next_rush_hour_period('1_day_prediction_model', 'afternoon', next_afternoon)
+next_afternoon_traffic = predict.predict_next_rush_hour_period('myldretid-kbh-test',
+                                                               '1_day_prediction_model', 
+                                                               'afternoon', 
+                                                               next_afternoon)
 
                   
 # Dataframes to predict the day after tomorrow and 3 days forward
@@ -116,8 +127,14 @@ next_4_mornings = next_4_morning_df.iloc[-4:]
 next_4_afternoons = next_4_afternoon_df.iloc[-4:]
 
 # Predict next 4 days traveltime and compare to average traveltime
-next_4_mornings_traffic = predict.predict_next_4_rush_hour_periods('2_day_prediction_model', 'morning', next_4_mornings)
-next_4_afternoons_traffic = predict.predict_next_4_rush_hour_periods('2_day_prediction_model', 'afternoon', next_4_afternoons)
+next_4_mornings_traffic = predict.predict_next_4_rush_hour_periods('myldretid-kbh-test', 
+                                                                   '2_day_prediction_model', 
+                                                                   'morning', 
+                                                                   next_4_mornings)
+next_4_afternoons_traffic = predict.predict_next_4_rush_hour_periods('myldretid-kbh-test', 
+                                                                     '2_day_prediction_model', 
+                                                                     'afternoon', 
+                                                                     next_4_afternoons)
 
 # Concatenate all dates
 all_morning_predictions = np.concatenate([next_morning_traffic, next_4_mornings_traffic])
@@ -129,3 +146,7 @@ morning_prediction_dict, afternoon_prediction_dict = predict.define_dates(all_mo
 # Plot predictions for both PC and mobile devices
 plotter.plot_gauges(morning_prediction_dict, afternoon_prediction_dict)
 plotter.plot_gauges_mobile(morning_prediction_dict, afternoon_prediction_dict)
+
+
+
+
