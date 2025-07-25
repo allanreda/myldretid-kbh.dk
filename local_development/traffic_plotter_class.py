@@ -3,10 +3,18 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.io as pio
 pio.renderers.default = "browser"
+import io
+import logging
+import sys
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class TrafficGaugePlotter:
-    def __init__(self):
-        pass
+    def __init__(self, cloud_utils_class):
+        self.cloud_utils = cloud_utils_class
+
         # Weekday and month names in Danish
         self.weekdays = {
             "Monday": "Mandag", "Tuesday": "Tirsdag", "Wednesday": "Onsdag",
@@ -69,109 +77,129 @@ class TrafficGaugePlotter:
 
     # Plot gauges for desktop layout
     def plot_gauges(self, morning_prediction_dict, afternoon_prediction_dict):
-        combined = [(d, "morning", v) for d, v in morning_prediction_dict.items()] + \
-                   [(d, "afternoon", v) for d, v in afternoon_prediction_dict.items()]
-        combined_sorted = sorted(combined, key=lambda x: (x[0], 0 if x[1] == "morning" else 1))
-        first_two = combined_sorted[:2]
-        remaining_mornings = [x for x in combined_sorted if x[1] == "morning" and x not in first_two][:4]
-        remaining_afternoons = [x for x in combined_sorted if x[1] == "afternoon" and x not in first_two][:4]
-        all_predictions = first_two + remaining_mornings + remaining_afternoons
+        try:
+            combined = [(d, "morning", v) for d, v in morning_prediction_dict.items()] + \
+                    [(d, "afternoon", v) for d, v in afternoon_prediction_dict.items()]
+            combined_sorted = sorted(combined, key=lambda x: (x[0], 0 if x[1] == "morning" else 1))
+            first_two = combined_sorted[:2]
+            remaining_mornings = [x for x in combined_sorted if x[1] == "morning" and x not in first_two][:4]
+            remaining_afternoons = [x for x in combined_sorted if x[1] == "afternoon" and x not in first_two][:4]
+            all_predictions = first_two + remaining_mornings + remaining_afternoons
 
-        values = [v for _, _, v in all_predictions]
-        labels = [self.format_label(d, p) for d, p, _ in all_predictions]
+            values = [v for _, _, v in all_predictions]
+            labels = [self.format_label(d, p) for d, p, _ in all_predictions]
 
-        specs = [
-            [None, {"type": "indicator"}, {"type": "indicator"}, None],
-            [{"type": "indicator"} for _ in range(4)],
-            [{"type": "indicator"} for _ in range(4)]
-        ]
-        fig = make_subplots(rows=3, cols=4, specs=specs, subplot_titles=[""] * 10)
+            specs = [
+                [None, {"type": "indicator"}, {"type": "indicator"}, None],
+                [{"type": "indicator"} for _ in range(4)],
+                [{"type": "indicator"} for _ in range(4)]
+            ]
+            fig = make_subplots(rows=3, cols=4, specs=specs, subplot_titles=[""] * 10)
 
-        for i, (val, label) in enumerate(zip(values, labels)):
-            if i == 0:
-                row, col = 1, 2
-            elif i == 1:
-                row, col = 1, 3
-            elif 2 <= i <= 5:
-                row, col = 2, i - 1
-            else:
-                row, col = 3, i - 5
+            for i, (val, label) in enumerate(zip(values, labels)):
+                if i == 0:
+                    row, col = 1, 2
+                elif i == 1:
+                    row, col = 1, 3
+                elif 2 <= i <= 5:
+                    row, col = 2, i - 1
+                else:
+                    row, col = 3, i - 5
 
-            fig.add_trace(go.Indicator(
-                mode="gauge+number",
-                value=val,
-                title={
-                    "text": f"{label}<br><span style='font-size:14px;color:gray'>{self.get_description(val)}</span>",
-                    "font": {"size": 17}
-                },
-                number={"suffix": "%", "font": {"size": 28, "color": "#2c3e50"}},
-                gauge={
-                    'axis': {'range': [-30, 30], 'tickwidth': 2},
-                    'bar': {'color': self.get_color_gradient(val)},
-                    'threshold': {
-                        'line': {'color': "#34495e", 'width': 2},
-                        'value': 0
+                fig.add_trace(go.Indicator(
+                    mode="gauge+number",
+                    value=val,
+                    title={
+                        "text": f"{label}<br><span style='font-size:14px;color:gray'>{self.get_description(val)}</span>",
+                        "font": {"size": 17}
                     },
-                    'bgcolor': "#f9f9f9",
-                    'bordercolor': "#e0e0e0",
-                    'borderwidth': 1
-                }
-            ), row=row, col=col)
+                    number={"suffix": "%", "font": {"size": 28, "color": "#2c3e50"}},
+                    gauge={
+                        'axis': {'range': [-30, 30], 'tickwidth': 2},
+                        'bar': {'color': self.get_color_gradient(val)},
+                        'threshold': {'line': {'color': "#34495e", 'width': 2}, 'value': 0},
+                        'bgcolor': "#f9f9f9",
+                        'bordercolor': "#e0e0e0",
+                        'borderwidth': 1
+                    }
+                ), row=row, col=col)
 
-        fig.update_layout(
-            height=960,
-            margin=dict(t=140, l=40, r=40, b=40),
-            paper_bgcolor='#f0f6ff',
-            plot_bgcolor='#f0f6ff',
-            font=dict(family="Poppins, Segoe UI, sans-serif", color="#2c3e50")
-        )
+            fig.update_layout(
+                height=960,
+                margin=dict(t=140, l=40, r=40, b=40),
+                paper_bgcolor='#f0f6ff',
+                plot_bgcolor='#f0f6ff',
+                font=dict(family="Poppins, Segoe UI, sans-serif", color="#2c3e50")
+            )
 
-        return fig
+            buffer = io.BytesIO()
+            fig.write_image(buffer, format='png', scale=2)
+            logger.info("Successfully created desktop traffic gauge plot.")
+            return buffer
+
+        except Exception as e:
+            logger.error(f"Error occurred while generating desktop traffic gauge plot: {e}")
+            return None
 
     # Plot gauges for mobile layout (2 per row)
     def plot_gauges_mobile(self, morning_prediction_dict, afternoon_prediction_dict):
-        combined = [(d, "morning", v) for d, v in morning_prediction_dict.items()] + \
-                   [(d, "afternoon", v) for d, v in afternoon_prediction_dict.items()]
-        combined_sorted = sorted(combined, key=lambda x: (x[0], 0 if x[1] == "morning" else 1))
-        all_predictions = combined_sorted[:10]
-        values = [v for _, _, v in all_predictions]
-        labels = [self.format_label(d, p) for d, p, _ in all_predictions]
+        try:
+            combined = [(d, "morning", v) for d, v in morning_prediction_dict.items()] + \
+                    [(d, "afternoon", v) for d, v in afternoon_prediction_dict.items()]
+            combined_sorted = sorted(combined, key=lambda x: (x[0], 0 if x[1] == "morning" else 1))
+            all_predictions = combined_sorted[:10]
 
-        rows = (len(values) + 1) // 2
-        specs = [[{"type": "indicator"}, {"type": "indicator"}] for _ in range(rows)]
-        fig = make_subplots(rows=rows, cols=2, specs=specs, subplot_titles=[""] * len(values))
+            values = [v for _, _, v in all_predictions]
+            labels = [self.format_label(d, p) for d, p, _ in all_predictions]
 
-        for i, (val, label) in enumerate(zip(values, labels)):
-            row = i // 2 + 1
-            col = i % 2 + 1
+            rows = (len(values) + 1) // 2
+            specs = [[{"type": "indicator"}, {"type": "indicator"}] for _ in range(rows)]
+            fig = make_subplots(rows=rows, cols=2, specs=specs, subplot_titles=[""] * len(values))
 
-            fig.add_trace(go.Indicator(
-                mode="gauge+number",
-                value=val,
-                title={
-                    "text": f"{label}<br><span style='font-size:14px;color:gray'>{self.get_description(val)}</span>",
-                    "font": {"size": 16}
-                },
-                number={"suffix": "%", "font": {"size": 26, "color": "#2c3e50"}},
-                gauge={
-                    'axis': {'range': [-30, 30], 'tickwidth': 2},
-                    'bar': {'color': self.get_color_gradient(val)},
-                    'threshold': {
-                        'line': {'color': "#34495e", 'width': 2},
-                        'value': 0
+            for i, (val, label) in enumerate(zip(values, labels)):
+                row = i // 2 + 1
+                col = i % 2 + 1
+
+                fig.add_trace(go.Indicator(
+                    mode="gauge+number",
+                    value=val,
+                    title={
+                        "text": f"{label}<br><span style='font-size:14px;color:gray'>{self.get_description(val)}</span>",
+                        "font": {"size": 16}
                     },
-                    'bgcolor': "#f9f9f9",
-                    'bordercolor': "#e0e0e0",
-                    'borderwidth': 1
-                }
-            ), row=row, col=col)
+                    number={"suffix": "%", "font": {"size": 26, "color": "#2c3e50"}},
+                    gauge={
+                        'axis': {'range': [-30, 30], 'tickwidth': 2},
+                        'bar': {'color': self.get_color_gradient(val)},
+                        'threshold': {'line': {'color': "#34495e", 'width': 2}, 'value': 0},
+                        'bgcolor': "#f9f9f9",
+                        'bordercolor': "#e0e0e0",
+                        'borderwidth': 1
+                    }
+                ), row=row, col=col)
 
-        fig.update_layout(
-            height=350 * rows,
-            margin=dict(t=140, l=30, r=30, b=40),
-            paper_bgcolor='#f0f6ff',
-            plot_bgcolor='#f0f6ff',
-            font=dict(family="Poppins, Segoe UI, sans-serif", color="#2c3e50")
-        )
+            fig.update_layout(
+                height=350 * rows,
+                margin=dict(t=140, l=30, r=30, b=40),
+                paper_bgcolor='#f0f6ff',
+                plot_bgcolor='#f0f6ff',
+                font=dict(family="Poppins, Segoe UI, sans-serif", color="#2c3e50")
+            )
 
-        return fig
+            buffer = io.BytesIO()
+            fig.write_image(buffer, format='png', scale=2)
+            logger.info("Successfully created mobile traffic gauge plot.")
+            return buffer
+
+        except Exception as e:
+            logger.error(f"Error occurred while generating mobile traffic gauge plot: {e}")
+            return None
+    
+    def plot_and_export_to_gcs(self, morning_prediction_dict, afternoon_prediction_dict, bucket_name, gcs_folder_name):
+
+        # Plot predictions for both desktop and mobile devices
+        buffer_desktop = self.plot_gauges(morning_prediction_dict, afternoon_prediction_dict)
+        buffer_mobile = self.plot_gauges_mobile(morning_prediction_dict, afternoon_prediction_dict)
+
+        self.cloud_utils.upload_to_gcs(buffer_desktop, bucket_name, gcs_folder_name, 'predictions_desktop', 'png')
+        self.cloud_utils.upload_to_gcs(buffer_mobile, bucket_name, gcs_folder_name, 'predictions_mobile', 'png')

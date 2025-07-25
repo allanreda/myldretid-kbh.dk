@@ -31,7 +31,7 @@ preprocesser = PreProcessing(openweather_api_key)
 # Instantiate PredictionPipeline class
 predict = PredictionPipeline(cloud_utils, preprocesser)
 # Instantiate TrafficGaugePlotter class
-plotter = TrafficGaugePlotter()
+plotter = TrafficGaugePlotter(cloud_utils)
 
 # Create manual holiday date ranges
 manual_holidays = [
@@ -91,10 +91,18 @@ historical_df = cloud_utils.pull_historical_data(query)
 forecast_df = preprocesser.pull_weather_forecast()
 
 # Predict next 2 rush hours and compare to average traveltime
-next_morning_traffic, next_afternoon_traffic = predict.predict_next_rush_hour_periods_wrapper(historical_df, forecast_df, manual_holidays)
+next_morning_traffic, next_afternoon_traffic = predict.predict_next_rush_hour_periods_wrapper(historical_df, 
+                                                                                              forecast_df, 
+                                                                                              manual_holidays,
+                                                                                              'myldretid-kbh-test',
+                                                                                              '1_day_prediction_model')
 
 # Predict the next 8 rush hours after the first 2 and compare to average traveltime
-next_4_mornings_traffic, next_4_afternoons_traffic = predict.predict_next_8_rush_hour_periods_wrapper(historical_df, forecast_df, manual_holidays)
+next_4_mornings_traffic, next_4_afternoons_traffic = predict.predict_next_8_rush_hour_periods_wrapper(historical_df, 
+                                                                                                      forecast_df, 
+                                                                                                      manual_holidays,
+                                                                                                      'myldretid-kbh-test',
+                                                                                                      '2_day_prediction_model')
 
 
 # Concatenate all dates
@@ -103,10 +111,8 @@ all_afternoon_predictions = np.concatenate([next_afternoon_traffic, next_4_after
 # Define and map dates to predictions
 morning_prediction_dict, afternoon_prediction_dict = predict.define_dates(all_morning_predictions, all_afternoon_predictions)
 
-# Plot predictions for both PC and mobile devices
-plotter.plot_gauges(morning_prediction_dict, afternoon_prediction_dict)
-plotter.plot_gauges_mobile(morning_prediction_dict, afternoon_prediction_dict)
-
+# Plot and export prediction visualizations for both PC and mobile devices
+plotter.plot_and_export_to_gcs(morning_prediction_dict, afternoon_prediction_dict, 'myldretid-kbh-test', 'prediction_images')
 
 
 

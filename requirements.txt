@@ -14,3 +14,4 @@ catboost
 astral
 plotly
 nbformat
+kaleido
