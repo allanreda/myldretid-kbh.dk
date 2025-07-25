@@ -126,7 +126,7 @@ class TrafficGaugePlotter:
             font=dict(family="Poppins, Segoe UI, sans-serif", color="#2c3e50")
         )
 
-        fig.show()
+        return fig
 
     # Plot gauges for mobile layout (2 per row)
     def plot_gauges_mobile(self, morning_prediction_dict, afternoon_prediction_dict):
@@ -174,4 +174,4 @@ class TrafficGaugePlotter:
             font=dict(family="Poppins, Segoe UI, sans-serif", color="#2c3e50")
         )
 
-        fig.show()
+        return fig

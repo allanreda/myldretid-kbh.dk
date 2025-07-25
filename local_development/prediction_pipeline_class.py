@@ -79,7 +79,7 @@ class PredictionPipeline:
             return None
     
     # Wrapper function to run prediction pipelines for both next morning and afternoon
-    def predict_next_rush_hour_periods_wrapper(self, historical_df, forecast_df, manual_holidays):
+    def predict_next_rush_hour_periods_wrapper(self, historical_df, forecast_df, manual_holidays, gcs_bucket, filename):
         try:
             logger.info("Started prediction pipeline for both next morning and afternoon.")
             # Combine historical data with forecast data
@@ -99,14 +99,14 @@ class PredictionPipeline:
                 next_afternoon['morning_travel_time'] = morning_df['current_travel_time'].dropna().mean()
 
             # Predict next mornings traveltime and compare to average traveltime
-            next_morning_traffic = self.predict_next_rush_hour_period('myldretid-kbh-test',
-                                                                        '1_day_prediction_model', 
+            next_morning_traffic = self.predict_next_rush_hour_period(gcs_bucket,
+                                                                        filename, 
                                                                         'morning', 
                                                                         next_morning)
             # Predict next afternoons traveltime and compare to average traveltime
             # Note: Should ideally be run before 15 but after 9 to get the correct morning_traveltime value included.
-            next_afternoon_traffic = self.predict_next_rush_hour_period('myldretid-kbh-test',
-                                                                        '1_day_prediction_model', 
+            next_afternoon_traffic = self.predict_next_rush_hour_period(gcs_bucket,
+                                                                        filename, 
                                                                         'afternoon', 
                                                                         next_afternoon)
             logger.info("Finished prediction pipeline for both next morning and afternoon.")
@@ -133,8 +133,8 @@ class PredictionPipeline:
             logger.error(f"Error occured in prediction pipeline for next 4 {rush_hour_period}: {e}")
             return None
         
-    # Wrapper function to run prediction pipelines for both next morning and afternoon
-    def predict_next_8_rush_hour_periods_wrapper(self, historical_df, forecast_df, manual_holidays):
+    # Wrapper function to run prediction pipelines for the next 8 rush hours after the first 2
+    def predict_next_8_rush_hour_periods_wrapper(self, historical_df, forecast_df, manual_holidays, gcs_bucket, filename):
         try:
             logger.info("Started prediction pipeline for next 8 rush hours")
             # Combine historical data with forecast data
@@ -148,14 +148,14 @@ class PredictionPipeline:
             next_4_afternoons = next_4_afternoon_df.iloc[-4:]
 
             # Predict next 4 days traveltime and compare to average traveltime
-            next_4_mornings_traffic = self.predict_next_4_rush_hour_periods('myldretid-kbh-test', 
-                                                                            '2_day_prediction_model', 
+            next_4_mornings_traffic = self.predict_next_4_rush_hour_periods(gcs_bucket,
+                                                                            filename, 
                                                                             'morning', 
                                                                             next_4_mornings)
-            next_4_afternoons_traffic = self.predict_next_4_rush_hour_periods('myldretid-kbh-test', 
-                                                                                '2_day_prediction_model', 
-                                                                                'afternoon', 
-                                                                                next_4_afternoons)
+            next_4_afternoons_traffic = self.predict_next_4_rush_hour_periods(gcs_bucket,
+                                                                              filename,
+                                                                              'afternoon', 
+                                                                              next_4_afternoons)
             
             logger.info("Finished prediction pipeline for next 8 rush hours.")
             return next_4_mornings_traffic, next_4_afternoons_traffic
