@@ -9,8 +9,9 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s -
 logger = logging.getLogger(__name__)
 
 class PredictionPipeline:
-    def __init__(self, cloud_utils_class):
+    def __init__(self, cloud_utils_class, preprocessing_class):
         self.cloud_utils = cloud_utils_class
+        self.preprocesser = preprocessing_class
 
     def combine_historical_with_forecast(self, historical_df, forecast_df):
         try:
@@ -41,24 +42,6 @@ class PredictionPipeline:
             percentage_diff_list.append(pred)
         return percentage_diff_list
 
-    # # Function to load elements from joblib created by training pipeline
-    # def load_model_bundle(self, joblib_filename, rush_hour_period):
-    #     try:
-    #         # Load joblib file
-    #         prediction_bundle = joblib.load(f"{joblib_filename}.joblib")
-    #         # Load relevant elements of the joblib file
-    #         model = prediction_bundle[f"{rush_hour_period}_model"]
-    #         scaler = prediction_bundle[f"{rush_hour_period}_scaler"]
-    #         expected_columns = prediction_bundle[f"{rush_hour_period}_columns"]
-    #         avg_traveltime = prediction_bundle[f"avg_{rush_hour_period}_traveltime"]
-
-    #         logger.info(f"Successfully loaded file {joblib_filename}.joblib and relevant elements for {rush_hour_period} period")
-    #         return model, scaler, expected_columns, avg_traveltime
-        
-    #     except Exception as e:
-    #         logger.error(f"Error occured when loading file {joblib_filename}.joblib and relevant elements for {rush_hour_period} period: {e}")
-    #         return None, None, None, None
-
     # Function to predict a rush hour period 
     def predict(self, X_values, model, scaler, expected_columns, rush_hour_period):
         try:
@@ -76,7 +59,8 @@ class PredictionPipeline:
         except Exception as e:
             logger.error(f"Error occured when predicting for next {rush_hour_period}: {e}")
             return None
-        
+    
+    # Function to run prediction pipeline for the next rush hour period
     def predict_next_rush_hour_period(self, bucket_name, joblib_filename, rush_hour_period, X_values):
         try:
             logger.info(f"Started prediction pipeline for next {rush_hour_period}.")
@@ -93,8 +77,45 @@ class PredictionPipeline:
         except Exception as e:
             logger.error(f"Error occured in prediction pipeline for next {rush_hour_period}: {e}")
             return None
-        
     
+    # Wrapper function to run prediction pipelines for both next morning and afternoon
+    def predict_next_rush_hour_periods_wrapper(self, historical_df, forecast_df, manual_holidays):
+        try:
+            logger.info("Started prediction pipeline for both next morning and afternoon.")
+            # Combine historical data with forecast data
+            combined_df = self.combine_historical_with_forecast(historical_df, forecast_df)
+
+            # Dataframes to predict the next 1 day only (contains lag_1day and rolling_avg_7day)
+            morning_df, afternoon_df, _, _ = self.preprocesser.execute_preprocessing_1_day(combined_df, manual_holidays)
+
+            # Get next days values
+            next_morning = morning_df.iloc[[-5]]
+            next_afternoon = afternoon_df.iloc[[-5]]
+
+            # Calculate avg morning travel time for next_afternoon, but only if its before 9 or after 15
+            # This will make it possible to run the 1_day_prediction_model that has both lag_1_day and rolling_avg variables.
+            # 1_day_prediction_model requires the morning_travel_time variable
+            if datetime.now().hour <= 8 or datetime.now().hour > 15:
+                next_afternoon['morning_travel_time'] = morning_df['current_travel_time'].dropna().mean()
+
+            # Predict next mornings traveltime and compare to average traveltime
+            next_morning_traffic = self.predict_next_rush_hour_period('myldretid-kbh-test',
+                                                                        '1_day_prediction_model', 
+                                                                        'morning', 
+                                                                        next_morning)
+            # Predict next afternoons traveltime and compare to average traveltime
+            # Note: Should ideally be run before 15 but after 9 to get the correct morning_traveltime value included.
+            next_afternoon_traffic = self.predict_next_rush_hour_period('myldretid-kbh-test',
+                                                                        '1_day_prediction_model', 
+                                                                        'afternoon', 
+                                                                        next_afternoon)
+            logger.info("Finished prediction pipeline for both next morning and afternoon.")
+            return next_morning_traffic, next_afternoon_traffic
+        
+        except Exception as e:
+            logger.error(f"Error occured in prediction pipeline for both next morning and afternoon: {e}")
+            return None, None
+
     def predict_next_4_rush_hour_periods(self, bucket_name, joblib_filename, rush_hour_period, X_values):
         try:
             logger.info(f"Started prediction pipeline for next 4 {rush_hour_period}.")
@@ -112,6 +133,40 @@ class PredictionPipeline:
             logger.error(f"Error occured in prediction pipeline for next 4 {rush_hour_period}: {e}")
             return None
         
+    # Wrapper function to run prediction pipelines for both next morning and afternoon
+    def predict_next_8_rush_hour_periods_wrapper(self, historical_df, forecast_df, manual_holidays):
+        try:
+            logger.info("Started prediction pipeline for next 8 rush hours")
+            # Combine historical data with forecast data
+            combined_df = self.combine_historical_with_forecast(historical_df, forecast_df)
+
+            # Dataframes to predict the next 1 day only (contains lag_1day and rolling_avg_7day)
+            next_4_morning_df, next_4_afternoon_df, _, _ = self.preprocesser.execute_preprocessing_2_day(combined_df, manual_holidays)
+
+            # Get values for the next 4 days
+            next_4_mornings = next_4_morning_df.iloc[-4:]
+            next_4_afternoons = next_4_afternoon_df.iloc[-4:]
+
+            # Predict next 4 days traveltime and compare to average traveltime
+            next_4_mornings_traffic = self.predict_next_4_rush_hour_periods('myldretid-kbh-test', 
+                                                                            '2_day_prediction_model', 
+                                                                            'morning', 
+                                                                            next_4_mornings)
+            next_4_afternoons_traffic = self.predict_next_4_rush_hour_periods('myldretid-kbh-test', 
+                                                                                '2_day_prediction_model', 
+                                                                                'afternoon', 
+                                                                                next_4_afternoons)
+            
+            logger.info("Finished prediction pipeline for next 8 rush hours.")
+            return next_4_mornings_traffic, next_4_afternoons_traffic
+        
+        except Exception as e:
+            logger.error(f"Error occured in prediction pipeline for next 8 rush hours: {e}")
+            return None, None
+
+
+
+
     def define_dates(self, all_morning_predictions, all_afternoon_predictions):
         try:
             # Get todays date + 4 next dates

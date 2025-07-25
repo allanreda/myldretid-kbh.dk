@@ -29,7 +29,7 @@ cloud_utils = CloudUtils(bq_client, storage_client)
 # Instantiate PreProcessing class
 preprocesser = PreProcessing(openweather_api_key)
 # Instantiate PredictionPipeline class
-predict = PredictionPipeline(cloud_utils)
+predict = PredictionPipeline(cloud_utils, preprocesser)
 # Instantiate TrafficGaugePlotter class
 plotter = TrafficGaugePlotter()
 
@@ -90,56 +90,16 @@ historical_df = cloud_utils.pull_historical_data(query)
 # Pull weather forecast for next 5 days
 forecast_df = preprocesser.pull_weather_forecast()
 
-# Combine historical data with forecast data
-combined_df = predict.combine_historical_with_forecast(historical_df, forecast_df)
+# Predict next 2 rush hours and compare to average traveltime
+next_morning_traffic, next_afternoon_traffic = predict.predict_next_rush_hour_periods_wrapper(historical_df, forecast_df, manual_holidays)
 
-# Dataframes to predict the next 1 day only (contains lag_1day and rolling_avg_7day)
-morning_df, afternoon_df, _, _ = preprocesser.execute_preprocessing_1_day(combined_df, manual_holidays)
+# Predict the next 8 rush hours after the first 2 and compare to average traveltime
+next_4_mornings_traffic, next_4_afternoons_traffic = predict.predict_next_8_rush_hour_periods_wrapper(historical_df, forecast_df, manual_holidays)
 
-# Get next days values
-next_morning = morning_df.iloc[[-5]]
-next_afternoon = afternoon_df.iloc[[-5]]
-
-# Calculate avg morning travel time for next_afternoon, but only if its before 9 or after 15
-# This will make it possible to run the 1_day_prediction_model that has both lag_1_day and rolling_avg variables.
-# 1_day_prediction_model requires the morning_travel_time variable
-if datetime.now().hour <= 8 or datetime.now().hour > 15:
-    next_afternoon['morning_travel_time'] = morning_df['current_travel_time'].dropna().mean()
-
-# Predict next mornings traveltime and compare to average traveltime
-next_morning_traffic = predict.predict_next_rush_hour_period('myldretid-kbh-test',
-                                                             '1_day_prediction_model', 
-                                                             'morning', 
-                                                             next_morning)
-# Predict next afternoons traveltime and compare to average traveltime
-# Note: Should ideally be run before 15 but after 9 to get the correct morning_traveltime value included.
-next_afternoon_traffic = predict.predict_next_rush_hour_period('myldretid-kbh-test',
-                                                               '1_day_prediction_model', 
-                                                               'afternoon', 
-                                                               next_afternoon)
-
-                  
-# Dataframes to predict the day after tomorrow and 3 days forward
-next_4_morning_df, next_4_afternoon_df, _, _ = preprocesser.execute_preprocessing_2_day(combined_df, manual_holidays)
-
-# Get values for the next 4 days
-next_4_mornings = next_4_morning_df.iloc[-4:]
-next_4_afternoons = next_4_afternoon_df.iloc[-4:]
-
-# Predict next 4 days traveltime and compare to average traveltime
-next_4_mornings_traffic = predict.predict_next_4_rush_hour_periods('myldretid-kbh-test', 
-                                                                   '2_day_prediction_model', 
-                                                                   'morning', 
-                                                                   next_4_mornings)
-next_4_afternoons_traffic = predict.predict_next_4_rush_hour_periods('myldretid-kbh-test', 
-                                                                     '2_day_prediction_model', 
-                                                                     'afternoon', 
-                                                                     next_4_afternoons)
 
 # Concatenate all dates
 all_morning_predictions = np.concatenate([next_morning_traffic, next_4_mornings_traffic])
 all_afternoon_predictions = np.concatenate([next_afternoon_traffic, next_4_afternoons_traffic])
-
 # Define and map dates to predictions
 morning_prediction_dict, afternoon_prediction_dict = predict.define_dates(all_morning_predictions, all_afternoon_predictions)
 
