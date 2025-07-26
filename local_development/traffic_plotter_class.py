@@ -2,7 +2,7 @@ from datetime import date
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.io as pio
-pio.renderers.default = "browser"
+pio.renderers.default = "png"  
 import io
 import logging
 import sys
@@ -133,8 +133,9 @@ class TrafficGaugePlotter:
             )
 
             buffer = io.BytesIO()
-            fig.write_image(buffer, format='png', scale=2)
-            logger.info("Successfully created desktop traffic gauge plot.")
+            fig.write_image(buffer, format='png')
+            logger.info("Successfully created mobile traffic gauge plot.")
+
             return buffer
 
         except Exception as e:
@@ -187,8 +188,9 @@ class TrafficGaugePlotter:
             )
 
             buffer = io.BytesIO()
-            fig.write_image(buffer, format='png', scale=2)
+            fig.write_image(buffer, format='png')
             logger.info("Successfully created mobile traffic gauge plot.")
+            
             return buffer
 
         except Exception as e:

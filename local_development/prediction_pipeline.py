@@ -15,6 +15,7 @@ from local_development.cloud_utils_class import CloudUtils
 from local_development.traffic_plotter_class import TrafficGaugePlotter
 import numpy as np
 from datetime import date, datetime
+import io
 
 # Initialize the BigQuery client
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/myldretid-kbh-test_service_account.json'
@@ -109,10 +110,19 @@ next_4_mornings_traffic, next_4_afternoons_traffic = predict.predict_next_8_rush
 all_morning_predictions = np.concatenate([next_morning_traffic, next_4_mornings_traffic])
 all_afternoon_predictions = np.concatenate([next_afternoon_traffic, next_4_afternoons_traffic])
 # Define and map dates to predictions
-morning_prediction_dict, afternoon_prediction_dict = predict.define_dates(all_morning_predictions, all_afternoon_predictions)
+json_predictions = predict.define_dates_and_convert_json(all_morning_predictions, all_afternoon_predictions)
 
-# Plot and export prediction visualizations for both PC and mobile devices
-plotter.plot_and_export_to_gcs(morning_prediction_dict, afternoon_prediction_dict, 'myldretid-kbh-test', 'prediction_images')
+# Write the string to buffer
+buffer = io.BytesIO()
+buffer.write(json_predictions.encode('utf-8'))
 
-
+# Upload to GCS
+cloud_utils.upload_to_gcs(
+    buffer=buffer,
+    bucket_name="myldretid-kbh-predictions-test",
+    gcs_folder_name="predictions",
+    filename="json_predictions",
+    filetype="json",
+    content_type="application/json"
+)
 

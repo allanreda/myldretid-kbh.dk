@@ -16,7 +16,7 @@ class TrainingPipeline:
         self.gcp_utils = gcp_utils_class
     
 
-    def run_training_pipeline(self, historical_weather_data, manual_holidays, preprocesser_pipeline, bucket_name, gcs_folder_name, joblib_filename, filetype):
+    def run_training_pipeline(self, historical_weather_data, manual_holidays, preprocesser_pipeline, bucket_name, gcs_folder_name, joblib_filename, filetype, content_type):
         try:
             current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             logger.info(f"Started training pipeline for {joblib_filename}.{filetype} on {current_datetime}.")
@@ -53,7 +53,7 @@ class TrainingPipeline:
                 "afternoon_feature_importance": afternoon_feature_importance
             }, buffer)
 
-            self.gcp_utils.upload_to_gcs(buffer, bucket_name, gcs_folder_name, joblib_filename, filetype)
+            self.gcp_utils.upload_to_gcs(buffer, bucket_name, gcs_folder_name, joblib_filename, filetype, content_type)
 
             logger.info(f"Successfully completed training pipeline for {joblib_filename}.{filetype}")
 

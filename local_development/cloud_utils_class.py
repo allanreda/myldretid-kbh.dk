@@ -34,7 +34,7 @@ class CloudUtils:
             logger.error(f"Error occured when fetching historical data from BigQuery: {e}")
             return None
         
-    def upload_to_gcs(self, buffer, bucket_name, gcs_folder_name, filename, filetype):
+    def upload_to_gcs(self, buffer, bucket_name, gcs_folder_name, filename, filetype, content_type):
         try:
             # Reset pointer to start
             buffer.seek(0)
@@ -42,7 +42,7 @@ class CloudUtils:
             bucket = self.storage_client.bucket(bucket_name)
             blob = bucket.blob(f"{gcs_folder_name}/{filename}.{filetype}")
             # Upload blob
-            blob.upload_from_file(buffer, content_type='application/octet-stream')
+            blob.upload_from_file(buffer, content_type=content_type)
 
             logger.info(f"Successfully uploaded file: {filename}.{filetype} to folder: {gcs_folder_name} in bucket: {bucket_name}.")
         

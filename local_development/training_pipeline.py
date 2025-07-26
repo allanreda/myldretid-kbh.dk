@@ -94,7 +94,8 @@ training.run_training_pipeline(historical_data,
                                'myldretid-kbh-test',
                                'prediction_models',
                                '1_day_prediction_model',
-                               'joblib')
+                               'joblib',
+                               'application/octet-stream')
 
 training.run_training_pipeline(historical_data, 
                                manual_holidays,
@@ -102,4 +103,5 @@ training.run_training_pipeline(historical_data,
                                'myldretid-kbh-test',
                                'prediction_models',
                                '2_day_prediction_model',
-                               'joblib')
+                               'joblib',
+                               'application/octet-stream')

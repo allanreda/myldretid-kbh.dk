@@ -1,4 +1,5 @@
 import joblib
+import json
 import logging
 import sys
 import pandas as pd
@@ -164,10 +165,7 @@ class PredictionPipeline:
             logger.error(f"Error occured in prediction pipeline for next 8 rush hours: {e}")
             return None, None
 
-
-
-
-    def define_dates(self, all_morning_predictions, all_afternoon_predictions):
+    def define_dates_and_convert_json(self, all_morning_predictions, all_afternoon_predictions):
         try:
             # Get todays date + 4 next dates
             today = date.today()
@@ -185,10 +183,23 @@ class PredictionPipeline:
                 morning_prediction_dict = dict(zip(dates, all_morning_predictions))
                 afternoon_prediction_dict = dict(zip(dates, all_afternoon_predictions))
 
+            # Convert to json dict
+            result = {
+                "morning_predictions": {
+                    str(k): round(float(v), 2) for k, v in morning_prediction_dict.items()
+                },
+                "afternoon_predictions": {
+                    str(k): round(float(v), 2) for k, v in afternoon_prediction_dict.items()
+                }
+            }
+
+            # Convert the dict to a json string
+            json_string = json.dumps(result, indent=2)
+
             logger.info("Succesfully defined and mapped dates to predictions.")
-            return morning_prediction_dict, afternoon_prediction_dict
+            return json_string
         
         except Exception as e:
             logger.error(f"Error occured in defining and mapping dates to predictions: {e}")
-            return None, None
+            return None
         
