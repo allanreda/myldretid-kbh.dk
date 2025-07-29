@@ -1,5 +1,5 @@
 import os
-from google.cloud import bigquery, storage
+from google.cloud import bigquery, storage, secretmanager
 from pathlib import Path
 import sys
 import importlib # Remove in prod
@@ -20,9 +20,7 @@ from local_development.cloud_utils_class import CloudUtils
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:/Users/allan/Desktop/Personlige projekter/myldretid-kbh-test_service_account.json'
 bq_client = bigquery.Client()
 storage_client = storage.Client()
-
-# Import OpenWeather API key
-openweather_api_key = Path("C:/Users/allan/Desktop/Personlige projekter/openweather_api_key.txt").read_text()
+sm_client = secretmanager.SecretManagerServiceClient()
 
 # Define SQL query to fetch historical data from Bigquery
 query = """
@@ -73,14 +71,17 @@ manual_holidays = [
     ("2026-06-29", "2026-08-10")
 ]
 
+# Instantiate CloudUtils class
+cloud_utils = CloudUtils(bq_client, storage_client, sm_client)
+# Import OpenWeather API key from Secret Manager in 'hyggeskyen' GCP
+openweather_api_key = cloud_utils.get_secret('OPENWEATHER_API_KEY', 'sylvan-mode-413619')
+
 # Instantiate PreProcessing class
 preprocesser = PreProcessing(openweather_api_key)
 # Instantiate Reducer class
 reducer = MulticollinearityReducer(target_column = "current_travel_time")
 # Instantiate MachineLearning class
 machinelearning = MachineLearning(target_column = "current_travel_time")
-# Instantiate CloudUtils class
-cloud_utils = CloudUtils(bq_client, storage_client)
 # Instantiate TrainingPipeline class
 training = TrainingPipeline(reducer, preprocesser, machinelearning, cloud_utils)
 

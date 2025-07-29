@@ -1,5 +1,4 @@
 const url = "https://storage.googleapis.com/myldretid-kbh-predictions-test/predictions/json_predictions.json";
-// Weekday and month translations
 const weekdays = {
     Monday: "Mandag", Tuesday: "Tirsdag", Wednesday: "Onsdag", Thursday: "Torsdag",
     Friday: "Fredag", Saturday: "Lørdag", Sunday: "Søndag"
@@ -11,15 +10,18 @@ const weekdays = {
     September: "September", October: "Oktober", November: "November", December: "December"
   };
   
-  // Format date into Danish label
   function formatDateLabel(dateStr, period) {
     const date = new Date(dateStr);
     const day = weekdays[date.toLocaleString('en-US', { weekday: 'long' })];
-    const month = months[date.toLocaleString('en-US', { month: 'long' })];
     const label = period === 'morning' ? 'Morgen' : 'Eftermiddag';
     const icon = period === 'morning' ? '🌅' : '🌇';
-    return `${icon} ${day}, ${date.getDate()}. ${month} ${date.getFullYear()} ${label}`;
+  
+    const dayNum = String(date.getDate()).padStart(2, '0');
+    const monthNum = String(date.getMonth() + 1).padStart(2, '0');
+  
+    return `${icon} ${day}, ${dayNum}.${monthNum} ${label}`;
   }
+  
   
   function getDescription(val) {
     if (val < -15) return "🚀 Meget hurtigere end normalt";
@@ -41,25 +43,24 @@ const weekdays = {
     return "#f70525";
   }
   
-  function createGauge(id, val, label, description, color) {
+  function createGauge(id, val, label, description, color, isSmall = false) {
     const data = [{
       type: "indicator",
       mode: "gauge+number",
       value: val,
       title: {
-        text: `<b>${label}</b><br><span style="color:gray;font-size:14px">${description}</span>`,
-        font: { size: 16 }
+        text: `<b>${label}</b><br><span style="color:gray;font-size:${isSmall ? 12 : 14}px">${description}</span>`,
+        font: { size: isSmall ? 14 : 16 }
       },
-      number: { suffix: "%", font: { size: 28, color: "#2c3e50" } },
+      number: { suffix: "%", font: { size: isSmall ? 22 : 28, color: "#2c3e50" } },
       gauge: {
-        axis: { range: [-30, 30], tickwidth: 1, tickcolor: "#888" },
+        axis: { range: [-30, 30], tickwidth: 1 },
         bar: { color: color },
         bgcolor: "#f9f9f9",
         bordercolor: "#e0e0e0",
         borderwidth: 1,
         threshold: {
           line: { color: "#34495e", width: 2 },
-          thickness: 0.75,
           value: 0
         }
       }
@@ -72,6 +73,7 @@ const weekdays = {
     }, { responsive: true });
   }
   
+  
   async function main() {
     try {
       const res = await fetch(`${url}?ts=${Date.now()}`);
@@ -82,42 +84,34 @@ const weekdays = {
         ...Object.entries(data.afternoon_predictions).map(([d, v]) => ({ date: d, period: 'afternoon', value: v }))
       ];
   
-      // Sort by date, morning first
       combined.sort((a, b) => {
         const da = new Date(a.date), db = new Date(b.date);
-        if (da - db !== 0) return da - db;
-        return a.period === 'morning' ? -1 : 1;
+        return da - db || (a.period === 'morning' ? -1 : 1);
       });
   
-      const mainGauges = combined.slice(0, 2);      // Highlight first 2
-      const secondaryGauges = combined.slice(2, 10); // Next 8
+      const mainGauges = combined.slice(0, 2);
+      const secondaryGauges = combined.slice(2, 10);
+  
+      const heroText = getDescription(mainGauges[0].value);
+      document.getElementById("hero-description").innerText = heroText;
   
       const mainDiv = document.getElementById("main-gauges");
       const secondDiv = document.getElementById("secondary-gauges");
   
       let idCounter = 0;
   
-      for (const g of mainGauges) {
+      for (const g of mainGauges.concat(secondaryGauges)) {
         const id = `gauge-${idCounter++}`;
         const el = document.createElement("div");
         el.id = id;
         el.className = "gauge";
-        mainDiv.appendChild(el);
-        createGauge(id, g.value, formatDateLabel(g.date, g.period), getDescription(g.value), getColor(g.value));
-      }
-  
-      for (const g of secondaryGauges) {
-        const id = `gauge-${idCounter++}`;
-        const el = document.createElement("div");
-        el.id = id;
-        el.className = "gauge";
-        secondDiv.appendChild(el);
-        createGauge(id, g.value, formatDateLabel(g.date, g.period), getDescription(g.value), getColor(g.value));
+        (mainGauges.includes(g) ? mainDiv : secondDiv).appendChild(el);
+        createGauge(id, g.value, formatDateLabel(g.date, g.period), getDescription(g.value), getColor(g.value), mainGauges.includes(g) ? false : true);
       }
   
     } catch (err) {
-      console.error("Failed to load prediction data:", err);
-      document.body.innerHTML += `<p style="color:red;">Fejl ved indlæsning af trafikdata</p>`;
+      console.error("Failed to load data:", err);
+      document.getElementById("hero-description").innerText = "Kunne ikke indlæse trafikdata 😞";
     }
   }
   

@@ -2,21 +2,38 @@
 <html lang="da">
 <head>
   <meta charset="UTF-8" />
-  <title>Trafikforudsigelser – København</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚦 København Trafikforudsigelser</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-  <div class="container">
+  <header>
     <h1>🚦 København Trafikforudsigelser</h1>
+    <p class="tagline">Smart byvisualisering af rejsetid under myldretid</p>
+  </header>
 
+  <section class="hero" id="hero">
+    <h2 id="hero-summary">Dagens trafik</h2>
+    <p id="hero-description">Indlæser forudsigelser...</p>
+  </section>
+
+  <section class="gauges">
     <div id="main-gauges" class="gauge-row large"></div>
     <div id="secondary-gauges" class="gauge-row small"></div>
+  </section>
 
-    <footer>
-      <p>Opdateres flere gange dagligt. Kilde: Google Cloud Storage.</p>
-    </footer>
-  </div>
+  <section class="info">
+    <details>
+      <summary>ℹ️ Om denne visualisering</summary>
+      <p>Forudsigelserne opdateres flere gange dagligt og viser procentvise afvigelser i rejsetid sammenlignet med det normale. Grøn betyder hurtigere trafik end normalt, rød betyder langsommere.</p>
+      <p>Kilde: Egne modeller baseret på data fra København og vejrprognoser. Hosting og datalagring via Google Cloud Platform.</p>
+    </details>
+  </section>
+
+  <footer>
+    <p>© 2025 København Trafikforudsigelser · Udviklet med ❤️ af Allan Reda</p>
+  </footer>
 
   <script src="script.js"></script>
 </body>

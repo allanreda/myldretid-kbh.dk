@@ -12,6 +12,5 @@ matplotlib
 lightgbm
 catboost
 astral
-plotly
-nbformat
-kaleido
+google-cloud-secret-manager
+flask

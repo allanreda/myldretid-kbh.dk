@@ -7,12 +7,10 @@ import pandas as pd
 import importlib # Remove in prod
 importlib.reload(sys.modules['local_development.preprocessing_class'])
 importlib.reload(sys.modules['local_development.prediction_pipeline_class'])
-importlib.reload(sys.modules['local_development.traffic_plotter_class'])
 importlib.reload(sys.modules['local_development.cloud_utils_class'])
 from local_development.preprocessing_class import PreProcessing
 from local_development.prediction_pipeline_class import PredictionPipeline
 from local_development.cloud_utils_class import CloudUtils
-from local_development.traffic_plotter_class import TrafficGaugePlotter
 import numpy as np
 from datetime import date, datetime
 import io
@@ -31,8 +29,6 @@ cloud_utils = CloudUtils(bq_client, storage_client)
 preprocesser = PreProcessing(openweather_api_key)
 # Instantiate PredictionPipeline class
 predict = PredictionPipeline(cloud_utils, preprocesser)
-# Instantiate TrafficGaugePlotter class
-plotter = TrafficGaugePlotter(cloud_utils)
 
 # Create manual holiday date ranges
 manual_holidays = [
