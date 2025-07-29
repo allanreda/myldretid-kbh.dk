@@ -11,8 +11,8 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Declares which function handles HTTP requests
-ENV FUNCTION_TARGET=train_models
+ENV FUNCTION_TARGET=predict
 
 # Starts the Functions Framework server to listen on port 8080
-CMD ["functions-framework", "--target=train_models", "--port=8080"]
+CMD ["functions-framework", "--target=predict", "--port=8080"]
  
