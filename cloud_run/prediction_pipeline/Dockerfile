@@ -4,6 +4,8 @@ FROM python:3.10-slim
 # Set working directory inside container
 WORKDIR /app
 
+# Copy everything from the shared folder
+COPY ../shared /app/shared
 # Copy everything from folder into container
 COPY . .
 

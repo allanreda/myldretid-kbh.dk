@@ -1,7 +1,7 @@
 from google.cloud import bigquery, storage, secretmanager
-from local_development.preprocessing_class import PreProcessing
-from local_development.prediction_pipeline_class import PredictionPipeline
-from local_development.cloud_utils_class import CloudUtils
+from prediction_pipeline_class import PredictionPipeline
+from shared.preprocessing_class import PreProcessing
+from shared.cloud_utils_class import CloudUtils
 import numpy as np
 from datetime import date, datetime
 import io
