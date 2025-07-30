@@ -1,7 +1,7 @@
 # Project ID passed down from ../variables.tf
 variable "project_id" {}
 
-# The list of two project level roles
+# The list of project level roles for hyggeskyen SA
 # Passed down from ../variables.tf
 variable "project_level_roles" {
   type = list(object({
