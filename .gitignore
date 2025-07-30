@@ -175,3 +175,31 @@ cython_debug/
 
 # Catboost info
 catboost_info
+
+# Local .terraform directories
+.terraform/
+
+# Terraform plan and state files
+*.tfstate
+*.tfstate.backup
+
+# Crash log files
+crash.log
+
+# Terraform variable files
+*.tfvars
+*.tfvars.json
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration file (if present)
+.terraformrc
+terraform.rc
+
+# Terraform lock file (optional to ignore)
+# Uncomment below if you don’t want to track the provider versions per machine
+.terraform.lock.hcl
