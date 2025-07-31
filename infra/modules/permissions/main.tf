@@ -1,6 +1,6 @@
 # Define data source for service account
 data "google_service_account" "hyggeskyen_sa" {
-    account_id = "myldretid-kbh@sylvan-mode-413619.iam.gserviceaccount.com"
+    account_id = var.service_account_email
     project = "sylvan-mode-413619" 
 }
 
