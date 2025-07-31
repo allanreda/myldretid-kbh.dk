@@ -6,14 +6,6 @@ resource "google_storage_bucket" "bucket" {
   uniform_bucket_level_access = true
   force_destroy = true
 
-# Optional website block
-  dynamic "website" {
-    for_each = var.enable_website ? [1] : []
-    content {
-      main_page_suffix = "index.html"
-      not_found_page   = "404.html"
-    }
-  }
 # Optional CORS block
   dynamic "cors" {
     # Only add CORS if enable_cors = true and domain is not null

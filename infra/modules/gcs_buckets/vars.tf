@@ -19,11 +19,6 @@ variable "region" {
     default = "europe-west1"
 }
 
-variable "enable_website" {
-  type = bool
-  default = false
-}
-
 variable "enable_cors" {
   type = bool
   default = false

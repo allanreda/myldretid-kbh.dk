@@ -22,7 +22,6 @@ module "models_bucket" {
   name = "${terraform.workspace}-models"
   project_id = var.project_id
   region = var.region
-  enable_website = false
   enable_cors = false
   make_public = false
 
@@ -35,7 +34,6 @@ module "predictions_bucket" {
   name = "${terraform.workspace}-predictions"
   project_id = var.project_id
   region = var.region
-  enable_website = true
   domain = var.domain
   enable_cors = true
   make_public = true
