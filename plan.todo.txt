@@ -1,0 +1,7 @@
+[ ] Find a method to dynamically create linking between code in training_pipeline and prediction_pipeline and ressource names in GCP in regards of dev/prod naming.
+[ ] Buy domain
+[ ] Install GA4 on website
+ 
+
+
+
