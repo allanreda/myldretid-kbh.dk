@@ -111,8 +111,8 @@ def train_models(request: Request):
         training.run_training_pipeline(historical_data, 
                                     manual_holidays,
                                     'execute_preprocessing_1_day',
-                                    'myldretid-kbh-test',
-                                    'prediction_models',
+                                    'training',
+                                    'models',
                                     '1_day_prediction_model',
                                     'joblib',
                                     'application/octet-stream')
@@ -120,8 +120,8 @@ def train_models(request: Request):
         training.run_training_pipeline(historical_data, 
                                     manual_holidays,
                                     'execute_preprocessing_2_day',
-                                    'myldretid-kbh-test',
-                                    'prediction_models',
+                                    'training',
+                                    'models',
                                     '2_day_prediction_model',
                                     'joblib',
                                     'application/octet-stream')

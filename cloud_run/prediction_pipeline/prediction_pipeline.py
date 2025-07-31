@@ -112,14 +112,14 @@ def predict(request: Request):
         next_morning_traffic, next_afternoon_traffic = predict.predict_next_rush_hour_periods_wrapper(historical_df, 
                                                                                                     forecast_df, 
                                                                                                     manual_holidays,
-                                                                                                    'myldretid-kbh-test',
+                                                                                                    'training',
                                                                                                     '1_day_prediction_model')
 
         # Predict the next 8 rush hours after the first 2 and compare to average traveltime
         next_4_mornings_traffic, next_4_afternoons_traffic = predict.predict_next_8_rush_hour_periods_wrapper(historical_df, 
                                                                                                             forecast_df, 
                                                                                                             manual_holidays,
-                                                                                                            'myldretid-kbh-test',
+                                                                                                            'training',
                                                                                                             '2_day_prediction_model')
 
 
@@ -136,7 +136,7 @@ def predict(request: Request):
         # Upload to GCS
         cloud_utils.upload_to_gcs(
             buffer=buffer,
-            bucket_name="myldretid-kbh-predictions-test",
+            bucket_name="predictions",
             gcs_folder_name="predictions",
             filename="json_predictions",
             filetype="json",

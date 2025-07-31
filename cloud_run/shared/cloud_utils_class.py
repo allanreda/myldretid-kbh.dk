@@ -55,7 +55,7 @@ class CloudUtils:
         try:
             # Initialize bucket and define blob
             bucket = self.storage_client.bucket(bucket_name)
-            blob = bucket.blob(f'prediction_models/{filename}.joblib')
+            blob = bucket.blob(f'models/{filename}.joblib')
 
             # Download blob into memory
             buffer = io.BytesIO()

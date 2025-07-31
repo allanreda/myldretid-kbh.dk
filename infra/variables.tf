@@ -7,9 +7,9 @@ variable "region" {
     default = "europe-west1"
 }
 
-variable "resource_prefix" {
-    type = string
-    default = "myldretid-kbh"
+variable "domain" {
+    type    = string
+    default = "http://myldretid-kbh.dk"
 }
 
 # List of the required project level roles for the hyggeskyen SA 
