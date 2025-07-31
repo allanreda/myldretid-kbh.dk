@@ -13,10 +13,11 @@ module "permissions" {
   project_id = var.project_id # Passes project_id down to permissions module
   project_level_roles = var.project_level_roles # Passes the list of the required project level roles for the hyggeskyen SA down
 
-  # Wait for APIs to be enables
+  # Wait for APIs to be enabled
   depends_on = [module.enable_apis]
 }
 
+# Create bucket to store trained models
 module "models_bucket" {
   source = "./modules/gcs_buckets"
   name = "${terraform.workspace}-models"
@@ -25,10 +26,11 @@ module "models_bucket" {
   enable_cors = false
   make_public = false
 
-  # Wait for APIs to be enables
+  # Wait for APIs to be enabled
   depends_on = [module.enable_apis]
 }
 
+# Create bucket to store prediction file
 module "predictions_bucket" {
   source = "./modules/gcs_buckets"
   name = "${terraform.workspace}-predictions"
@@ -38,6 +40,6 @@ module "predictions_bucket" {
   enable_cors = true
   make_public = true
 
-  # Wait for APIs to be enables
+  # Wait for APIs to be enabled
   depends_on = [module.enable_apis]
 }
