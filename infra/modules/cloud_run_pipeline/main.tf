@@ -2,11 +2,11 @@ resource "google_cloud_run_v2_service" "service" {
     name = var.name
     project = var.project_id
     location = var.region
-    service_account = var.service_account_email
     deletion_protection = false
     ingress = "INGRESS_TRAFFIC_INTERNAL_ONLY"
 
     template {
+        service_account = var.service_account_email
         max_instance_request_concurrency = 1 
         containers {
             image = var.image
@@ -17,10 +17,10 @@ resource "google_cloud_run_v2_service" "service" {
                 }
             }
         }
-    }
-    scaling {
-        min_instance_count = 0
-        max_instance_count = 1
+        scaling {
+            min_instance_count = 0
+            max_instance_count = 1
+        }
     }
 
     traffic {
