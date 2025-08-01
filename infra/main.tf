@@ -11,6 +11,7 @@ module "permissions" {
   source = "./modules/permissions"
   
   project_id = var.project_id # Passes project_id down to permissions module
+  service_account_email = var.service_account_email
   project_level_roles = var.project_level_roles # Passes the list of the required project level roles for the hyggeskyen SA down
 
   # Wait for APIs to be enabled

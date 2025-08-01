@@ -10,13 +10,13 @@ resource "google_storage_bucket" "bucket" {
   dynamic "cors" {
     # Only add CORS if enable_cors = true and domain is not null
     for_each = var.enable_cors && var.domain != null ? [1] : []
-
-    origin          = [var.domain] # Get website domain
-    method          = ["GET"]
-    response_header = ["Content-Type"]
-    max_age_seconds = 3600
+    content {
+      origin = [var.domain] # Get website domain
+      method = ["GET"]
+      response_header = ["Content-Type"]
+      max_age_seconds = 3600 
+    }
   }
-
 }
 
 
