@@ -63,6 +63,7 @@ variable "cicd_project_level_roles" {
   default = [
     { role = "roles/artifactregistry.writer" },
     { role = "roles/run.admin" },
-    { role = "roles/iam.serviceAccountUser" }
+    { role = "roles/iam.serviceAccountUser" },
+    { role = "roles/viewer" }
   ]
 }
