@@ -51,6 +51,7 @@ jobs:
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/training:latest \
             --platform managed \
             --region $REGION \
+            --project $PROJECT_ID \
             --quiet
 
 
@@ -60,6 +61,7 @@ jobs:
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest \
             --platform managed \
             --region $REGION \
+            --project $PROJECT_ID \
             --quiet
 
       - name: Deploy to prediction-afternoon
@@ -68,4 +70,5 @@ jobs:
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest \
             --platform managed \
             --region $REGION \
+            --project $PROJECT_ID \
             --quiet
