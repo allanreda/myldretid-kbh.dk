@@ -31,13 +31,13 @@ jobs:
       # ── Build and Push Training Image ──
       - name: Build and Push Training Image
         run: |
-          docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/training:latest cloud_run/training_pipeline
+          docker build -f cloud_run/training_pipeline/Dockerfile -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/training:latest cloud_run
           docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/training:latest
 
       # ── Build and Push Prediction Image ──
       - name: Build and Push Prediction Image
         run: |
-          docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest cloud_run/prediction_pipeline
+          docker build -f cloud_run/prediction_pipeline/Dockerfile -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest cloud_run
           docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest
 
       # ── Deploy Updated Images to Cloud Run ──
@@ -46,18 +46,22 @@ jobs:
           gcloud run deploy training \
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/training:latest \
             --platform managed \
-            --region $REGION 
+            --region $REGION \
+            --quiet
+
 
       - name: Deploy to prediction-morning
         run: |
           gcloud run deploy prediction-morning \
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest \
             --platform managed \
-            --region $REGION 
+            --region $REGION \
+            --quiet
 
       - name: Deploy to prediction-afternoon
         run: |
           gcloud run deploy prediction-afternoon \
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest \
             --platform managed \
-            --region $REGION 
+            --region $REGION \
+            --quiet

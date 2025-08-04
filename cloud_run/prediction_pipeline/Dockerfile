@@ -5,7 +5,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Copy everything from the shared folder
-COPY ../shared /app/shared
+COPY shared /app/shared
 # Copy everything from folder into container
 COPY . .
 
