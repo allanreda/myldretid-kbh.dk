@@ -9,7 +9,8 @@ resource "google_cloud_run_v2_service" "service" {
         service_account = var.service_account_email
         max_instance_request_concurrency = 1 
         containers {
-            image = var.image
+            #image = var.image
+            image = "gcr.io/google-samples/hello-app:1.0" # Sample image until real deployment
             resources {
                 limits = {
                 cpu = var.cpu
@@ -58,5 +59,5 @@ resource "google_pubsub_subscription" "subscription" {
     }
   }
 
-  ack_deadline_seconds = 900
+  ack_deadline_seconds = 600
 }

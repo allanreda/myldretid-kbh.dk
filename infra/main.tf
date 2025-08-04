@@ -11,9 +11,10 @@ module "permissions" {
   source = "./modules/permissions"
   
   project_id = var.project_id # Passes project_id down to permissions module
-  service_account_email = var.service_account_email
+  external_project_id = var.external_project_id
+  service_account_name = var.service_account_name
   project_level_roles = var.project_level_roles # Passes the list of the required project level roles for the hyggeskyen SA down
-
+  
   # Wait for APIs to be enabled
   depends_on = [module.enable_apis]
 }
@@ -21,20 +22,20 @@ module "permissions" {
 # Create bucket to store trained models
 module "models_bucket" {
   source = "./modules/gcs_buckets"
-  name = "${terraform.workspace}-models"
+  name = "${var.project_id}-${terraform.workspace}-models"
   project_id = var.project_id
   region = var.region
   enable_cors = false
   make_public = false
  
   # Wait for APIs to be enabled
-  depends_on = [module.enable_apis]
+  depends_on = [module.permissions]
 }
 
 # Create bucket to store prediction file
 module "predictions_bucket" {
   source = "./modules/gcs_buckets"
-  name = "${terraform.workspace}-predictions"
+  name = "${var.project_id}-${terraform.workspace}-predictions"
   project_id = var.project_id
   region = var.region
   domain = var.domain
@@ -42,7 +43,7 @@ module "predictions_bucket" {
   make_public = true
 
   # Wait for APIs to be enabled
-  depends_on = [module.enable_apis]
+  depends_on = [module.permissions]
 }
 
 
@@ -58,7 +59,7 @@ module "training_pipeline" {
   schedule = "0 6 * * 0" # Every sunday at 6:00 
 
   # Wait for APIs to be enabled
-  depends_on = [module.enable_apis]
+  depends_on = [module.permissions]
 }
 
 module "prediction_pipeline_morning" {
@@ -68,12 +69,12 @@ module "prediction_pipeline_morning" {
   region = var.region
   service_account_email = var.service_account_email
   image = "${var.region}-docker.pkg.dev/${var.project_id}/myldretid-kbh-${terraform.workspace}/prediction:latest"
-  cpu = 0.5
+  cpu = 1
   memory = "512Mi"
   schedule = "0 10 * * *"  # Every day at 10:00 
 
   # Wait for APIs to be enabled
-  depends_on = [module.enable_apis]
+  depends_on = [module.permissions]
 }
 
 module "prediction_pipeline_afternoon" {
@@ -83,10 +84,10 @@ module "prediction_pipeline_afternoon" {
   region = var.region
   service_account_email = var.service_account_email
   image = "${var.region}-docker.pkg.dev/${var.project_id}/myldretid-kbh-${terraform.workspace}/prediction:latest"
-  cpu = 0.5
+  cpu = 1
   memory = "512Mi"
   schedule = "0 18 * * *"  # Every day at 18:00 
 
   # Wait for APIs to be enabled
-  depends_on = [module.enable_apis]
+  depends_on = [module.permissions]
 }

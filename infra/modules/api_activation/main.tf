@@ -6,4 +6,5 @@ resource "google_project_service" "enabled_apis" {
     project = var.project_id # Project ID passed down from permissions/vars.tf
 
     disable_on_destroy = true 
+    disable_dependent_services=true
 }

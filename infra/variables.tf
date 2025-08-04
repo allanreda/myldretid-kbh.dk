@@ -2,14 +2,21 @@ variable "project_id" {
     type = string
 }
 
+variable "external_project_id" {
+    type = string
+}
+
 variable "region" {
     type    = string
     default = "europe-west1"
 }
 
+variable "service_account_name" {
+    type = string
+}
+
 variable "service_account_email" {
     type = string
-    default = "myldretid-kbh@sylvan-mode-413619.iam.gserviceaccount.com"
 }
 
 variable "domain" {
@@ -26,6 +33,7 @@ variable "api_list" {
     "pubsub.googleapis.com",          # Pub/Sub
     "storage.googleapis.com",         # Cloud Storage
     "logging.googleapis.com",         # Logging
+    "iam.googleapis.com"
   ]
 }
 

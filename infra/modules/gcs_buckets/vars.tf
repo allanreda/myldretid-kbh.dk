@@ -6,7 +6,6 @@ variable "project_id" {
 variable "domain" {
     type = string
     default = null
-
 }
 
 # Name of the bucket

@@ -3,8 +3,13 @@ variable "project_id" {
     type = string
 }
 
-# SA email passed down from ../variables.tf
-variable "service_account_email" {
+variable "external_project_id" {
+    type = string
+}
+
+
+# SA name passed down from ../variables.tf
+variable "service_account_name" {
     type = string
 }
 
