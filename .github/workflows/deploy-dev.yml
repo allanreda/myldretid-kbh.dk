@@ -1,0 +1,74 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      REGION: ${{ secrets.REGION }}
+      WORKSPACE: dev
+      REPO_NAME: myldretid-kbh-dev
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker $REGION-docker.pkg.dev
+
+      # ── Build and Push Training Image ──
+      - name: Build and Push Training Image
+        run: |
+          docker build -f cloud_run/training_pipeline/Dockerfile -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/training:latest cloud_run
+          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/training:latest
+
+      # ── Build and Push Prediction Image ──
+      - name: Build and Push Prediction Image
+        run: |
+          docker build -f cloud_run/prediction_pipeline/Dockerfile -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest cloud_run
+          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest
+
+      # ── Deploy Updated Images to Cloud Run ──
+      - name: Deploy to training
+        run: |
+          gcloud run deploy training \
+            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/training:latest \
+            --platform managed \
+            --region $REGION \
+            --project $PROJECT_ID \
+            --quiet
+
+
+      - name: Deploy to prediction-morning
+        run: |
+          gcloud run deploy prediction-morning \
+            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest \
+            --platform managed \
+            --region $REGION \
+            --project $PROJECT_ID \
+            --quiet
+
+      - name: Deploy to prediction-afternoon
+        run: |
+          gcloud run deploy prediction-afternoon \
+            --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest \
+            --platform managed \
+            --region $REGION \
+            --project $PROJECT_ID \
+            --quiet

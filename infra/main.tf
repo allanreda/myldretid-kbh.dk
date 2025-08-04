@@ -14,7 +14,8 @@ module "permissions" {
   external_project_id = var.external_project_id
   service_account_name = var.service_account_name
   project_level_roles = var.project_level_roles # Passes the list of the required project level roles for the hyggeskyen SA down
-  
+  cicd_service_account_email = var.cicd_service_account_email
+  cicd_project_level_roles = var.cicd_project_level_roles
   # Wait for APIs to be enabled
   depends_on = [module.enable_apis]
 }

@@ -19,6 +19,10 @@ variable "service_account_email" {
     type = string
 }
 
+variable "cicd_service_account_email" {
+    type = string
+}
+
 variable "domain" {
     type    = string
     default = "http://myldretid-kbh.dk"
@@ -37,7 +41,7 @@ variable "api_list" {
   ]
 }
 
-# List of the required project level roles for the hyggeskyen SA 
+# List of the required project level roles for the deployment_sa 
 variable "project_level_roles" {
   type = list(object({
     role = string
@@ -48,5 +52,17 @@ variable "project_level_roles" {
     { role = "roles/pubsub.subscriber" },
     { role = "roles/logging.logWriter" },
     { role = "roles/run.invoker" }
+  ]
+}
+
+# List of the required project level roles for the cicd_sa
+variable "cicd_project_level_roles" {
+  type = list(object({
+    role = string
+  }))
+  default = [
+    { role = "roles/artifactregistry.writer" },
+    { role = "roles/run.admin" },
+    { role = "roles/iam.serviceAccountUser" }
   ]
 }
