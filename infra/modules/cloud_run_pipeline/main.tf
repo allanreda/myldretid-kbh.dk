@@ -1,3 +1,10 @@
+resource "google_artifact_registry_repository" "pipeline_repo" {
+  project       = var.project_id
+  location      = var.region
+  repository_id = "myldretid-kbh-${terraform.workspace}"  
+  format        = "DOCKER"
+}
+
 resource "google_cloud_run_v2_service" "service" {
     name = var.name
     project = var.project_id
@@ -9,8 +16,8 @@ resource "google_cloud_run_v2_service" "service" {
         service_account = var.service_account_email
         max_instance_request_concurrency = 1 
         containers {
-            #image = var.image
-            image = "gcr.io/google-samples/hello-app:1.0" # Sample image until real deployment
+            image = var.image
+            #image = "gcr.io/google-samples/hello-app:1.0" # Sample image until real deployment
             resources {
                 limits = {
                 cpu = var.cpu
@@ -28,6 +35,8 @@ resource "google_cloud_run_v2_service" "service" {
         percent = 100
         type = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     }
+    
+    depends_on = [google_artifact_registry_repository.pipeline_repo]
 }
 
 resource "google_pubsub_topic" "topic" {
