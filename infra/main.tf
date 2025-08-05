@@ -47,7 +47,6 @@ module "predictions_bucket" {
   depends_on = [module.permissions]
 }
 
-
 module "training_pipeline" {
   source = "./modules/cloud_run_pipeline"
   name = "training-${terraform.workspace}"
