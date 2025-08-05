@@ -50,7 +50,7 @@ module "predictions_bucket" {
 
 module "training_pipeline" {
   source = "./modules/cloud_run_pipeline"
-  name = "training"
+  name = "training-${terraform.workspace}"
   project_id = var.project_id
   region = var.region
   service_account_email = var.service_account_email
@@ -65,7 +65,7 @@ module "training_pipeline" {
 
 module "prediction_pipeline_morning" {
   source = "./modules/cloud_run_pipeline"
-  name = "prediction-morning"
+  name = "prediction-morning-${terraform.workspace}"
   project_id = var.project_id
   region = var.region
   service_account_email = var.service_account_email
@@ -80,7 +80,7 @@ module "prediction_pipeline_morning" {
 
 module "prediction_pipeline_afternoon" {
   source = "./modules/cloud_run_pipeline"
-  name = "prediction-afternoon"
+  name = "prediction-afternoon-${terraform.workspace}"
   project_id = var.project_id
   region = var.region
   service_account_email = var.service_account_email
