@@ -140,7 +140,7 @@ def train_models(request: Request):
         print(f"-----------------------------------------------------\n Total execution time: {total_time/60} minutes \n-----------------------------------------------------")
 
 
-        return ("Training completed successfully", 200)
+        return Response("Training completed successfully", 200)
 
     except Exception as e:
         print(f"Error: {e}")
