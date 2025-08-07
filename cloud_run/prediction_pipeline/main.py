@@ -116,14 +116,14 @@ def predict(request: Request):
         next_morning_traffic, next_afternoon_traffic = predict.predict_next_rush_hour_periods_wrapper(historical_df, 
                                                                                                     forecast_df, 
                                                                                                     manual_holidays,
-                                                                                                    'training',
+                                                                                                    f"{bucket_name}-models",
                                                                                                     '1_day_prediction_model')
 
         # Predict the next 8 rush hours after the first 2 and compare to average traveltime
         next_4_mornings_traffic, next_4_afternoons_traffic = predict.predict_next_8_rush_hour_periods_wrapper(historical_df, 
                                                                                                             forecast_df, 
                                                                                                             manual_holidays,
-                                                                                                            'training',
+                                                                                                            f"{bucket_name}-models",
                                                                                                             '2_day_prediction_model')
 
 
