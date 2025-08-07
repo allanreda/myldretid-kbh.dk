@@ -3,6 +3,7 @@ import io
 import logging
 import sys
 import json
+import sklearn
 
 
 # Configure logging
