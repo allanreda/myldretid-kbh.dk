@@ -47,10 +47,19 @@ module "predictions_bucket" {
   depends_on = [module.permissions]
 }
 
+resource "google_artifact_registry_repository" "pipeline_repo" {
+  project       = var.project_id
+  location      = var.region
+  repository_id = "myldretid-kbh-${terraform.workspace}"  
+  format        = "DOCKER"
+
+  # Wait for APIs to be enabled
+  depends_on = [module.permissions]
+}
 
 module "training_pipeline" {
   source = "./modules/cloud_run_pipeline"
-  name = "training"
+  name = "training-${terraform.workspace}"
   project_id = var.project_id
   region = var.region
   service_account_email = var.service_account_email
@@ -59,13 +68,13 @@ module "training_pipeline" {
   memory = "1024Mi"
   schedule = "0 6 * * 0" # Every sunday at 6:00 
 
-  # Wait for APIs to be enabled
-  depends_on = [module.permissions]
+  # Wait for repo to be created
+  depends_on = [google_artifact_registry_repository.pipeline_repo]
 }
 
 module "prediction_pipeline_morning" {
   source = "./modules/cloud_run_pipeline"
-  name = "prediction-morning"
+  name = "prediction-morning-${terraform.workspace}"
   project_id = var.project_id
   region = var.region
   service_account_email = var.service_account_email
@@ -74,13 +83,13 @@ module "prediction_pipeline_morning" {
   memory = "512Mi"
   schedule = "0 10 * * *"  # Every day at 10:00 
 
-  # Wait for APIs to be enabled
-  depends_on = [module.permissions]
+  # Wait for repo to be created
+  depends_on = [google_artifact_registry_repository.pipeline_repo]
 }
 
 module "prediction_pipeline_afternoon" {
   source = "./modules/cloud_run_pipeline"
-  name = "prediction-afternoon"
+  name = "prediction-afternoon-${terraform.workspace}"
   project_id = var.project_id
   region = var.region
   service_account_email = var.service_account_email
@@ -89,6 +98,6 @@ module "prediction_pipeline_afternoon" {
   memory = "512Mi"
   schedule = "0 18 * * *"  # Every day at 18:00 
 
-  # Wait for APIs to be enabled
-  depends_on = [module.permissions]
+  # Wait for repo to be created
+  depends_on = [google_artifact_registry_repository.pipeline_repo]
 }

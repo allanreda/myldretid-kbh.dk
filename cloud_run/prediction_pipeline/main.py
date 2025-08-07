@@ -8,9 +8,10 @@ import io
 from zoneinfo import ZoneInfo 
 from datetime import datetime
 import time
-from flask import Request
+from flask import Request, Response
 import functions_framework
 import base64
+import os
 
 # Define the time zone
 cet_timezone = ZoneInfo('Europe/Copenhagen')
@@ -107,19 +108,22 @@ def predict(request: Request):
         historical_df = cloud_utils.pull_historical_data(query)
         # Pull weather forecast for next 5 days
         forecast_df = preprocesser.pull_weather_forecast()
+        
+        # Get bucket name from environment
+        bucket_name = os.environ.get("MODEL_BUCKET")
 
         # Predict next 2 rush hours and compare to average traveltime
         next_morning_traffic, next_afternoon_traffic = predict.predict_next_rush_hour_periods_wrapper(historical_df, 
                                                                                                     forecast_df, 
                                                                                                     manual_holidays,
-                                                                                                    'training',
+                                                                                                    f"{bucket_name}-models",
                                                                                                     '1_day_prediction_model')
 
         # Predict the next 8 rush hours after the first 2 and compare to average traveltime
         next_4_mornings_traffic, next_4_afternoons_traffic = predict.predict_next_8_rush_hour_periods_wrapper(historical_df, 
                                                                                                             forecast_df, 
                                                                                                             manual_holidays,
-                                                                                                            'training',
+                                                                                                            f"{bucket_name}-models",
                                                                                                             '2_day_prediction_model')
 
 
@@ -136,7 +140,7 @@ def predict(request: Request):
         # Upload to GCS
         cloud_utils.upload_to_gcs(
             buffer=buffer,
-            bucket_name="predictions",
+            bucket_name=f"{bucket_name}-predictions",
             gcs_folder_name="predictions",
             filename="json_predictions",
             filetype="json",
@@ -152,8 +156,8 @@ def predict(request: Request):
 
         print(f"-----------------------------------------------------\n Total execution time: {total_time/60} minutes \n-----------------------------------------------------")
 
-        return ("Prediction completed successfully", 200)
+        return Response("Prediction completed successfully", 200)
 
     except Exception as e:
         print(f"Error: {e}")
-        return (f"Internal server error: {e}", 500)
+        return Response(f"Error occurred, but acknowledged to prevent retry: {e}", status=200)

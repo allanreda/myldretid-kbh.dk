@@ -7,9 +7,10 @@ from shared.preprocessing_class import PreProcessing
 from zoneinfo import ZoneInfo 
 from datetime import datetime
 import time
-from flask import Request
+from flask import Request, Response
 import functions_framework
 import base64
+import os
 
 # Define the time zone
 cet_timezone = ZoneInfo('Europe/Copenhagen')
@@ -107,12 +108,15 @@ def train_models(request: Request):
         # Pull historical traffic and weather data from bigquery
         historical_data = cloud_utils.pull_historical_data(query)
 
+        # Get bucket name from environment
+        bucket_name = os.environ.get("MODEL_BUCKET")
+
         # Run training for 1-day and 2-day models
         training.run_training_pipeline(historical_data, 
                                     manual_holidays,
                                     'execute_preprocessing_1_day',
+                                    f"{bucket_name}-models",
                                     'training',
-                                    'models',
                                     '1_day_prediction_model',
                                     'joblib',
                                     'application/octet-stream')
@@ -120,8 +124,8 @@ def train_models(request: Request):
         training.run_training_pipeline(historical_data, 
                                     manual_holidays,
                                     'execute_preprocessing_2_day',
+                                    f"{bucket_name}-models",
                                     'training',
-                                    'models',
                                     '2_day_prediction_model',
                                     'joblib',
                                     'application/octet-stream')
@@ -136,8 +140,8 @@ def train_models(request: Request):
         print(f"-----------------------------------------------------\n Total execution time: {total_time/60} minutes \n-----------------------------------------------------")
 
 
-        return ("Training completed successfully", 200)
+        return Response("Training completed successfully", 200)
 
     except Exception as e:
         print(f"Error: {e}")
-        return (f"Internal server error: {e}", 500)
+        return Response(f"Error occurred, but acknowledged to prevent retry: {e}", status=200)

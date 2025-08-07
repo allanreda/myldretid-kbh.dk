@@ -51,7 +51,8 @@ variable "project_level_roles" {
     { role = "roles/storage.objectViewer" },
     { role = "roles/pubsub.subscriber" },
     { role = "roles/logging.logWriter" },
-    { role = "roles/run.invoker" }
+    { role = "roles/run.invoker" },
+    { role = "roles/bigquery.user" }
   ]
 }
 

@@ -1,10 +1,3 @@
-resource "google_artifact_registry_repository" "pipeline_repo" {
-  project       = var.project_id
-  location      = var.region
-  repository_id = "myldretid-kbh-${terraform.workspace}"  
-  format        = "DOCKER"
-}
-
 resource "google_cloud_run_v2_service" "service" {
     name = var.name
     project = var.project_id
@@ -24,6 +17,10 @@ resource "google_cloud_run_v2_service" "service" {
                 memory = var.memory
                 }
             }
+            env {
+              name  = "MODEL_BUCKET"
+              value = "${var.project_id}-${terraform.workspace}"
+            }
         }
         scaling {
             min_instance_count = 0
@@ -35,8 +32,6 @@ resource "google_cloud_run_v2_service" "service" {
         percent = 100
         type = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
     }
-    
-    depends_on = [google_artifact_registry_repository.pipeline_repo]
 }
 
 resource "google_pubsub_topic" "topic" {
@@ -69,4 +64,6 @@ resource "google_pubsub_subscription" "subscription" {
   }
 
   ack_deadline_seconds = 600
+
+  message_retention_duration = "600s"
 }
