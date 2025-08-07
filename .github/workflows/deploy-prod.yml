@@ -46,7 +46,7 @@ jobs:
       # ── Deploy Updated Images to Cloud Run ──
       - name: Deploy to training
         run: |
-          gcloud run deploy training \
+          gcloud run deploy training-$WORKSPACE \
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/training:latest \
             --platform managed \
             --region $REGION \
@@ -55,7 +55,7 @@ jobs:
 
       - name: Deploy to prediction-morning
         run: |
-          gcloud run deploy prediction-morning \
+          gcloud run deploy prediction-morning-$WORKSPACE \
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest \
             --platform managed \
             --region $REGION \
@@ -64,7 +64,7 @@ jobs:
 
       - name: Deploy to prediction-afternoon
         run: |
-          gcloud run deploy prediction-afternoon \
+          gcloud run deploy prediction-afternoon-$WORKSPACE \
             --image $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/prediction:latest \
             --platform managed \
             --region $REGION \
