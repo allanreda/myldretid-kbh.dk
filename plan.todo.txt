@@ -2,6 +2,6 @@
 [ ] Buy domain
 [ ] Install GA4 on website
 [ ] Make sure cloud run functions only run once, even if they failS 
-
+[ ] Find a better solution for manual_holidays
 
 
