@@ -8,7 +8,7 @@ import io
 from zoneinfo import ZoneInfo 
 from datetime import datetime
 import time
-from flask import Request
+from flask import Request, Response
 import functions_framework
 import base64
 import os
@@ -160,4 +160,4 @@ def predict(request: Request):
 
     except Exception as e:
         print(f"Error: {e}")
-        return (f"Internal server error: {e}", 500)
+        return Response(f"Error occurred, but acknowledged to prevent retry: {e}", status=200)
