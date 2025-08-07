@@ -1,10 +1,3 @@
-# resource "google_artifact_registry_repository" "pipeline_repo" {
-#   project       = var.project_id
-#   location      = var.region
-#   repository_id = "myldretid-kbh-${terraform.workspace}"  
-#   format        = "DOCKER"
-# }
-
 resource "google_cloud_run_v2_service" "service" {
     name = var.name
     project = var.project_id
@@ -23,6 +16,10 @@ resource "google_cloud_run_v2_service" "service" {
                 cpu = var.cpu
                 memory = var.memory
                 }
+            }
+            env {
+              name  = "MODEL_BUCKET"
+              value = "${var.project_id}-${terraform.workspace}"
             }
         }
         scaling {

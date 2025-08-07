@@ -10,6 +10,7 @@ import time
 from flask import Request
 import functions_framework
 import base64
+import os
 
 # Define the time zone
 cet_timezone = ZoneInfo('Europe/Copenhagen')
@@ -107,12 +108,15 @@ def train_models(request: Request):
         # Pull historical traffic and weather data from bigquery
         historical_data = cloud_utils.pull_historical_data(query)
 
+        # Get bucket name from environment
+        bucket_name = os.environ.get("MODEL_BUCKET")
+
         # Run training for 1-day and 2-day models
         training.run_training_pipeline(historical_data, 
                                     manual_holidays,
                                     'execute_preprocessing_1_day',
                                     'training',
-                                    'models',
+                                    f"{bucket_name}-models",
                                     '1_day_prediction_model',
                                     'joblib',
                                     'application/octet-stream')
@@ -121,7 +125,7 @@ def train_models(request: Request):
                                     manual_holidays,
                                     'execute_preprocessing_2_day',
                                     'training',
-                                    'models',
+                                    f"{bucket_name}-models",,
                                     '2_day_prediction_model',
                                     'joblib',
                                     'application/octet-stream')

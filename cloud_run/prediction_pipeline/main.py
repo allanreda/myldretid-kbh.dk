@@ -11,6 +11,7 @@ import time
 from flask import Request
 import functions_framework
 import base64
+import os
 
 # Define the time zone
 cet_timezone = ZoneInfo('Europe/Copenhagen')
@@ -107,6 +108,9 @@ def predict(request: Request):
         historical_df = cloud_utils.pull_historical_data(query)
         # Pull weather forecast for next 5 days
         forecast_df = preprocesser.pull_weather_forecast()
+        
+        # Get bucket name from environment
+        bucket_name = os.environ.get("MODEL_BUCKET")
 
         # Predict next 2 rush hours and compare to average traveltime
         next_morning_traffic, next_afternoon_traffic = predict.predict_next_rush_hour_periods_wrapper(historical_df, 
@@ -136,7 +140,7 @@ def predict(request: Request):
         # Upload to GCS
         cloud_utils.upload_to_gcs(
             buffer=buffer,
-            bucket_name="predictions",
+            bucket_name=f"{bucket_name}-predictions",
             gcs_folder_name="predictions",
             filename="json_predictions",
             filetype="json",
