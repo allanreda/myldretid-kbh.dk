@@ -125,7 +125,7 @@ def train_models(request: Request):
                                     manual_holidays,
                                     'execute_preprocessing_2_day',
                                     'training',
-                                    f"{bucket_name}-models",,
+                                    f"{bucket_name}-models",
                                     '2_day_prediction_model',
                                     'joblib',
                                     'application/octet-stream')
