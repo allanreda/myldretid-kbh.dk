@@ -96,7 +96,7 @@ module "prediction_pipeline_afternoon" {
   image = "${var.region}-docker.pkg.dev/${var.project_id}/myldretid-kbh-${terraform.workspace}/prediction:latest"
   cpu = 1
   memory = "512Mi"
-  schedule = "0 10 * * *"  # Every day at 10:00 
+  schedule = "0 11 * * *"  # Every day at 11:00 
 
   # Wait for repo to be created
   depends_on = [google_artifact_registry_repository.pipeline_repo]
