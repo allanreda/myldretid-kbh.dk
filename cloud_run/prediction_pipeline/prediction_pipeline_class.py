@@ -164,18 +164,21 @@ class PredictionPipeline:
             logger.error(f"Error occured in prediction pipeline for next 8 rush hours: {e}")
             return None, None
 
-    def define_dates_and_convert_json(self, all_morning_predictions, all_afternoon_predictions):
+    def define_dates_and_convert_json(self, all_morning_predictions, all_afternoon_predictions, cet_timezone):
         try:
             # Get todays date + 4 next dates
             today = date.today()
             dates = [today + timedelta(days=i) for i in range(5)]
 
+            # Get the hour of right now
+            hour = datetime.now(cet_timezone).hour
+
             # If the time is between 9 and 15, then add 1 day to the dates for the morning predictions only
-            if datetime.now().hour >= 9 and datetime.now().hour < 15:
+            if hour >= 9 and hour < 15:
                 morning_prediction_dict = dict(zip([d + timedelta(days=1) for d in dates], all_morning_predictions))
                 afternoon_prediction_dict = dict(zip(dates, all_afternoon_predictions))
             # If the time is above 15, then add 1 day to the dates of both the morning and afternoon predictions
-            elif datetime.now().hour >=15:
+            elif hour >=15:
                 morning_prediction_dict = dict(zip([d + timedelta(days=1) for d in dates], all_morning_predictions))
                 afternoon_prediction_dict = dict(zip([d + timedelta(days=1) for d in dates], all_afternoon_predictions))
             else:
