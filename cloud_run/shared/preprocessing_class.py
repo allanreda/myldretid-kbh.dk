@@ -289,8 +289,14 @@ class PreProcessing:
                 df['time'] = df['dt_txt'].dt.strftime("%H:%M")
                 # Transform nested weather column
                 df['weather'] = [entry['weather'][0]['main'] for entry in forecast_list]
+                
                 # Drop irrelevant columns
-                df = df.drop(['dt_txt','main.temp_kf','main.temp_min', 'main.temp_max', 'main.pressure',"dt","pop","wind.deg","main.grnd_level","main.sea_level","wind.gust","rain.3h","sys.pod"], axis="columns")
+                cols_to_drop = [
+                    'dt_txt','main.temp_kf','main.temp_min','main.temp_max','main.pressure',
+                    'dt','pop','wind.deg','main.grnd_level','main.sea_level','wind.gust',
+                    'rain.3h','sys.pod'
+                ]
+                df = df.drop(columns=cols_to_drop, errors='ignore')
 
                 # Rename relevant columns for clarity
                 df = df.rename(columns={
