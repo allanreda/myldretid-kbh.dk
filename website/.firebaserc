@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "default": "myldretid-kbh"
+  },
+  "targets": {
+    "myldretid-kbh": {
+      "hosting": {
+        "prod": [
+          "myldretid-kbh"
+        ],
+        "dev": [
+          "myldretid-kbh-dev"
+        ]
+      }
+    }
+  }
+}

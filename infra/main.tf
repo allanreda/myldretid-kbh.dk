@@ -39,7 +39,7 @@ module "predictions_bucket" {
   name = "${var.project_id}-${terraform.workspace}-predictions"
   project_id = var.project_id
   region = var.region
-  domain = var.domain
+  domains = var.domains
   enable_cors = true
   make_public = true
 
