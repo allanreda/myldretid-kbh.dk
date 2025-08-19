@@ -2,7 +2,11 @@ name: Deploy Dev Site
 
 on:
   push:
-    branches: [dev]
+    branches: 
+      -dev
+    paths:
+      - 'website/website/**'
+      - '.github/workflows/firebase.deploy.dev.yml'
 
 jobs:
   deploy:

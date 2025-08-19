@@ -2,7 +2,11 @@ name: Deploy Prod Site
 
 on:
   push:
-    branches: [main]
+    branches: 
+      -prod
+    paths:
+      - 'website/website/**'
+      - '.github/workflows/firebase.deploy.prod.yml'
 
 jobs:
   deploy:

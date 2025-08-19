@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - dev
+    paths:
+      - 'cloud_run/**'
+      - '.github/workflows/deploy-dev.yml'
 
 jobs:
   deploy:
