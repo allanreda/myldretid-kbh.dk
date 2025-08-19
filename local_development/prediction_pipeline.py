@@ -24,7 +24,7 @@ storage_client = storage.Client()
 openweather_api_key = Path("C:/Users/allan/Desktop/Personlige projekter/openweather_api_key.txt").read_text()
 
 # Instantiate CloudUtils class
-cloud_utils = CloudUtils(bq_client, storage_client)
+cloud_utils = CloudUtils(bq_client, storage_client, "")
 # Instantiate PreProcessing class
 preprocesser = PreProcessing(openweather_api_key)
 # Instantiate PredictionPipeline class
@@ -91,14 +91,14 @@ forecast_df = preprocesser.pull_weather_forecast()
 next_morning_traffic, next_afternoon_traffic = predict.predict_next_rush_hour_periods_wrapper(historical_df, 
                                                                                               forecast_df, 
                                                                                               manual_holidays,
-                                                                                              'myldretid-kbh-test',
+                                                                                              'myldretid-kbh-dev-models',
                                                                                               '1_day_prediction_model')
 
 # Predict the next 8 rush hours after the first 2 and compare to average traveltime
 next_4_mornings_traffic, next_4_afternoons_traffic = predict.predict_next_8_rush_hour_periods_wrapper(historical_df, 
                                                                                                       forecast_df, 
                                                                                                       manual_holidays,
-                                                                                                      'myldretid-kbh-test',
+                                                                                                      'myldretid-kbh-dev-models',
                                                                                                       '2_day_prediction_model')
 
 

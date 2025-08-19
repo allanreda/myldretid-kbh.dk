@@ -3,9 +3,9 @@ variable "project_id" {
     type = string
 }
 # Website domain passed down from ../variables.tf
-variable "domain" {
-    type = string
-    default = null
+variable "domains" {
+  type = list(string)
+  default = null
 }
 
 # Name of the bucket

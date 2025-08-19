@@ -1,0 +1,139 @@
+:root {
+    --green: #05f545;
+    --blue: #007bff;
+    --orange: #e67e22;
+    --gray: #f0f6ff;
+    --font: "Segoe UI", "Poppins", sans-serif;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  body {
+    margin: 0;
+    font-family: var(--font);
+    background: var(--gray);
+    color: #2c3e50;
+    scroll-behavior: smooth;
+  }
+  
+  header {
+    background: linear-gradient(to right, #007bff, #00b894);
+    padding: 40px 20px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  header h1 {
+    margin: 0;
+    font-size: 2.5em;
+  }
+  
+  .tagline {
+    font-size: 1.2em;
+    margin-top: 10px;
+    opacity: 0.9;
+  }
+  
+  .hero {
+    text-align: center;
+    margin: 40px 20px 10px;
+  }
+  
+  .hero h2 {
+    font-size: 1.8em;
+    margin-bottom: 10px;
+  }
+  
+  .hero p {
+    font-size: 1.2em;
+    color: #555;
+  }
+  
+  .gauge-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 30px;
+    padding: 0 20px;
+  }
+  
+  .gauge-row.large .gauge {
+    width: 400px;
+    height: 400px;
+    transform: scale(1.03);
+  }
+  
+  .gauge-row.small {
+    overflow-x: auto;
+    padding-bottom: 20px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+  
+  .gauge-row.small .gauge {
+    width: 280px;
+    min-width: 280px;
+    height: 280px;
+    flex-shrink: 0;
+  }
+  
+  .gauge {
+    background: white;
+    border-radius: 16px;
+    padding: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.06);
+    transition: transform 0.2s ease;
+  }
+  
+  .gauge:hover {
+    transform: scale(1.02);
+  }
+  
+  .info {
+    max-width: 700px;
+    margin: 60px auto;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    font-size: 0.95em;
+    box-shadow: 0 0 8px rgba(0,0,0,0.05);
+  }
+  
+  details summary {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 10px;
+  }
+  
+  footer {
+    text-align: center;
+    font-size: 0.85em;
+    padding: 40px 20px 20px;
+    color: #666;
+    background: #e9f3ff;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .gauge-row.large {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      justify-content: flex-start;
+      gap: 20px;
+      padding-bottom: 20px;
+    }
+  
+    .gauge-row.large .gauge {
+      width: 300px;
+      min-width: 300px;
+      height: 300px;
+      flex-shrink: 0;
+    }
+  }
+  
+  

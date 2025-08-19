@@ -13,18 +13,18 @@ import functions_framework
 import base64
 import os
 
-# Define the time zone
-cet_timezone = ZoneInfo('Europe/Copenhagen')
-
-# Get the current date and time
-current_datetime = datetime.now(cet_timezone)
-current_date = current_datetime.strftime('%Y-%m-%d')
-current_time = current_datetime.strftime('%H:%M')
-
 @functions_framework.http
 def predict(request: Request):
     """Triggered from a Pub/Sub message via HTTP."""
     try:
+        # Define the time zone
+        cet_timezone = ZoneInfo('Europe/Copenhagen')
+
+        # Get the current date and time
+        current_datetime = datetime.now(cet_timezone)
+        current_date = current_datetime.strftime('%Y-%m-%d')
+        current_time = current_datetime.strftime('%H:%M')
+        
         print(f" ----------------------------------------------------- \n ----------------------------------------------------- \n ----------------------------------------------------- \n Script execution started on {current_date} at {current_time} \n ----------------------------------------------------- \n ----------------------------------------------------- \n -----------------------------------------------------")
         # Start timer
         start_time = time.time()
@@ -131,7 +131,7 @@ def predict(request: Request):
         all_morning_predictions = np.concatenate([next_morning_traffic, next_4_mornings_traffic])
         all_afternoon_predictions = np.concatenate([next_afternoon_traffic, next_4_afternoons_traffic])
         # Define and map dates to predictions
-        json_predictions = predict.define_dates_and_convert_json(all_morning_predictions, all_afternoon_predictions)
+        json_predictions = predict.define_dates_and_convert_json(all_morning_predictions, all_afternoon_predictions, cet_timezone)
 
         # Write the string to buffer
         buffer = io.BytesIO()

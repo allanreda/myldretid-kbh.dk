@@ -3,6 +3,7 @@ import io
 import logging
 import sys
 import json
+import sklearn
 
 
 # Configure logging
@@ -45,6 +46,9 @@ class CloudUtils:
             blob = bucket.blob(f"{gcs_folder_name}/{filename}.{filetype}")
             # Upload blob
             blob.upload_from_file(buffer, content_type=content_type)
+            
+            # Close buffer
+            buffer.close()
 
             logger.info(f"Successfully uploaded file: {filename}.{filetype} to folder: {gcs_folder_name} in bucket: {bucket_name}.")
         
@@ -55,7 +59,7 @@ class CloudUtils:
         try:
             # Initialize bucket and define blob
             bucket = self.storage_client.bucket(bucket_name)
-            blob = bucket.blob(f'prediction_models/{filename}.joblib')
+            blob = bucket.blob(f'training/{filename}.joblib')
 
             # Download blob into memory
             buffer = io.BytesIO()
@@ -71,11 +75,15 @@ class CloudUtils:
             expected_columns = prediction_bundle[f"{rush_hour_period}_columns"]
             avg_traveltime = prediction_bundle[f"avg_{rush_hour_period}_traveltime"]
 
-            logger.info(f"Successfully loaded model bundle from gs://{bucket_name}/prediction_models/{filename}.joblib for {rush_hour_period}")
+            # Close buffer
+            buffer.close()
+
+            logger.info(f"Successfully loaded model bundle from gs://{bucket_name}/training/{filename}.joblib for {rush_hour_period}")
+            
             return model, scaler, expected_columns, avg_traveltime
 
         except Exception as e:
-            logger.error(f"Error loading model bundle from GCS (gs://{bucket_name}/prediction_models/{filename}.joblib) for {rush_hour_period}: {e}")
+            logger.error(f"Error loading model bundle from GCS (gs://{bucket_name}/training/{filename}.joblib) for {rush_hour_period}: {e}")
             return None, None, None, None
         
     # Function for fetching secrets from GCP Secret Manager

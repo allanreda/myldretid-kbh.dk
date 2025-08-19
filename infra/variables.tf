@@ -23,9 +23,8 @@ variable "cicd_service_account_email" {
     type = string
 }
 
-variable "domain" {
-    type    = string
-    default = "http://myldretid-kbh.dk"
+variable "domains" {
+  type = list(string)
 }
 
 # List of the required APIs to enable
