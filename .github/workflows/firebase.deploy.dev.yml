@@ -3,7 +3,7 @@ name: Deploy Dev Site
 on:
   push:
     branches: 
-      -dev
+      - dev
     paths:
       - 'website/website/**'
       - '.github/workflows/firebase.deploy.dev.yml'
