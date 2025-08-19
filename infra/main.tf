@@ -12,7 +12,7 @@ module "permissions" {
   
   project_id = var.project_id # Passes project_id down to permissions module
   external_project_id = var.external_project_id
-  service_account_name = var.service_account_name
+  service_account_name = "${terraform.workspace}-${var.service_account_name}"
   project_level_roles = var.project_level_roles # Passes the list of the required project level roles for the hyggeskyen SA down
   cicd_service_account_email = var.cicd_service_account_email
   cicd_project_level_roles = var.cicd_project_level_roles
@@ -62,7 +62,7 @@ module "training_pipeline" {
   name = "training-${terraform.workspace}"
   project_id = var.project_id
   region = var.region
-  service_account_email = var.service_account_email
+  service_account_email = "${terraform.workspace}-${var.service_account_email}"
   image = "${var.region}-docker.pkg.dev/${var.project_id}/myldretid-kbh-${terraform.workspace}/training:latest"
   cpu = 2
   memory = "1024Mi"
@@ -77,7 +77,7 @@ module "prediction_pipeline_morning" {
   name = "prediction-morning-${terraform.workspace}"
   project_id = var.project_id
   region = var.region
-  service_account_email = var.service_account_email
+  service_account_email = "${terraform.workspace}-${var.service_account_email}"
   image = "${var.region}-docker.pkg.dev/${var.project_id}/myldretid-kbh-${terraform.workspace}/prediction:latest"
   cpu = 1
   memory = "512Mi"
@@ -92,7 +92,7 @@ module "prediction_pipeline_afternoon" {
   name = "prediction-afternoon-${terraform.workspace}"
   project_id = var.project_id
   region = var.region
-  service_account_email = var.service_account_email
+  service_account_email = "${terraform.workspace}-${var.service_account_email}"
   image = "${var.region}-docker.pkg.dev/${var.project_id}/myldretid-kbh-${terraform.workspace}/prediction:latest"
   cpu = 1
   memory = "512Mi"

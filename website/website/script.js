@@ -1,4 +1,13 @@
-const url = "https://storage.googleapis.com/myldretid-kbh-dev-predictions/predictions/json_predictions.json";
+let url;
+
+if (window.location.hostname.includes("dev")) {
+  // Dev environment
+  url = "https://storage.googleapis.com/myldretid-kbh-dev-predictions/predictions/json_predictions.json";
+} else {
+  // Prod environment
+  url = "https://storage.googleapis.com/myldretid-kbh-prod-predictions/predictions/json_predictions.json";
+}
+
 const weekdays = {
     Monday: "Mandag", Tuesday: "Tirsdag", Wednesday: "Onsdag", Thursday: "Torsdag",
     Friday: "Fredag", Saturday: "Lørdag", Sunday: "Søndag"
