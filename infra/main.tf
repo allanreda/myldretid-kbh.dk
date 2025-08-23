@@ -101,3 +101,16 @@ module "prediction_pipeline_afternoon" {
   # Wait for repo to be created
   depends_on = [google_artifact_registry_repository.pipeline_repo]
 }
+
+# Set up DNS for custom domain on prod site
+module "dns_setup" {
+  source = "./modules/firebase_dns"
+  project_id = var.project_id
+  custom_domain_name = var.custom_domain_name
+  domains = var.domains
+  dns_ip = var.dns_ip
+  txt_value = var.txt_value
+
+  # Wait for APIs to be enabled
+  depends_on = [module.permissions]
+}

@@ -27,6 +27,19 @@ variable "domains" {
   type = list(string)
 }
 
+variable "custom_domain_name" {
+    type = string
+}
+
+variable "dns_ip" {
+    type = string
+}
+
+variable "txt_value" {
+    type = string
+}
+
+
 # List of the required APIs to enable
 variable "api_list" {
   type = list(string)
@@ -36,7 +49,8 @@ variable "api_list" {
     "pubsub.googleapis.com",          # Pub/Sub
     "storage.googleapis.com",         # Cloud Storage
     "logging.googleapis.com",         # Logging
-    "iam.googleapis.com"
+    "iam.googleapis.com",             # IAM
+    "dns.googleapis.com"             # Cloud DNS
   ]
 }
 
@@ -51,7 +65,8 @@ variable "project_level_roles" {
     { role = "roles/pubsub.subscriber" },
     { role = "roles/logging.logWriter" },
     { role = "roles/run.invoker" },
-    { role = "roles/bigquery.user" }
+    { role = "roles/bigquery.user" },
+    { role = "roles/dns.admin" }
   ]
 }
 
