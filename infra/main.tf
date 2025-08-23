@@ -107,7 +107,6 @@ module "dns_setup" {
   source = "./modules/firebase_dns"
   project_id = var.project_id
   custom_domain_name = var.custom_domain_name
-  domains = var.domains
   dns_ip = var.dns_ip
   txt_value = var.txt_value
 

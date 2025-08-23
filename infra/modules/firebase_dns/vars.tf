@@ -7,10 +7,6 @@ variable "custom_domain_name" {
     type = string
 }
 # Passed down from ../variables.tf
-variable "domains" {
-  type = list(string)
-}
-# Passed down from ../variables.tf
 variable "dns_ip" {
     type = string
 }
