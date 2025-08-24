@@ -14,3 +14,7 @@ variable "dns_ip" {
 variable "txt_value" {
     type = string
 }
+# Passed down from ../variables.tf
+variable "search_console_verification_token" {
+    type = string
+}

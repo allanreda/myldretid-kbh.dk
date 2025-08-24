@@ -3,6 +3,19 @@ resource "google_dns_managed_zone" "myldretid-kbh-zone" {
   name = "myldretid-kbh-zone"
   dns_name = "${var.custom_domain_name}."
   project = var.project_id
+  dnssec_config {
+    state = "on"
+    default_key_specs {
+      algorithm  = "rsasha256"
+      key_type   = "keySigning"
+      key_length = 2048
+    }
+    default_key_specs {
+      algorithm  = "rsasha256"
+      key_type   = "zoneSigning"
+      key_length = 1024
+    }
+  }
 }
 
 resource "google_dns_record_set" "firebase_a_record" {
@@ -13,10 +26,6 @@ resource "google_dns_record_set" "firebase_a_record" {
   managed_zone = google_dns_managed_zone.myldretid-kbh-zone.name
 
   rrdatas = [var.dns_ip]
-
-#   lifecycle {
-#     prevent_destroy = true
-#   }
 }
 
 resource "google_dns_record_set" "firebase_txt_verification" {
@@ -27,8 +36,14 @@ resource "google_dns_record_set" "firebase_txt_verification" {
   managed_zone = google_dns_managed_zone.myldretid-kbh-zone.name
 
   rrdatas = ["\"${var.txt_value}\""]
+}
 
-#   lifecycle {
-#     prevent_destroy = true
-#   }
+resource "google_dns_record_set" "search_console_verification" {
+  name         = "${var.custom_domain_name}."
+  type         = "TXT"
+  ttl          = 300
+  project = var.project_id
+  managed_zone = google_dns_managed_zone.myldretid-kbh-zone.name
+
+  rrdatas = ["${var.search_console_verification_token}"]
 }

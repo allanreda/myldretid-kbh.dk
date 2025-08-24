@@ -109,6 +109,7 @@ module "dns_setup" {
   custom_domain_name = var.custom_domain_name
   dns_ip = var.dns_ip
   txt_value = var.txt_value
+  search_console_verification_token = var.search_console_verification_token
 
   # Wait for APIs to be enabled
   depends_on = [module.permissions]

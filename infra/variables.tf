@@ -39,6 +39,9 @@ variable "txt_value" {
     type = string
 }
 
+variable "search_console_verification_token" {
+    type = string
+}
 
 # List of the required APIs to enable
 variable "api_list" {
