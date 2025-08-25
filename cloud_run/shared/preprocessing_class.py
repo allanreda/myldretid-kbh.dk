@@ -122,9 +122,15 @@ class PreProcessing:
             is_holiday = df['date'].dt.date.isin(all_holiday_dates)
             # Create binary column: 1 if date is a holiday, 0 if not
             df['is_holiday'] = ((is_holiday) | (is_weekend)).astype(int)
-
+            
+            # Get all days that arent holidays
+            non_holiday_df = df[df['is_holiday'] == 0]
+            # Calculate average traveltime for weekdays only
+            avg_morning = non_holiday_df.loc[non_holiday_df['rush_hour_period'] == 'morning', 'current_travel_time'].mean()
+            avg_afternoon = non_holiday_df.loc[non_holiday_df['rush_hour_period'] == 'afternoon', 'current_travel_time'].mean()
+            
             logger.info("Preprocessing: Succesfully included holidays into dataframe.")
-            return df
+            return df, avg_morning, avg_afternoon
         
         except Exception as e:
             logger.error(f"Preprocessing: Error occured in including holidays in dataframe: {e}")
@@ -351,7 +357,7 @@ class PreProcessing:
     def execute_preprocessing_1_day(self, raw_df, manual_holidays):
         try:
             df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
-            df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
+            df, avg_morning, avg_afternoon = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
             df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
             df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
             df = self.validate_step(self.map_sun_times(df), "map_sun_times")
@@ -370,7 +376,7 @@ class PreProcessing:
 
 
             logger.info("Preprocessing: Successfully completed full training pipeline.")
-            return morning_df, afternoon_df, morning_df['current_travel_time'].mean(), afternoon_df['current_travel_time'].mean()
+            return morning_df, afternoon_df, avg_morning, avg_afternoon
 
         except Exception as e:
             logger.error(f"Preprocessing pipeline failed: {e}")
@@ -381,7 +387,7 @@ class PreProcessing:
     def execute_preprocessing_2_day(self, raw_df, manual_holidays):
         try:
             df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
-            df = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
+            df, avg_morning, avg_afternoon = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
             df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
             df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
             df = self.validate_step(self.map_sun_times(df), "map_sun_times")
@@ -400,7 +406,7 @@ class PreProcessing:
             afternoon_df = self.validate_step(self.remove_outliers_5pct(afternoon_df, 'current_travel_time'), "remove_outliers_afternoon")
 
             logger.info("Preprocessing: Successfully completed full training pipeline.")
-            return morning_df, afternoon_df, morning_df['current_travel_time'].mean(), afternoon_df['current_travel_time'].mean()
+            return morning_df, afternoon_df, avg_morning, avg_afternoon
 
         except Exception as e:
             logger.error(f"Preprocessing pipeline failed: {e}")

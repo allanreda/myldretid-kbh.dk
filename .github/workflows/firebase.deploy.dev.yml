@@ -1,0 +1,21 @@
+name: Deploy Dev Site
+
+on:
+  push:
+    branches: 
+      - dev
+    paths:
+      - 'website/website/**'
+      - '.github/workflows/firebase.deploy.dev.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: npm install -g firebase-tools
+
+      - run: firebase deploy --only hosting:dev --token "${{ secrets.FIREBASE_DEPLOY_TOKEN }}"
+        working-directory: website/website
