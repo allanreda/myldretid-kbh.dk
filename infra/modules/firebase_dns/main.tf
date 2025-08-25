@@ -28,22 +28,24 @@ resource "google_dns_record_set" "firebase_a_record" {
   rrdatas = [var.dns_ip]
 }
 
-resource "google_dns_record_set" "firebase_txt_verification" {
+resource "google_dns_record_set" "txt_verification" {
   name         = "${var.custom_domain_name}."
   type         = "TXT"
   ttl          = 300
   project = var.project_id
   managed_zone = google_dns_managed_zone.myldretid-kbh-zone.name
 
-  rrdatas = ["\"${var.txt_value}\""]
+  rrdatas = ["${var.txt_value}", 
+            "${var.search_console_verification_token}"
+        ]
 }
 
-resource "google_dns_record_set" "search_console_verification" {
-  name         = "${var.custom_domain_name}."
-  type         = "TXT"
-  ttl          = 300
-  project = var.project_id
-  managed_zone = google_dns_managed_zone.myldretid-kbh-zone.name
+# resource "google_dns_record_set" "search_console_verification" {
+#   name         = "${var.custom_domain_name}."
+#   type         = "TXT"
+#   ttl          = 300
+#   project = var.project_id
+#   managed_zone = google_dns_managed_zone.myldretid-kbh-zone.name
 
-  rrdatas = ["${var.search_console_verification_token}"]
-}
+#   rrdatas = ["${var.search_console_verification_token}"]
+# }
