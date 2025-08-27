@@ -3,7 +3,7 @@ name: Deploy Prod Site
 on:
   push:
     branches: 
-      - prod
+      - main
     paths:
       - 'website/website/**'
       - '.github/workflows/firebase.deploy.prod.yml'
