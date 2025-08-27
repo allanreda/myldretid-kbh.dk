@@ -40,12 +40,3 @@ resource "google_dns_record_set" "txt_verification" {
         ]
 }
 
-# resource "google_dns_record_set" "search_console_verification" {
-#   name         = "${var.custom_domain_name}."
-#   type         = "TXT"
-#   ttl          = 300
-#   project = var.project_id
-#   managed_zone = google_dns_managed_zone.myldretid-kbh-zone.name
-
-#   rrdatas = ["${var.search_console_verification_token}"]
-# }
