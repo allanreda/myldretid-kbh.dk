@@ -46,7 +46,7 @@ const weekdays = {
     if (val < -15) return "#05f545";
     if (val < -10) return "#1abc9c";
     if (val < -5) return "#37c477";
-    if (val < 5) return "#f4f4f4";
+    if (val < 5) return "#FFFF00";
     if (val < 10) return "#f39c12";
     if (val < 15) return "#e67e22";
     return "#f70525";
