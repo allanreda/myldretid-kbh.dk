@@ -3,19 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Myldretid i København</title>
+  <title>Myldretid i København - ML-baserede trafikprognoser</title>
+  <meta name="description" content="ML-baserede trafikprognoser for myldretiden i København. Opdateres kl. 10 og 18 hver dag.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Myldretid i København",
+    "url": "https://myldretid-kbh.dk/",
+    "description": "ML-baserede trafikprognoser for myldretiden i København. Opdateres kl. 10 og 18 hver dag.",
+    "inLanguage": "da-DK"
+  }
+  </script>
+
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>🚦 Myldretid i København 🚦</h1>
-    <h2 class="tagline">ML-baserede trafikprognoser for myldretiden i København.</h2>
+    <h1>Myldretid i København</h1>
+    <h2 class="tagline">ML-baserede trafikprognoser for myldretiden i København - opdateres kl. 10 og 18 hver dag.</h2>
   </header>
 
   <section class="hero" id="hero">
     <h2 id="hero-summary">Næste myldretid:</h2>
-    <p id="hero-description">Indlæser forudsigelser...</p>
+    <p id="hero-description">Indlæser prognoser...</p>
   </section>
 
   <section class="gauges">
@@ -24,15 +37,44 @@
   </section>
 
   <section class="info">
-    <details>
+    <details open>
       <summary>ℹ️ Om denne service</summary>
-      <p>Forudsigelserne opdateres flere gange dagligt og viser procentvise afvigelser i rejsetid sammenlignet med det normale. Grøn betyder hurtigere trafik end normalt, rød betyder langsommere.</p>
-      <p>Kilde: Egne modeller baseret på data fra København og vejrprognoser. Hosting og datalagring via Google Cloud Platform.</p>
+  
+      <p>
+        Denne side viser <strong>trafikprognoser for myldretiden i København</strong>. 
+        ML-modellen beregner <em>procentvis afvigelse i rejsetid</em> i forhold til det gennemsnitlige niveau, så du hurtigt kan vurdere, om trafikken bliver hurtigere eller langsommere end normalt.
+      </p>
+  
+      <h3>Sådan virker det</h3>
+      <ul>
+        <li><strong>Dataindsamling (dagligt): </strong>Der indsamles data dagligt fra 20 forskellige knudepunkter i København.</li>
+        <li><strong>Modeltræning (søndag): </strong> Machine learning-modellen gentrænes på det nyeste indsamlede data, for at holde den så relevant som muligt.</li>
+        <li><strong>Prognoser (dagligt kl. 10 & 18): </strong>To gange dagligt benyttes ML-modellen til at forudsige det samlede trafikniveau for de næste 5 dage (10 myldretider).</li>
+      </ul>
+  
+      <h3>Datakilder</h3>
+      <p>
+        Modellen bygger bl.a. på data fra <strong>TomTom</strong>, <strong>OpenWeather</strong> samt information fra <strong>Københavns Kommune</strong>.
+      </p>
+  
+      <h3>Farver og tolkning</h3>
+      <ul>
+        <li><strong>Grøn:</strong> Hurtigere end normalt (negativ afvigelse).</li>
+        <li><strong>Gul:</strong> Omtrent normalt niveau.</li>
+        <li><strong>Rød:</strong> Langsommere end normalt (positiv afvigelse).</li>
+      </ul>
+  
+      <h3>Begrænsninger</h3>
+      <p>
+        Prognoser er <em>vejledende</em> og kan afvige fra virkeligheden ved uforudsete hændelser såsom uheld, vejarbejde og diverse events. 
+        Benyt servicen som en vejledning, og hav in mente at disse prognoser blot er estimater.
+      </p>
     </details>
   </section>
+  
 
   <footer>
-    <p>© 2025 København Trafikforudsigelser · Udviklet af Allan Reda</p>
+    <p>© 2025 myldretid-kbh · Udviklet af Allan Fattah Reda</p>
   </footer>
 
   <script src="script.js"></script>
