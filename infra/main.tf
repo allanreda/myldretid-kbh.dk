@@ -47,6 +47,7 @@ module "predictions_bucket" {
   depends_on = [module.permissions]
 }
 
+# Create Artifact Registry repository
 resource "google_artifact_registry_repository" "pipeline_repo" {
   project       = var.project_id
   location      = var.region

@@ -1,4 +1,4 @@
-name: Deploy to Dev
+name: Deploy Dev Cloud Run
 
 on:
   push:
