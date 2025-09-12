@@ -12,6 +12,8 @@ from flask import Request, Response
 import functions_framework
 import base64
 import os
+import json
+from pathlib import Path
 
 @functions_framework.http
 def predict(request: Request):
@@ -53,29 +55,9 @@ def predict(request: Request):
         # Instantiate PredictionPipeline class
         predict = PredictionPipeline(cloud_utils, preprocesser)
 
-        # Create manual holiday date ranges
-        manual_holidays = [
-            ("2024-07-01", "2024-08-09"),
-            ("2024-10-14", "2024-10-18"),
-            ("2024-12-23", "2025-01-02"),
-            ("2025-02-10", "2025-02-14"),
-            ("2025-04-14", "2025-04-21"),
-            ("2025-05-01", "2025-05-01"),
-            ("2025-05-29", "2025-05-30"),
-            ("2025-06-05", "2025-06-05"),
-            ("2025-06-09", "2025-06-09"),
-            ("2025-06-30", "2025-08-08"),
-            ("2025-10-13", "2025-10-17"),
-            ("2025-11-18", "2025-11-18"),
-            ("2025-12-24", "2026-01-02"),
-            ("2026-02-09", "2026-02-13"),
-            ("2026-03-30", "2026-04-06"),
-            ("2026-05-01", "2026-05-01"),
-            ("2026-05-14", "2026-05-15"),
-            ("2026-05-24", "2026-05-25"),
-            ("2026-06-05", "2026-06-05"),
-            ("2026-06-29", "2026-08-10")
-        ]
+        # Load holidays file
+        with open(Path(__file__).parent / "shared" / "holidays.json", encoding="utf-8") as f:
+            manual_holidays = json.load(f)
 
         # Define SQL query to fetch historical data from Bigquery
         query = """

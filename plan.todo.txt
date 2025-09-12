@@ -1,8 +1,8 @@
 [x] Find a method to dynamically create linking between code in training_pipeline and prediction_pipeline and ressource names in GCP in regards of dev/prod naming.
 [x] Buy domain
 [ ] Install GA4 on website
-[ ] Verify on Search Console
+[x] Verify on Search Console
 [x] Make sure cloud run functions only run once, even if they failS 
-[ ] Find a better solution for manual_holidays
+[ ] Use config file for manual_holidays
 [x] avg_traveltime needs to be only for weekdays
 
