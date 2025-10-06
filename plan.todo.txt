@@ -3,6 +3,6 @@
 [ ] Install GA4 on website
 [x] Verify on Search Console
 [x] Make sure cloud run functions only run once, even if they failS 
-[ ] Use config file for manual_holidays
+[x] Use config file for manual_holidays
 [x] avg_traveltime needs to be only for weekdays
 
