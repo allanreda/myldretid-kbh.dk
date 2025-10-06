@@ -136,4 +136,22 @@
     }
   }
   
+  #lang-switch {
+    margin-top: 10px;
+  }
+  
+  #lang-switch button {
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin: 0 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: 0.2s;
+  }
+  
+  #lang-switch button:hover {
+    background: #f0f0f0;
+  }
   
