@@ -1,3 +1,26 @@
+// --- Google Analytics 4 dynamic loader ---
+(function() {
+  const host = window.location.hostname;
+  const PROD_ID = "G-HBEYXDZWL0";   // Prod GA4 ID
+  const DEV_ID = "G-X66JK338WJ";     // Dev GA4 ID 
+
+  // Decide which Measurement ID to use
+  const GA_ID = host.includes("dev") ? DEV_ID : PROD_ID;
+
+  // Dynamically load the GA4 script
+  const gtagScript = document.createElement("script");
+  gtagScript.async = true;
+  gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+  document.head.appendChild(gtagScript);
+
+  // Initialize GA4
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', GA_ID);
+})();
+
+
 let url;
 
 if (window.location.hostname.includes("dev")) {
