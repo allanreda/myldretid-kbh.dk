@@ -136,32 +136,22 @@
     }
   }
   
-  header { position: relative; }
-
   #lang-switch {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    gap: 8px;
+    margin-top: 10px;
   }
   
-  #lang-switch .lang-btn {
-    width: 38px;
-    height: 32px;
-    border: 1px solid #ffffff66;
-    background: #ffffffdd;
-    border-radius: 8px;
+  #lang-switch button {
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin: 0 5px;
+    padding: 5px 10px;
     cursor: pointer;
-    font-size: 18px;   /* emoji size */
-    line-height: 1;
-    display: grid;
-    place-items: center;
-    transition: transform 0.15s ease, background 0.15s ease;
+    font-family: inherit;
+    transition: 0.2s;
   }
   
-  #lang-switch .lang-btn:hover {
-    background: #fff;
-    transform: translateY(-1px);
+  #lang-switch button:hover {
+    background: #f0f0f0;
   }
   
