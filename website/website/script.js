@@ -2,7 +2,7 @@
 (function() {
   const host = window.location.hostname;
   const PROD_ID = "G-HBEYXDZWL0";   // Prod GA4 ID
-  const DEV_ID = "G-X66JK338WJ";     // Dev GA4 ID 
+  const DEV_ID = "G-SGX2BK6NM9";     // Dev GA4 ID 
 
   // Decide which Measurement ID to use
   const GA_ID = host.includes("dev") ? DEV_ID : PROD_ID;
