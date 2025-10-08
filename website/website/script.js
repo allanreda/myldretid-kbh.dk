@@ -23,7 +23,7 @@
 
 let url;
 
-if (window.location.hostname.includes("dev")) {
+if (window.location.hostname.includes("dev") || window.location.hostname === "localhost") {
   // Dev environment
   url = "https://storage.googleapis.com/myldretid-kbh-dev-predictions/predictions/json_predictions.json";
 } else {
