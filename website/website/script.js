@@ -33,11 +33,12 @@ const weekdays = {
 function formatDateLabel(dateStr, period) {
   const date = new Date(dateStr);
   const day = weekdays[date.toLocaleString('en-US', { weekday: 'long' })];
-  const label = period === 'morning' ? 'Morgen' : 'Eftermiddag';
-  const icon = period === 'morning' ? '🌅' : '🌇';
   const dayNum = String(date.getDate()).padStart(2, '0');
   const monthNum = String(date.getMonth() + 1).padStart(2, '0');
-  return `${icon} ${day}, ${dayNum}.${monthNum} ${label}`;
+  const label = period === 'morning' ? 'Morgen' : 'Eftermiddag';
+
+  // Clean, professional label (no emoji)
+  return `${day}, ${dayNum}.${monthNum} ${label}`;
 }
 
 function getDescription(val) {
