@@ -371,8 +371,8 @@ class PreProcessing:
             morning_df = self.validate_step(self.convert_booleans(morning_df), "convert_booleans")
             afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
 
-            morning_df = self.validate_step(self.remove_outliers_5pct(morning_df, 'current_travel_time'), "remove_outliers_morning")
-            afternoon_df = self.validate_step(self.remove_outliers_5pct(afternoon_df, 'current_travel_time'), "remove_outliers_afternoon")
+            #morning_df = self.validate_step(self.remove_outliers_5pct(morning_df, 'current_travel_time'), "remove_outliers_morning")
+            #afternoon_df = self.validate_step(self.remove_outliers_5pct(afternoon_df, 'current_travel_time'), "remove_outliers_afternoon")
 
 
             logger.info("Preprocessing: Successfully completed full training pipeline.")
@@ -402,8 +402,8 @@ class PreProcessing:
             morning_df = self.validate_step(self.convert_booleans(morning_df), "convert_booleans")
             afternoon_df = self.validate_step(self.convert_booleans(afternoon_df), "convert_booleans")
 
-            morning_df = self.validate_step(self.remove_outliers_5pct(morning_df, 'current_travel_time'), "remove_outliers_morning")
-            afternoon_df = self.validate_step(self.remove_outliers_5pct(afternoon_df, 'current_travel_time'), "remove_outliers_afternoon")
+            #morning_df = self.validate_step(self.remove_outliers_5pct(morning_df, 'current_travel_time'), "remove_outliers_morning")
+            #afternoon_df = self.validate_step(self.remove_outliers_5pct(afternoon_df, 'current_travel_time'), "remove_outliers_afternoon")
 
             logger.info("Preprocessing: Successfully completed full training pipeline.")
             return morning_df, afternoon_df, avg_morning, avg_afternoon
