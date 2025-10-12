@@ -23,6 +23,10 @@ jobs:
           rm -f sitemap.xml
           # Use disallow-all robots
           cp robots.dev.txt robots.txt
+          echo "Files in deployment folder:"
+          ls -la
+          echo "robots.txt content:"
+          cat robots.txt
 
       - run: firebase deploy --only hosting:dev --token "${{ secrets.FIREBASE_DEPLOY_TOKEN }}"
         working-directory: website/website

@@ -21,9 +21,9 @@ jobs:
           cd website/website
           # Copy the robots file
           cp robots.prod.txt robots.txt
-          echo "✅ Files in deployment folder:"
+          echo "Files in deployment folder:"
           ls -la
-          echo "✅ robots.txt content:"
+          echo "robots.txt content:"
           cat robots.txt
 
       - run: firebase deploy --only hosting:prod --token "${{ secrets.FIREBASE_DEPLOY_TOKEN }}"
