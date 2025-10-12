@@ -114,4 +114,7 @@ module "dns_setup" {
 
   # Wait for APIs to be enabled
   depends_on = [module.permissions]
+
+  # Only setup for prod workspace
+  count = terraform.workspace == "prod" ? 1 : 0
 }

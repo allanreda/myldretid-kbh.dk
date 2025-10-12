@@ -1,6 +1,7 @@
-[ ] Do an english version of website
+[ ] Fix meta text and robot.txt file for SEO
 [ ] Write a readme for the project/website
 [ ] Clean up code and format according to best practices
+[ ] Do an english version of website
 [x] Install GA4 on website
 [x] Find a method to dynamically create linking between code in training_pipeline and prediction_pipeline and ressource names in GCP in regards of dev/prod naming.
 [x] Buy domain

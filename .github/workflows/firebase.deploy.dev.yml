@@ -17,5 +17,12 @@ jobs:
 
       - run: npm install -g firebase-tools
 
+      - run: |
+          cd website/website
+          # Remove sitemap from dev
+          rm -f sitemap.xml
+          # Use disallow-all robots
+          cp robots.dev.txt robots.txt
+
       - run: firebase deploy --only hosting:dev --token "${{ secrets.FIREBASE_DEPLOY_TOKEN }}"
         working-directory: website/website
