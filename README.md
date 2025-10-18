@@ -8,6 +8,23 @@ Even though driving through Copenhagen during rush hours will always prolong you
 
 ## Table of Contents
 
-## Project Diagram
+## User Guide and Useful Info
+### Color Explanation
+### Calculation of Average Travel Time
+### Reasoning Behind Update Times
 
-## User Guide
+## Project Diagram
+<img width="1415" height="1238" alt="myldretid-kbh drawio" src="https://github.com/user-attachments/assets/26fcafd7-beeb-4c99-9762-df9ff7fe85b9" />
+This diagram doesn't include the pipeline architecture behind the data ingestion of the traffic and weather data. That was built earlier as a separate project, which you can read about here: https://github.com/allanreda/Copenhagen-Traffic-and-Weather-ETL-Pipeline  
+
+## Machine Learning
+### Feature Engineering and Preprocessing
+### Model Choice
+### Performance
+
+## CI/CD Pipelines
+### Dev and Prod Environments
+### Website Pipeline
+### Cloud Run Pipeline
+
+## IAC (Terraform)
