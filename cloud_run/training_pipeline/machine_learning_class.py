@@ -24,10 +24,8 @@ class MachineLearning:
             # Cross-validation setup
             cv = KFold(n_splits=10, shuffle=True, random_state=42)
 
-            mse_scores = []
-            mae_scores = []
-            r2_scores = []
-            
+            mse_scores, rmse_scores, mae_scores, r2_scores = [], [], [], []
+
             # Loop through each split
             for train_index, test_index in cv.split(X):
                 # Split data in traning and test
@@ -47,24 +45,29 @@ class MachineLearning:
 
                 # Get performance metrics
                 mse = mean_squared_error(y_test, y_pred)
+                rmse = np.sqrt(mse)
                 mae = mean_absolute_error(y_test, y_pred)
                 r2 = r2_score(y_test, y_pred)
 
                 # Append performance metrics to list
                 mse_scores.append(mse)
+                rmse_scores.append(rmse)
                 mae_scores.append(mae)
                 r2_scores.append(r2)
             
             logger.info("Average performance across all folds:")
-            logger.info(f"Average MSE: {np.mean(mse_scores):.2f}")
-            logger.info(f"Average MAE: {np.mean(mae_scores):.2f}")
-            logger.info(f"Average R²:  {np.mean(r2_scores):.2f}")
+            logger.info(f"Average MSE:  {np.mean(mse_scores):.3f}")
+            logger.info(f"Average RMSE: {np.mean(rmse_scores):.3f}")
+            logger.info(f"Average MAE:  {np.mean(mae_scores):.3f}")
+            logger.info(f"Average R²:   {np.mean(r2_scores):.3f}")
 
             return {
                 "avg_mse": np.mean(mse_scores),
+                "avg_rmse": np.mean(rmse_scores),
                 "avg_mae": np.mean(mae_scores),
                 "avg_r2": np.mean(r2_scores),
                 "all_mse": mse_scores,
+                "all_rmse": rmse_scores,
                 "all_mae": mae_scores,
                 "all_r2": r2_scores
             }

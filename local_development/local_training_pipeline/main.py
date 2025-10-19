@@ -142,12 +142,14 @@ for name, model in models.items():
         y_pred_all.extend(y_pred)
 
     # Evaluate on all combined predictions
-    rmse = np.sqrt(mean_squared_error(y_true_all, y_pred_all))
+    mse = mean_squared_error(y_true_all, y_pred_all)
+    rmse = np.sqrt(mse)
     mae = mean_absolute_error(y_true_all, y_pred_all)
     r2 = r2_score(y_true_all, y_pred_all)
 
     results.append({
         'Model': name,
+        'MSE': mse,
         'RMSE': rmse,
         'MAE': mae,
         'R²': r2
@@ -156,3 +158,4 @@ for name, model in models.items():
 # Display results
 results_df = pd.DataFrame(results).sort_values(by='RMSE')
 print(results_df)
+
