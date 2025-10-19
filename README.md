@@ -19,6 +19,21 @@ This diagram doesn't include the pipeline architecture behind the data ingestion
 
 ## Machine Learning
 ### Feature Engineering and Preprocessing
+Before the data reaches the models, it goes through a series of functions that prepare the data and creates necessary variables. These are as follows:
+
+- Grouping by rush hours (splitting into morning and afternoon)
+- Including public holidays in a binary column
+- Create dummy columns from weather data
+- Create dummy columns from weekdays
+- Calculate sunset and sunrise times for each day
+- Add 1 day lag for travel time
+- Add 7 day lag for travel time
+- Calculate rolling average for the past 7 days
+- Convert all boolean values to binary
+
+It should be noted that two separate datasets are being prepared: one for predicting the next 2 rush hours, and one for predicting the 8 rush hours after that. 
+For the latter, it isn't possible to add a 1 day lag or calculate a rolling average for the past 7 days, simply because the data doesn't exist. 
+
 ### Model Choice
 ### Performance
 
