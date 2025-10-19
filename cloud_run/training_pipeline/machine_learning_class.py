@@ -21,10 +21,6 @@ class MachineLearning:
             X = df.drop(columns=[self.target_column])
             y = df[self.target_column]
 
-            # Scale the features 
-            scaler = StandardScaler()
-            X_scaled = scaler.fit_transform(X)
-
             # Cross-validation setup
             cv = KFold(n_splits=10, shuffle=True, random_state=42)
 
@@ -33,16 +29,21 @@ class MachineLearning:
             r2_scores = []
             
             # Loop through each split
-            for train_index, test_index in cv.split(X_scaled):
+            for train_index, test_index in cv.split(X):
                 # Split data in traning and test
-                X_train, X_test = X_scaled[train_index], X_scaled[test_index]
+                X_train, X_test = X.iloc[train_index], X.iloc[test_index]
                 y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+                
+                # Scale the features 
+                scaler = StandardScaler()
+                X_train_scaled = scaler.fit_transform(X_train)
+                X_test_scaled = scaler.transform(X_test)
 
                 # Initiate and fit model
                 model = ExtraTreesRegressor()
-                model.fit(X_train, y_train)
+                model.fit(X_train_scaled, y_train)
                 # Predict on test data
-                y_pred = model.predict(X_test)
+                y_pred = model.predict(X_test_scaled)
 
                 # Get performance metrics
                 mse = mean_squared_error(y_test, y_pred)
