@@ -35,6 +35,11 @@ It should be noted that two separate datasets are being prepared: one for predic
 For the latter, it isn't possible to add a 1 day lag or calculate a rolling average for the past 7 days, simply because the data doesn't exist. 
 
 ### Model Choice
+Upon testing multiple models, the Extra Trees Regressor proved to be the best performer across all parameters. 
+<img width="516" height="288" alt="image" src="https://github.com/user-attachments/assets/6979acb5-9c82-46e6-bcd1-815aefdbe039" />
+
+A K-fold cross validation was used here, and was run with both 10, 5, and 3 folds - the Extra Trees Regressor performed best in all three cases.
+
 ### Performance
 
 ## CI/CD Pipelines
