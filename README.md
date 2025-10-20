@@ -31,14 +31,34 @@ Before the data reaches the models, it goes through a series of functions that p
 - Calculate rolling average for the past 7 days
 - Convert all boolean values to binary
 
-It should be noted that two separate datasets are being prepared: one for predicting the next 2 rush hours, and one for predicting the 8 rush hours after that. 
+It should be noted that two separate pipelines are run: one for predicting the next 2 rush hours, and one for predicting the 8 rush hours after that. 
 For the latter, it isn't possible to add a 1 day lag or calculate a rolling average for the past 7 days, simply because the data doesn't exist. 
 
-### Model Choice
-Upon testing multiple models, the Extra Trees Regressor proved to be the best performer across all parameters. 
-<img width="516" height="288" alt="image" src="https://github.com/user-attachments/assets/6979acb5-9c82-46e6-bcd1-815aefdbe039" />
+Each pipeline produces two datasets: one for the morning rush hour and one for the afternoon. NOTE: explain further
 
-A K-fold cross validation was used here, and was run with both 10, 5, and 3 folds - the Extra Trees Regressor performed best in all three cases.
+### Model Evalutaion and Selection
+Multiple algorithms were tested and evaluated using K-fold cross validation to identify the model that performed best in predicting unseen data. 
+```python
+models = {
+    'Linear Regression': LinearRegression(),
+    'Ridge Regression': Ridge(),
+    'Lasso Regression': Lasso(),
+    'Decision Tree': DecisionTreeRegressor(),
+    'Random Forest': RandomForestRegressor(),
+    'Gradient Boosting': GradientBoostingRegressor(),
+    'XGBoost': xgb.XGBRegressor(),
+    'Support Vector Regressor': SVR(),
+    'ElasticNet': ElasticNet(),
+    'KNN': KNeighborsRegressor(),
+    'Extra Trees': ExtraTreesRegressor(),
+    'CatBoost': CatBoostRegressor(verbose=0)
+}
+```
+The cross validations was run with 10, 5, and 3 folds to ensure that the model performance remained concistent across different data splits and sample sizes. All models were trained and evaluated using the exact same dataset, and performance was compared using RMSE, MSE, MAE, and R². 
+The Extra Trees Regressor proved to be the best perfomer across all evaluation parameters and cross validation setups. Based on these results it was selected as the final model.  
+
+Seen below is the benchmark for the models trained on the dataset for the morning rush hour to predict the next 2 rush hours.
+<img width="516" height="288" alt="image" src="https://github.com/user-attachments/assets/6979acb5-9c82-46e6-bcd1-815aefdbe039" />
 
 ### Performance
 
