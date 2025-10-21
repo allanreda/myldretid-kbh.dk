@@ -21,53 +21,49 @@ class MachineLearning:
             X = df.drop(columns=[self.target_column])
             y = df[self.target_column]
 
+            # Scale the features 
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(X)
+
             # Cross-validation setup
             cv = KFold(n_splits=10, shuffle=True, random_state=42)
 
-            mse_scores, rmse_scores, mae_scores, r2_scores = [], [], [], []
-
+            mse_scores = []
+            mae_scores = []
+            r2_scores = []
+            
             # Loop through each split
-            for train_index, test_index in cv.split(X):
+            for train_index, test_index in cv.split(X_scaled):
                 # Split data in traning and test
-                X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+                X_train, X_test = X_scaled[train_index], X_scaled[test_index]
                 y_train, y_test = y.iloc[train_index], y.iloc[test_index]
-                
-                # Scale the features 
-                scaler = StandardScaler()
-                X_train_scaled = scaler.fit_transform(X_train)
-                X_test_scaled = scaler.transform(X_test)
 
                 # Initiate and fit model
                 model = ExtraTreesRegressor()
-                model.fit(X_train_scaled, y_train)
+                model.fit(X_train, y_train)
                 # Predict on test data
-                y_pred = model.predict(X_test_scaled)
+                y_pred = model.predict(X_test)
 
                 # Get performance metrics
                 mse = mean_squared_error(y_test, y_pred)
-                rmse = np.sqrt(mse)
                 mae = mean_absolute_error(y_test, y_pred)
                 r2 = r2_score(y_test, y_pred)
 
                 # Append performance metrics to list
                 mse_scores.append(mse)
-                rmse_scores.append(rmse)
                 mae_scores.append(mae)
                 r2_scores.append(r2)
             
             logger.info("Average performance across all folds:")
-            logger.info(f"Average MSE:  {np.mean(mse_scores):.3f}")
-            logger.info(f"Average RMSE: {np.mean(rmse_scores):.3f}")
-            logger.info(f"Average MAE:  {np.mean(mae_scores):.3f}")
-            logger.info(f"Average R²:   {np.mean(r2_scores):.3f}")
+            logger.info(f"Average MSE: {np.mean(mse_scores):.2f}")
+            logger.info(f"Average MAE: {np.mean(mae_scores):.2f}")
+            logger.info(f"Average R²:  {np.mean(r2_scores):.2f}")
 
             return {
                 "avg_mse": np.mean(mse_scores),
-                "avg_rmse": np.mean(rmse_scores),
                 "avg_mae": np.mean(mae_scores),
                 "avg_r2": np.mean(r2_scores),
                 "all_mse": mse_scores,
-                "all_rmse": rmse_scores,
                 "all_mae": mae_scores,
                 "all_r2": r2_scores
             }
