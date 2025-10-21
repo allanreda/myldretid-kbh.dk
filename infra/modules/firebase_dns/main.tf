@@ -43,3 +43,13 @@ resource "google_dns_record_set" "txt_verification" {
         ]
 }
 
+# CNAME record for www subdomain pointing to Firebase Hosting target
+resource "google_dns_record_set" "firebase_www_cname" {
+  name         = "www.${var.custom_domain_name}."
+  type         = "CNAME"
+  ttl          = 300
+  project      = var.project_id
+  managed_zone = google_dns_managed_zone.myldretid-kbh-zone.name
+
+  rrdatas = ["myldretid-kbh.web.app."]
+}

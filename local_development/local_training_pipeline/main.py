@@ -90,7 +90,7 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import numpy as np
 import pandas as pd
 
-df = morning_df
+df = afternoon_df
 
 # X = features, y = target
 X = df.drop(columns=['current_travel_time'])
@@ -115,7 +115,7 @@ models = {
 #_____________________ KFold Cross Validation _______________________
 
 # Cross-validation setup
-cv = KFold(n_splits=10, shuffle=True, random_state=42)
+cv = KFold(n_splits=5, shuffle=True, random_state=42)
 
 results = []
 
