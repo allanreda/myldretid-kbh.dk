@@ -66,10 +66,18 @@ The feature importances for the latest trained models, at the time of writing th
 <img width="901" height="571" alt="image" src="https://github.com/user-attachments/assets/c31ba9ad-a8bb-4697-8f6f-2f444391d457" />
 <img width="810" height="577" alt="image" src="https://github.com/user-attachments/assets/8b7c225c-6139-4324-9ef9-3f23446b8662" />
 
-Some of the features have minimal impact on the models, yet I have still chosen to include them for now. When I tried removing them, the models only worsened a bit, so no positive impact was proven by removing them. At the time of writing this, there is only a little over a years worth of data available. My hope is that these currently insignificant features will get a greater impact on the models, as more data is collected as time goes by. 
+The "is_holiday" feature has the highest decision power by far on both models. Traffic levels will always be lower on weekends and public holidays, when most people are off from work. 
+
+Also, I think it is worth noting that the "morning_travel_time" feature on the afternoon model has the third-highest decision power. This can probably be explained by the fact that the same people taking the car in the morning also have to take the car home in the afternoon. It makes total sense when you think about it, but is still a fun observation in my opinion. 
+
+Some of the features have minimal impact on the models, yet I have still chosen to include them for now. When I tried removing them, the models only worsened a bit, so no positive impact was proven by removing them. At the time of writing this, there is only a little over a years worth of data available. My hope is that these currently insignificant features will have a greater impact on the models, as more data is collected as time goes by. 
 
 ## CI/CD Pipelines
 ### Dev and Prod Environments
+When starting this project out, I knew that the end product would be a tool with real users. Therefore, I wanted to ensure that there would be minimal downtime of the user-facing part of the project, which would be the frontend and the pipeline providing data to it. The best way to ensure that is by setting up separate development and production environments for both, which is what I did. 
+
+I decided to use Github Workflows mainly due to the fact that I was already using Github for version controlling, but also due to its relatively easy integration with both Google Cloud and Firebase.
+
 ### Website Pipeline
 ### Cloud Run Pipeline
 
