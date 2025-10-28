@@ -56,12 +56,17 @@ models = {
 }
 ```
 The cross validations was run with 10, 5, and 3 folds to ensure that the model performance remained consistent across different data splits and sample sizes. All models were trained and evaluated using the exact same dataset, and performance was compared using RMSE, MSE, MAE, and R². 
-The Extra Trees Regressor proved to be the best performer across all evaluation parameters and cross validation setups. Based on these results it was selected as the final model.  
+The Extra Trees Regressor proved to be the best performer across all evaluation parameters and cross validation setups. Based on these results, it was selected as the final model.  
 
 Seen below is the benchmark for the models trained on the dataset for the morning rush hour to predict the next 2 rush hours.
 <img width="516" height="288" alt="image" src="https://github.com/user-attachments/assets/6979acb5-9c82-46e6-bcd1-815aefdbe039" />
 
-### Feature Importance
+### Feature Importances
+The feature importances for the latest trained models, at the time of writing this, can be seen below.
+<img width="901" height="571" alt="image" src="https://github.com/user-attachments/assets/c31ba9ad-a8bb-4697-8f6f-2f444391d457" />
+<img width="810" height="577" alt="image" src="https://github.com/user-attachments/assets/8b7c225c-6139-4324-9ef9-3f23446b8662" />
+
+Some of the features have minimal impact on the models, yet I have still chosen to include them for now. When I tried removing them, the models only worsened a bit, so no positive impact was proven by removing them. At the time of writing this, there is only a little over a years worth of data available. My hope is that these currently insignificant features will get a greater impact on the models, as more data is collected as time goes by. 
 
 ## CI/CD Pipelines
 ### Dev and Prod Environments
