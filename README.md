@@ -74,11 +74,43 @@ Some of the features have minimal impact on the models, yet I have still chosen 
 
 ## CI/CD Pipelines
 ### Dev and Prod Environments
-When starting this project out, I knew that the end product would be a tool with real users. Therefore, I wanted to ensure that there would be minimal downtime of the user-facing part of the project, which would be the frontend and the pipeline providing data to it. The best way to ensure that is by setting up separate development and production environments for both, which is what I did. 
+When starting this project out, I knew that the end product would be a tool with real users. Therefore, I wanted to ensure that there would be minimal downtime of the user-facing part of the project while developing. The user-facing part would be the frontend, and the pipeline providing data to it. The best way to ensure that is by setting up separate development and production environments for both, which is what I did. 
 
 I decided to use Github Workflows mainly due to the fact that I was already using Github for version controlling, but also due to its relatively easy integration with both Google Cloud and Firebase.
 
 ### Website Pipeline
+#### Dev Workflow 
+##### Triggers
+Runs on pushes to the "dev" branch but only if changes have been made to:  
+- 'website/website/**'
+- '.github/workflows/firebase.deploy.dev.yml'
+##### Steps
+- Pull the repository code into the workflow environment
+- Install Firebase CLI using 'npm install -g firebase-tools'
+- Prepare deployment folder:
+  - Navigate to website/website
+  - Delete sitemap.xml to prevent search engines indexing on the dev site
+  - Replace robots.txt with robots.dev.txt which contains 'Disallow: /' to block search engine crawlers
+  - Print out all file names for debugging
+  - Print out content of robots.txt for debugging
+- Deploy to the dev Firebase hosting site
+
+#### Prod Workflow
+##### Triggers
+Runs on pushes to the "main" branch but only if changes have been made to:  
+- 'website/website/**'
+- '.github/workflows/firebase.deploy.prod.yml'
+##### Steps
+- Pull the repository code into the workflow environment
+- Install Firebase CLI using 'npm install -g firebase-tools'
+- Prepare deployment folder:
+  - Navigate to website/website
+  - Replace robots.txt with robots.prod.txt which contains 'Allow: /' to allow search engine to crawl and index site
+  - Print out all file names for debugging
+  - Print out content of robots.txt for debugging
+- Deploy to the prod Firebase hosting site
+  
+
 ### Cloud Run Pipeline
 
 ## IAC (Terraform)
