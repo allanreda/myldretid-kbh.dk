@@ -1,12 +1,12 @@
-name: Deploy Dev Cloud Run
+name: Deploy Prod Cloud Run
 
 on:
   push:
     branches:
-      - dev
+      - main
     paths:
       - 'cloud_run/**'
-      - '.github/workflows/deploy-dev.yml'
+      - '.github/workflows/cloud_run.deploy.prod.yml'
 
 jobs:
   deploy:
@@ -15,8 +15,8 @@ jobs:
     env:
       PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       REGION: ${{ secrets.REGION }}
-      WORKSPACE: dev
-      REPO_NAME: myldretid-kbh-dev
+      WORKSPACE: prod
+      REPO_NAME: myldretid-kbh-prod
 
     steps:
       - uses: actions/checkout@v3
@@ -30,7 +30,6 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-
 
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker $REGION-docker.pkg.dev
@@ -56,7 +55,6 @@ jobs:
             --region $REGION \
             --project $PROJECT_ID \
             --quiet
-
 
       - name: Deploy to prediction-morning
         run: |
