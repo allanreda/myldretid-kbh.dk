@@ -84,6 +84,7 @@ I decided to use Github Workflows mainly due to the fact that I was already usin
 Runs on pushes to the "dev" branch but only if changes have been made to:  
 - 'website/website/**'
 - '.github/workflows/firebase.deploy.dev.yml'
+
 ##### Steps
 - Pull the repository code into the workflow environment
 - Install Firebase CLI using 'npm install -g firebase-tools'
@@ -99,7 +100,8 @@ Runs on pushes to the "dev" branch but only if changes have been made to:
 ##### Triggers
 Runs on pushes to the "main" branch but only if changes have been made to:  
 - 'website/website/**'
-- '.github/workflows/firebase.deploy.prod.yml'
+- '.github/workflows/cloud_run.deploy.prod.yml'
+  
 ##### Steps
 - Pull the repository code into the workflow environment
 - Install Firebase CLI using 'npm install -g firebase-tools'
@@ -110,7 +112,39 @@ Runs on pushes to the "main" branch but only if changes have been made to:
   - Print out content of robots.txt for debugging
 - Deploy to the prod Firebase hosting site
   
-
 ### Cloud Run Pipeline
+#### Dev Workflow
+##### Triggers
+Runs on pushes to the "dev" branch but only if changes have been made to:  
+- 'cloud_run/**'
+- '.github/workflows/cloud_run.deploy.dev.yml'
+
+##### Steps
+- Pull the repository code into the workflow environment
+- Authenticate to Google Cloud using service account key
+- Setup Google Cloud CLI with GCP project ID
+- Configure Docker for Artifact Registry
+- Build and push training image
+- Build and push prediction image
+- Deploy updated training image to 'training-dev' Cloud Run service
+- Deploy updated prediction image to 'prediction-morning-dev' Cloud Run service
+- Deploy updated prediction image to 'prediction-afternoon-prod' Cloud Run service
+
+#### Prod Workflow
+##### Triggers
+Runs on pushes to the "main" branch but only if changes have been made to:  
+- 'cloud_run/**'
+- '.github/workflows/cloud_run.deploy.prod.yml'
+
+##### Steps
+- Pull the repository code into the workflow environment
+- Authenticate to Google Cloud using service account key
+- Setup Google Cloud CLI with GCP project ID
+- Configure Docker for Artifact Registry
+- Build and push training image
+- Build and push prediction image
+- Deploy updated training image to 'training-prod' Cloud Run service
+- Deploy updated prediction image to 'prediction-morning-prod' Cloud Run service
+- Deploy updated prediction image to 'prediction-afternoon-prod' Cloud Run service
 
 ## IAC (Terraform)
