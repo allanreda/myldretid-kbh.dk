@@ -14,3 +14,4 @@ catboost
 astral
 google-cloud-secret-manager
 flask
+shap

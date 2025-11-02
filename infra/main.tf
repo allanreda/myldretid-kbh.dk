@@ -58,6 +58,7 @@ resource "google_artifact_registry_repository" "pipeline_repo" {
   depends_on = [module.permissions]
 }
 
+# Create training pipeline including Cloud Run, Pub/Sub and Scheduler
 module "training_pipeline" {
   source = "./modules/cloud_run_pipeline"
   name = "training-${terraform.workspace}"
@@ -73,6 +74,7 @@ module "training_pipeline" {
   depends_on = [google_artifact_registry_repository.pipeline_repo]
 }
 
+# Create morning prediction pipeline including Cloud Run, Pub/Sub and Scheduler
 module "prediction_pipeline_morning" {
   source = "./modules/cloud_run_pipeline"
   name = "prediction-morning-${terraform.workspace}"
@@ -88,6 +90,7 @@ module "prediction_pipeline_morning" {
   depends_on = [google_artifact_registry_repository.pipeline_repo]
 }
 
+# Create afternoon prediction pipeline including Cloud Run, Pub/Sub and Scheduler
 module "prediction_pipeline_afternoon" {
   source = "./modules/cloud_run_pipeline"
   name = "prediction-afternoon-${terraform.workspace}"
@@ -97,7 +100,7 @@ module "prediction_pipeline_afternoon" {
   image = "${var.region}-docker.pkg.dev/${var.project_id}/myldretid-kbh-${terraform.workspace}/prediction:latest"
   cpu = 1
   memory = "512Mi"
-  schedule = "0 10 * * *"  # Every day at 11:00 
+  schedule = "0 10 * * *"  # Every day at 10:00 
 
   # Wait for repo to be created
   depends_on = [google_artifact_registry_repository.pipeline_repo]
