@@ -6,7 +6,7 @@ on:
       - dev
     paths:
       - 'cloud_run/**'
-      - '.github/workflows/deploy-dev.yml'
+      - '.github/workflows/cloud_run.deploy.dev.yml'
 
 jobs:
   deploy:
