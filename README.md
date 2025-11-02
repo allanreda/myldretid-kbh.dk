@@ -37,7 +37,7 @@ For the latter, it isn't possible to add a 1-day lag or calculate a rolling aver
 
 Each pipeline produces two datasets: one for the morning rush hour and one for the afternoon. This is done because the predictors have different effects on the target variable, based on the rush hour period. Furthermore, the travel time for the morning rush hour proved to be a strong predictor of the afternoon rush hour. Without splitting up into two models, this nuance would have been lost.
 
-### Model Evaluataion and Selection
+### Model Evaluation and Selection
 Multiple algorithms were tested and evaluated using K-fold cross validation to identify the model that performed best in predicting unseen data. 
 ```python
 models = {
@@ -148,3 +148,45 @@ Runs on pushes to the "main" branch but only if changes have been made to:
 - Deploy updated prediction image to 'prediction-afternoon-prod' Cloud Run service
 
 ## IAC (Terraform)
+The GCP infrastructure is fully managed with Terraform, to ensure that it stays consistent and reproducible, across both dev and prod environments. This is especially important since both the dev and prod infrastructure lives within the same Google Cloud project. Differences between them are the suffix of the created ressources, which are based on the Terraform workspace in use (which are either 'dev' or 'prod'). Example:  
+```
+repository_id = "myldretid-kbh-${terraform.workspace}"
+```
+### Modules
+The following is a short overview of the modules and what they each do:
+
+- enable_apis:
+  - Depends on: none
+  - Description: Enable all required APIs in the project
+
+- permissions:
+  - Depends on: enable_apis
+  - Description: Grant service accounts required permissions
+
+- models_bucket:
+  - Depends on: permissions
+  - Description: Create bucket to store trained models
+
+- predictions_bucket:
+  - Depends on: permissions
+  - Description: Create bucket to store prediction files
+
+- pipeline_repo (ressource):
+  - Depends on: permissions
+  - Description: Create Artifact Registry repository
+
+- training_pipeline:
+  - Depends on: pipeline_repo
+  - Description: Create training pipeline including Cloud Run, Pub/Sub and Scheduler
+
+- prediction_pipeline_morning:
+  - Depends on: pipeline_repo
+  - Description: Create morning prediction pipeline including Cloud Run, Pub/Sub and Scheduler
+
+- prediction_pipeline_afternoon:
+  - Depends on: pipeline_repo
+  - Description: Create afternoon prediction pipeline including Cloud Run, Pub/Sub and Scheduler
+
+- dns_setup (prod workspace only:
+  - Depends on: pipeline_repo
+  - Description: Set up DNS for custom domain on prod site
