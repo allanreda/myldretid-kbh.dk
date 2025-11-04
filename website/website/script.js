@@ -42,24 +42,25 @@ function formatDateLabel(dateStr, period) {
 }
 
 function getDescription(val) {
-  if (val < -15) return "🚀 Meget hurtigere end normalt";
-  if (val < -10) return "🚗 Hurtigere end normalt";
-  if (val < -5) return "👍 En smule hurtigere end normalt";
+  if (val < -15) return "🪦 Meget langsommere end normalt";
+  if (val < -10) return "🛑 Langsommere end normalt";
+  if (val < -5) return "⚠️ En smule langsommere end normalt";
   if (val < 5) return "👌 Omtrent som normalt";
-  if (val < 10) return "⚠️ En smule langsommere end normalt";
-  if (val < 15) return "🛑 Langsommere end normalt";
-  return "🪦 Meget langsommere end normalt";
+  if (val < 10) return "👍 En smule hurtigere end normalt";
+  if (val < 15) return "🚗 Hurtigere end normalt";
+  return "🚀 Meget hurtigere end normalt";
 }
 
 function getColor(val) {
-  if (val < -15) return "#05f545";
-  if (val < -10) return "#1abc9c";
-  if (val < -5) return "#37c477";
-  if (val < 5) return "#ffff00";
-  if (val < 10) return "#f39c12";
-  if (val < 15) return "#e67e22";
-  return "#f70525";
+  if (val < -15) return "#f70525"; 
+  if (val < -10) return "#e67e22";
+  if (val < -5) return "#f39c12";
+  if (val < 5) return "#ffff00";   
+  if (val < 10) return "#37c477";
+  if (val < 15) return "#1abc9c";
+  return "#05f545"; 
 }
+
 
 // --- Gauge Renderer ---
 function createGauge(id, val, label, description, color, isSmall = false) {

@@ -32,7 +32,7 @@ class PredictionPipeline:
             return None
         
     def calculate_percentage_diff(self, predicted, average):
-        percentage_diff = ((predicted - average) / average) * 100
+        percentage_diff = ((average - predicted) / average) * 100
         return percentage_diff
     
     def calculate_percentage_diff_4_days(self, predictions, average):
