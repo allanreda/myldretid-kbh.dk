@@ -8,6 +8,36 @@ Even though driving through Copenhagen during rush hours will always prolong you
 
 ## Table of Contents
 
+- [Introduction](#introduction)
+- [User Guide and Useful Info](#user-guide-and-useful-info)
+  - [Gauge Color Explanation](#gauge-color-explanation)
+  - [Calculation of Average Travel Time](#calculation-of-average-travel-time)
+  - [Reasoning Behind Update Times](#reasoning-behind-update-times)
+  - [Data Sources](#data-sources)
+- [Project Diagram](#project-diagram)
+- [Machine Learning](#machine-learning)
+  - [Feature Engineering and Preprocessing](#feature-engineering-and-preprocessing)
+  - [Model Evaluation and Selection](#model-evaluation-and-selection)
+  - [Feature Importances](#feature-importances)
+- [IAC (Terraform)](#iac-terraform)
+  - [Modules](#modules)
+- [CI/CD Pipelines](#cicd-pipelines)
+  - [Dev and Prod Environments](#dev-and-prod-environments)
+  - [Website Pipeline](#website-pipeline)
+    - [Dev Workflow](#dev-workflow)
+      - [Triggers](#triggers)
+      - [Steps](#steps)
+    - [Prod Workflow](#prod-workflow)
+      - [Triggers](#triggers-1)
+      - [Steps](#steps-1)
+  - [Cloud Run Pipeline](#cloud-run-pipeline)
+    - [Dev Workflow](#dev-workflow-1)
+      - [Triggers](#triggers-2)
+      - [Steps](#steps-2)
+    - [Prod Workflow](#prod-workflow-1)
+      - [Triggers](#triggers-3)
+      - [Steps](#steps-3)
+
 ## User Guide and Useful Info
 ### Gauge Color Explanation
 
@@ -30,7 +60,7 @@ The predictions currently runs twice every day: at 10 AM and 6 PM.
 These specific times were chosen because they occur after each rush hour period, when the ETL pipeline has collected the latest data. This ensures that the latest data is ready to be used for generating lag variables for the upcoming predictions.
 
 ### Data Sources
-The TomTom Traffic API and OpenWeather API are used to collect traffic and weather data from 20 specific geograpical locations in Copenhagen. You can read more about the ETL pipeline that collects this data, in this repository: https://github.com/allanreda/Copenhagen-Traffic-and-Weather-ETL-Pipeline. The pipeline has been running since the 21st of September 2024.  
+The TomTom Traffic API and OpenWeather API are used to collect traffic and weather data from 20 specific geograpical locations in Copenhagen. You can read more about the ETL pipeline that collects this data, in this repository: https://github.com/allanreda/Copenhagen-Traffic-and-Weather-ETL-Pipeline. The pipeline has been running since the **21st of September 2024**.  
 Furthermore, this project also uses the official website of Copenhagen Municipality as a reliable source of information for past and upcoming school and public holidays.
 
 ## Project Diagram
@@ -91,6 +121,25 @@ The "is_holiday" feature has the highest decision power by far on both models. T
 Also, I think it is worth noting that the "morning_travel_time" feature on the afternoon model has the third-highest decision power. This can probably be explained by the fact that the same people taking the car in the morning also have to take the car home in the afternoon. It makes total sense when you think about it, but is still a fun observation in my opinion. 
 
 Some of the features have minimal impact on the models, yet I have still chosen to include them for now. When I tried removing them, the models only worsened a bit, so no positive impact was proven by removing them. At the time of writing this, there is only a little over a years worth of data available. My hope is that these currently insignificant features will have a greater impact on the models, as more data is collected as time goes by. 
+
+## IAC (Terraform)
+The GCP infrastructure is fully managed with Terraform, to ensure that it stays consistent and reproducible, across both dev and prod environments. This is especially important since both the dev and prod infrastructure lives within the same Google Cloud project. Differences between them are the suffix of the created ressources, which are based on the Terraform workspace in use (which are either 'dev' or 'prod'). Example:  
+```
+repository_id = "myldretid-kbh-${terraform.workspace}"
+```
+### Modules
+
+| Module                       | Depends on       | Description                                                         |
+|------------------------------|------------------|----------------------------------------------------------------------|
+| **enable_apis**              | none             | Enable all required APIs in the project                              |
+| **permissions**              | enable_apis      | Grant service accounts required permissions                          |
+| **models_bucket**            | permissions      | Create bucket to store trained models                                |
+| **predictions_bucket**       | permissions      | Create bucket to store prediction files                              |
+| **pipeline_repo (resource)** | permissions      | Create Artifact Registry repository                                  |
+| **training_pipeline**        | pipeline_repo    | Create training pipeline including Cloud Run, Pub/Sub, and Scheduler |
+| **prediction_pipeline_morning** | pipeline_repo | Create morning prediction pipeline including Cloud Run, Pub/Sub, and Scheduler |
+| **prediction_pipeline_afternoon** | pipeline_repo | Create afternoon prediction pipeline including Cloud Run, Pub/Sub, and Scheduler |
+| **dns_setup (prod workspace only)** | pipeline_repo | Set up DNS for custom domain on prod site                            |
 
 ## CI/CD Pipelines
 ### Dev and Prod Environments
@@ -167,46 +216,3 @@ Runs on pushes to the "main" branch but only if changes have been made to:
 - Deploy updated prediction image to 'prediction-morning-prod' Cloud Run service
 - Deploy updated prediction image to 'prediction-afternoon-prod' Cloud Run service
 
-## IAC (Terraform)
-The GCP infrastructure is fully managed with Terraform, to ensure that it stays consistent and reproducible, across both dev and prod environments. This is especially important since both the dev and prod infrastructure lives within the same Google Cloud project. Differences between them are the suffix of the created ressources, which are based on the Terraform workspace in use (which are either 'dev' or 'prod'). Example:  
-```
-repository_id = "myldretid-kbh-${terraform.workspace}"
-```
-### Modules
-The following is a short overview of the modules and what they each do:
-
-- enable_apis:
-  - Depends on: none
-  - Description: Enable all required APIs in the project
-
-- permissions:
-  - Depends on: enable_apis
-  - Description: Grant service accounts required permissions
-
-- models_bucket:
-  - Depends on: permissions
-  - Description: Create bucket to store trained models
-
-- predictions_bucket:
-  - Depends on: permissions
-  - Description: Create bucket to store prediction files
-
-- pipeline_repo (ressource):
-  - Depends on: permissions
-  - Description: Create Artifact Registry repository
-
-- training_pipeline:
-  - Depends on: pipeline_repo
-  - Description: Create training pipeline including Cloud Run, Pub/Sub and Scheduler
-
-- prediction_pipeline_morning:
-  - Depends on: pipeline_repo
-  - Description: Create morning prediction pipeline including Cloud Run, Pub/Sub and Scheduler
-
-- prediction_pipeline_afternoon:
-  - Depends on: pipeline_repo
-  - Description: Create afternoon prediction pipeline including Cloud Run, Pub/Sub and Scheduler
-
-- dns_setup (prod workspace only:
-  - Depends on: pipeline_repo
-  - Description: Set up DNS for custom domain on prod site
