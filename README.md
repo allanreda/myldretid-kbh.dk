@@ -1,6 +1,10 @@
 # myldretid-kbh 
 ## Machine Learning Based Traffic Predictor for Copenhagen Rush Hours
-Try out the service live at: https://myldretid-kbh.dk/
+Try out the service live at: https://myldretid-kbh.dk/    
+
+<p align="center">
+  <img width="300" alt="image" src="https://github.com/user-attachments/assets/8e742179-e9f1-42b8-baa1-1f3b045ade36" />
+</p>  
 
 ## Introduction
 Copenhagen is a relatively small city compared to other capitals around the world. In most cases, you are able to drive from one end of the city to the other, in less than 30 minutes - except during rush hours. 
@@ -113,8 +117,8 @@ Seen below is the benchmark for the models trained on the dataset for the mornin
 
 ### Feature Importances
 The feature importances for the latest trained models, at the time of writing this, can be seen below.
-<img width="901" height="571" alt="image" src="https://github.com/user-attachments/assets/c31ba9ad-a8bb-4697-8f6f-2f444391d457" />
-<img width="810" height="577" alt="image" src="https://github.com/user-attachments/assets/8b7c225c-6139-4324-9ef9-3f23446b8662" />
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/c31ba9ad-a8bb-4697-8f6f-2f444391d457" />
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/8b7c225c-6139-4324-9ef9-3f23446b8662" />
 
 The "is_holiday" feature has the highest decision power by far on both models. Traffic levels will always be lower on weekends and public holidays, when most people are off from work. 
 
