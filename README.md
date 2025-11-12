@@ -9,9 +9,29 @@ Even though driving through Copenhagen during rush hours will always prolong you
 ## Table of Contents
 
 ## User Guide and Useful Info
-### Color Explanation
+### Gauge Color Explanation
+
+| Color             | Meaning                                                        |
+| :---------------- | :------------------------------------------------------------- |
+| **Bright green**  | A lot faster than average (positive deviation ≥ **15%**)       |
+| **Turquoise**     | Faster than average (positive deviation **10–15%**)            |
+| **Dark green**    | A bit faster than average (positive deviation **5–10%**)       |
+| **Yellow**        | Around average (deviation **–5% to +5%**)                      |
+| **Bright orange** | A bit slower than average (negative deviation **–10% to –5%**) |
+| **Dark orange**   | Slower than average (negative deviation **–15% to –10%**)      |
+| **Red**           | A lot slower than average (negative deviation ≤ **–15%**)      |
+
 ### Calculation of Average Travel Time
+The calculation uses the historical travel times of the rush hours captured in all the 20 chosen geographical locations of Copenhagen. The rush hours are defined as 7, 8, and 9 AM for the morning and 3, 4 and 5 PM for the afternoon.  
+It's important to mention that the average travel time is calculated using only data from the weekdays and thereby excluding the weekends. The main intended use of this service is in the weekdays where Copenhageners are driving to/from work or school during the rush hours. Therefore it would make more sense if the predictions were relative to the weekdays rather than the weekends. Including the weekend in the calculation would also significantly lower the average, which would not be ideal in this case. 
+
 ### Reasoning Behind Update Times
+The predictions currently runs twice every day: at 10 AM and 6 PM.  
+These specific times were chosen because they occur after each rush hour period, when the ETL pipeline has collected the latest data. This ensures that the latest data is ready to be used for generating lag variables for the upcoming predictions.
+
+### Data Sources
+The TomTom Traffic API and OpenWeather API are used to collect traffic and weather data from 20 specific geograpical locations in Copenhagen. You can read more about the ETL pipeline that collects this data, in this repository: https://github.com/allanreda/Copenhagen-Traffic-and-Weather-ETL-Pipeline. The pipeline has been running since the 21st of September 2024.  
+Furthermore, this project also uses the official website of Copenhagen Municipality as a reliable source of information for past and upcoming school and public holidays.
 
 ## Project Diagram
 <img width="1415" height="1238" alt="myldretid-kbh drawio" src="https://github.com/user-attachments/assets/26fcafd7-beeb-4c99-9762-df9ff7fe85b9" />
