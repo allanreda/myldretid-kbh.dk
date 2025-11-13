@@ -1,21 +1,3 @@
-// --- Google Analytics 4 dynamic loader ---
-(function() {
-  const host = window.location.hostname;
-  const PROD_ID = "G-HBEYXDZWL0";
-  const DEV_ID = "G-9PXSDQWSS1";
-  const GA_ID = host.includes("dev") ? DEV_ID : PROD_ID;
-
-  const s = document.createElement("script");
-  s.async = true;
-  s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
-  document.head.appendChild(s);
-
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
-  gtag('js', new Date());
-  gtag('config', GA_ID);
-})();
-
 // --- Environment URL ---
 let url;
 if (window.location.hostname.includes("dev") || window.location.hostname === "localhost") {
