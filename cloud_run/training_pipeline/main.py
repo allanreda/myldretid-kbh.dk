@@ -66,7 +66,7 @@ def train_models(request: Request):
             AND weather.time = traffic.time
             AND weather.date = traffic.date
         WHERE 
-            DATE(traffic.date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 YEAR)
+            DATE(traffic.date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 3 YEAR)
         """
 
         # Load holidays file
