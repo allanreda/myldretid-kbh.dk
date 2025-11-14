@@ -68,7 +68,7 @@ The TomTom Traffic API and OpenWeather API are used to collect traffic and weath
 Furthermore, this project also uses the official website of Copenhagen Municipality as a reliable source of information for past and upcoming school and public holidays.
 
 ## Project Diagram
-<img width="1415" height="1238" alt="myldretid-kbh drawio" src="https://github.com/user-attachments/assets/26fcafd7-beeb-4c99-9762-df9ff7fe85b9" />
+<img width="1415" height="1238" alt="myldretid-kbh project diagram" src="https://github.com/user-attachments/assets/26fcafd7-beeb-4c99-9762-df9ff7fe85b9" />
 This diagram doesn't include the pipeline architecture behind the data ingestion of the traffic and weather data. That was built earlier as a separate project, which you can read about here: https://github.com/allanreda/Copenhagen-Traffic-and-Weather-ETL-Pipeline  
 
 ## Machine Learning
@@ -112,13 +112,13 @@ models = {
 The cross validations was run with 10, 5, and 3 folds to ensure that the model performance remained consistent across different data splits and sample sizes. All models were trained and evaluated using the exact same dataset, and performance was compared using RMSE, MSE, MAE, and R². 
 The Extra Trees Regressor proved to be the best performer across all evaluation parameters and cross validation setups. Based on these results, it was selected as the final model.  
 
-Seen below is the benchmark for the models trained on the dataset for the morning rush hour to predict the next 2 rush hours.
-<img width="516" height="288" alt="image" src="https://github.com/user-attachments/assets/6979acb5-9c82-46e6-bcd1-815aefdbe039" />
+Seen below is the benchmark for the models trained on the dataset for the morning rush hour to predict the next 2 rush hours.   
+<img width="700" alt="myldretid-kbh model performance benchmark" src="https://github.com/user-attachments/assets/b8b77cea-9cef-47b5-9382-6a3a19b92fca" />
 
 ### Feature Importances
 The feature importances for the latest trained models, at the time of writing this, can be seen below.
-<img width="700" alt="image" src="https://github.com/user-attachments/assets/c31ba9ad-a8bb-4697-8f6f-2f444391d457" />
-<img width="700" alt="image" src="https://github.com/user-attachments/assets/8b7c225c-6139-4324-9ef9-3f23446b8662" />
+<img width="700" alt="feature importances morning model" src="https://github.com/user-attachments/assets/c31ba9ad-a8bb-4697-8f6f-2f444391d457" />
+<img width="700" alt="feature importances afternoon model" src="https://github.com/user-attachments/assets/8b7c225c-6139-4324-9ef9-3f23446b8662" />
 
 The "is_holiday" feature has the highest decision power by far on both models. Traffic levels will always be lower on weekends and public holidays, when most people are off from work. 
 
