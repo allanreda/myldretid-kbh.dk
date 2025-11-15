@@ -90,7 +90,7 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import numpy as np
 import pandas as pd
 
-df = afternoon_df
+df = morning_df
 
 # X = features, y = target
 X = df.drop(columns=['current_travel_time'])
@@ -115,7 +115,7 @@ models = {
 #_____________________ KFold Cross Validation _______________________
 
 # Cross-validation setup
-cv = KFold(n_splits=5, shuffle=True, random_state=42)
+cv = KFold(n_splits=3, shuffle=True, random_state=42)
 
 results = []
 
@@ -158,4 +158,5 @@ for name, model in models.items():
 # Display results
 results_df = pd.DataFrame(results).sort_values(by='RMSE')
 print(results_df)
+
 
