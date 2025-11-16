@@ -174,6 +174,25 @@ class PreProcessing:
         except Exception as e:
             logger.error(f"Preprocessing: Error occured in creating day name dummies: {e}", exc_info=True)
             raise
+    
+    # Function to merge all dummy weather columns about rain type weather into one
+    def merge_rainy_columns(self, df):
+        try:
+            required_cols = ["weather_main_Drizzle", "weather_main_Mist", "weather_main_Rain"]
+
+            # Skip function if any required column is missing
+            if not all(col in df.columns for col in required_cols):
+                logger.info("Preprocessing: Skipped merging rainy columns because one or more columns are missing.")
+                return df
+
+            # Merge columns
+            df["weather_main_Rain"] = df[required_cols].max(axis=1)
+            logger.info(f"Preprocessing: Succesfully merged rain type columns into a single column.")
+            return df
+        
+        except Exception as e:
+            logger.error(f"Preprocessing: Error occured in merging rain type columns into a single column': {e}", exc_info=True)
+            raise
 
     # Calculate sunrise and sunset for each date
     def get_cph_sun_times(self, date):
@@ -354,6 +373,7 @@ class PreProcessing:
             df, avg_morning, avg_afternoon = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
             df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main', 'Clouds'), "create_dummies") 
             df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
+            df = self.validate_step(self.merge_rainy_columns(df), "merge_rainy_columns")
             df = self.validate_step(self.map_sun_times(df), "map_sun_times")
             df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
             df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
@@ -385,6 +405,7 @@ class PreProcessing:
             df, avg_morning, avg_afternoon = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
             df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main', 'Clouds'), "create_dummies") 
             df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
+            df = self.validate_step(self.merge_rainy_columns(df), "merge_rainy_columns")
             df = self.validate_step(self.map_sun_times(df), "map_sun_times")
             #df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
             df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
