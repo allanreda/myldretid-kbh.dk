@@ -85,8 +85,8 @@ class PreProcessing:
             return grouped_df
         
         except Exception as e:
-            logger.error(f"Preprocessing: Error occured in grouping data by rush hour period: {e}")
-            return None
+            logger.error(f"Preprocessing: Error occured in grouping data by rush hour period: {e}", exc_info=True)
+            raise
 
     # Function to include holidays in the dataframe
     def include_holidays(self, df, manual_holidays):
@@ -133,28 +133,32 @@ class PreProcessing:
             return df, avg_morning, avg_afternoon
         
         except Exception as e:
-            logger.error(f"Preprocessing: Error occured in including holidays in dataframe: {e}")
-            return None
+            logger.error(f"Preprocessing: Error occured in including holidays in dataframe: {e}", exc_info=True)
+            raise
 
     # Function to create dummy columns
-    def create_dummies(self, df, column, prefix):
+    def create_dummies(self, df, column, prefix, dummy_to_drop = None):
         try:
 
             # Create dummy variables for day names
-            dummies = pd.get_dummies(df[column], prefix=prefix, drop_first=True)
+            dummies = pd.get_dummies(df[column], prefix=prefix, drop_first=False)
             
             # Concatenate dummy columns to dataframe
             df = pd.concat([df, dummies], axis=1)
             
-            # Drop column
+            # Drop main column
             df = df.drop(column, axis = "columns")
+
+            # Drop specific dummy column if specified
+            if dummy_to_drop:
+                df = df.drop(prefix + "_" + dummy_to_drop, axis = "columns")
             
             logger.info(f"Preprocessing: Succesfully created dummy-columns for column {column}.")
             return df
         
         except Exception as e:
-            logger.error(f"Preprocessing: Error occured in creating dummies for column '{column}': {e}")
-            return None
+            logger.error(f"Preprocessing: Error occured in creating dummies for column '{column}': {e}", exc_info=True)
+            raise
         
     def create_dayname_dummies(self, df):
         try:
@@ -163,13 +167,13 @@ class PreProcessing:
             # Extract day name 
             df['day_name'] = df['date'].dt.day_name()
             # Create day name dummies
-            df = self.create_dummies(df, 'day_name', 'day')
+            df = self.create_dummies(df, 'day_name', 'day', "Saturday")
 
             return df
         
         except Exception as e:
-            logger.error(f"Preprocessing: Error occured in creating day name dummies: {e}")
-            return None
+            logger.error(f"Preprocessing: Error occured in creating day name dummies: {e}", exc_info=True)
+            raise
 
     # Calculate sunrise and sunset for each date
     def get_cph_sun_times(self, date):
@@ -191,8 +195,8 @@ class PreProcessing:
             return df
         
         except Exception as e:
-            logger.error(f"Preprocessing: Error occured in mapping sun times: {e}")
-            return None
+            logger.error(f"Preprocessing: Error occured in mapping sun times: {e}", exc_info=True)
+            raise
     
     # Function to calculate travel time lag by x amount of days
     def calculate_travel_time_lag(self, df, lag, column_name):
@@ -207,8 +211,23 @@ class PreProcessing:
             return df
         
         except Exception as e:
-            logger.error(f"Preprocessing: Error occured in calculating and mapping {lag} day lag: {e}")
-            return None
+            logger.error(f"Preprocessing: Error occured in calculating and mapping {lag} day lag: {e}", exc_info=True)
+            raise
+    
+    # Function to replace the 1 day for mondays with the 7 day lag.
+    # This is to ensure that the monday predictions is not distorted by the sunday travel times
+    def calculate_monday_lag(self, df):
+        try:
+            # Replace lag_1day with lag_7day where Monday = 1
+            df.loc[df["day_Monday"] == 1, "lag_1day"] = df.loc[df["day_Monday"] == 1, "lag_7day"]
+
+            logger.info(f"Preprocessing: Succesfully calculated monday 1 day lag.")
+            return df
+        
+        except Exception as e:
+            logger.error(f"Preprocessing: Error occured in calculating monday 1 day lag: {e}", exc_info=True)
+            raise
+
 
     # Function to calculate rolling average of travel time by x amount of time
     def calculate_rolling_avg(self, df, window, column_name):
@@ -230,8 +249,8 @@ class PreProcessing:
             return df
 
         except Exception as e:
-            logger.error(f"Preprocessing: Error occured in calculating and mapping {window} day rolling average: {e}")
-            return None
+            logger.error(f"Preprocessing: Error occured in calculating and mapping {window} day rolling average: {e}", exc_info=True)
+            raise
 
 
     def convert_booleans(self, df):
@@ -243,8 +262,8 @@ class PreProcessing:
             return df
         
         except Exception as e:
-            logger.error(f"Preprocessing: Error occured when converting boolean columns: {e}")
-            return None
+            logger.error(f"Preprocessing: Error occured when converting boolean columns: {e}", exc_info=True)
+            raise
     
     # Function to split dataframe into morning and afternoon dataframes
     def split_data(self, df):
@@ -274,8 +293,8 @@ class PreProcessing:
             return morning_df, afternoon_df
         
         except Exception as e:
-            logger.error(f"Preprocessing: Error occured in splitting dataframe: {e}")
-            return None, None
+            logger.error(f"Preprocessing: Error occured in splitting dataframe: {e}", exc_info=True)
+            raise
         
     def pull_weather_forecast(self):
         try:
@@ -324,33 +343,8 @@ class PreProcessing:
                 logger.error("Fetching weather forecast data failed")
         
         except Exception as e:
-            logger.error(f"Error occured when fetching and normalizing weather forecast: {e}")
-            return None
-    
-    # Function to remove outliers
-    def remove_outliers_5pct(self, df, column):
-        try:
-            # Identify rows that are NOT NaN in the column
-            non_na = df[column].notna()
-            
-            # Compute bounds using only non-NaN values
-            lower_bound = df.loc[non_na, column].quantile(0.05)
-            upper_bound = df.loc[non_na, column].quantile(0.95)
-            
-            # Keep NaNs, and keep non-NaNs within bounds
-            mask = non_na & df[column].between(lower_bound, upper_bound)
-            mask |= df[column].isna()  # Keep NaNs
-            
-            filtered_df = df[mask]
-
-            logger.info(f"Preprocessing: Removed outliers from '{column}' (kept NaNs and middle 90% of values).")
-            return filtered_df
-
-        except Exception as e:
-            logger.error(f"Error while removing outliers from '{column}': {e}")
-            return None
-
-
+            logger.error(f"Error occured when fetching and normalizing weather forecast: {e}", exc_info=True)
+            raise
 
     # Wrapper function for training pipeline
     # Can be used to train models to predict 1 day in the future
@@ -358,11 +352,12 @@ class PreProcessing:
         try:
             df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
             df, avg_morning, avg_afternoon = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
-            df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
+            df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main', 'Clouds'), "create_dummies") 
             df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
             df = self.validate_step(self.map_sun_times(df), "map_sun_times")
             df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")
             df = self.validate_step(self.calculate_travel_time_lag(df, 7, 'lag_7day'), "calculate_travel_time_lag_7")
+            df = self.validate_step(self.calculate_monday_lag(df), "calculate_monday_lag")
             df = self.validate_step(self.calculate_rolling_avg(df, 7, 'rolling_avg_7day'), "calculate_rolling_avg")
             morning_df, afternoon_df = self.split_data(df)
             if morning_df is None or afternoon_df is None:
@@ -388,7 +383,7 @@ class PreProcessing:
         try:
             df = self.validate_step(self.group_by_rush_hour(raw_df), "group_by_rush_hour")
             df, avg_morning, avg_afternoon = self.validate_step(self.include_holidays(df, manual_holidays), "include_holidays")
-            df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main'), "create_dummies")
+            df = self.validate_step(self.create_dummies(df, 'weather_main', 'weather_main', 'Clouds'), "create_dummies") 
             df = self.validate_step(self.create_dayname_dummies(df), "create_dayname_dummies")
             df = self.validate_step(self.map_sun_times(df), "map_sun_times")
             #df = self.validate_step(self.calculate_travel_time_lag(df, 1, 'lag_1day'), "calculate_travel_time_lag_1")

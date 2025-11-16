@@ -4,9 +4,15 @@ sys.path.append('C:/Users/allan/Desktop/Personlige projekter/cph-traffic-predict
 from google.cloud import bigquery, storage, secretmanager
 from multicollinearity_reduction_class import MulticollinearityReducer
 from machine_learning_class import MachineLearning
-#from training_pipeline_class import TrainingPipeline
 from cloud_utils_class import CloudUtils
 from preprocessing_class import PreProcessing
+
+import importlib
+importlib.reload(sys.modules['preprocessing_class'])
+importlib.reload(sys.modules['multicollinearity_reduction_class'])
+importlib.reload(sys.modules['machine_learning_class'])
+importlib.reload(sys.modules['cloud_utils_class'])
+
 from zoneinfo import ZoneInfo 
 from datetime import datetime
 import time
@@ -64,7 +70,7 @@ reducer = MulticollinearityReducer(target_column = "current_travel_time")
 machinelearning = MachineLearning(target_column = "current_travel_time")
 
 # Pull historical traffic and weather data from bigquery
-historical_data = cloud_utils.pull_historical_data(query)
+#historical_data = cloud_utils.pull_historical_data(query)
 
 # Run the preprocessing pipeline for the historical data
 morning_df, afternoon_df, _, _ = preprocesser.execute_preprocessing_1_day(historical_data, manual_holidays)
@@ -90,7 +96,7 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import numpy as np
 import pandas as pd
 
-df = morning_df
+df = afternoon_df
 
 # X = features, y = target
 X = df.drop(columns=['current_travel_time'])
@@ -115,7 +121,7 @@ models = {
 #_____________________ KFold Cross Validation _______________________
 
 # Cross-validation setup
-cv = KFold(n_splits=3, shuffle=True, random_state=42)
+cv = KFold(n_splits=10, shuffle=True, random_state=42)
 
 results = []
 
