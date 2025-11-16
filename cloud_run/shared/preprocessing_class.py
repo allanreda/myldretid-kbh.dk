@@ -187,6 +187,9 @@ class PreProcessing:
 
             # Merge columns
             df["weather_main_Rain"] = df[required_cols].max(axis=1)
+            # Drop the now unnecessary columns (to avoid multicollinearity)
+            df = df.drop(columns=["weather_main_Drizzle", "weather_main_Mist"])
+            
             logger.info(f"Preprocessing: Succesfully merged rain type columns into a single column.")
             return df
         

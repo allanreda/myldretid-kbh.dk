@@ -96,7 +96,7 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 import numpy as np
 import pandas as pd
 
-df = morning_df
+df = afternoon_df
 
 # X = features, y = target
 X = df.drop(columns=['current_travel_time'])
