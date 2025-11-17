@@ -109,22 +109,22 @@ models = {
     'CatBoost': CatBoostRegressor(verbose=0)
 }
 ```
-The cross validations was run with 10, 5, and 3 folds to ensure that the model performance remained consistent across different data splits and sample sizes. All models were trained and evaluated using the exact same dataset, and performance was compared using RMSE, MSE, MAE, and R². 
-The Extra Trees Regressor proved to be the best performer across all evaluation parameters and cross validation setups. Based on these results, it was selected as the final model.  
+The cross validations were run with 10, 5, and 3 folds to ensure that the model performance remained consistent across different data splits and sample sizes. All models were trained and evaluated using the exact same dataset, and performance was compared using RMSE, MSE, MAE, and R². 
+The **Extra Trees Regressor** proved to be the best overall performer across all evaluation parameters and cross validation setups. Based on these results, it was selected as the final model.  
 
-Seen below is the benchmark for the models trained on the dataset for the morning rush hour to predict the next 2 rush hours.   
-<img width="700" alt="myldretid-kbh model performance benchmark" src="https://github.com/user-attachments/assets/b8b77cea-9cef-47b5-9382-6a3a19b92fca" />
+Seen below is the benchmark for the models trained on the dataset for the afternoon rush hour to predict the next two rush hours.   
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/5022ea88-00a2-4520-8e80-7c4775972cd9" />
 
 ### Feature Importances
-The feature importances for the latest trained models, at the time of writing this, can be seen below.
-<img width="700" alt="feature importances morning model" src="https://github.com/user-attachments/assets/c31ba9ad-a8bb-4697-8f6f-2f444391d457" />
-<img width="700" alt="feature importances afternoon model" src="https://github.com/user-attachments/assets/8b7c225c-6139-4324-9ef9-3f23446b8662" />
+The feature importances for the latest trained models, for the prediction of the next two rush hour periods, at the time of writing this, can be seen below.  
+<img width="700" alt="feature importances morning model" src="https://github.com/user-attachments/assets/19ec19ec-bb94-45f7-82be-dfff63a6ac1b" />  
+<img width="700" alt="feature importances afternoon model" src="https://github.com/user-attachments/assets/add4bd8b-be44-4e1b-a672-39bd73c62282" />  
 
 The "is_holiday" feature has the highest decision power by far on both models. Traffic levels will always be lower on weekends and public holidays, when most people are off from work. 
 
 Also, I think it is worth noting that the "morning_travel_time" feature on the afternoon model has the third-highest decision power. This can probably be explained by the fact that the same people taking the car in the morning also have to take the car home in the afternoon. It makes total sense when you think about it, but is still a fun observation in my opinion. 
 
-Some of the features have minimal impact on the models, yet I have still chosen to include them for now. When I tried removing them, the models only worsened a bit, so no positive impact was proven by removing them. At the time of writing this, there is only a little over a years worth of data available. My hope is that these currently insignificant features will have a greater impact on the models, as more data is collected as time goes by. 
+Some of the features have minimal impact on the models, yet I have still chosen to include them **for now**. When I tried removing them, the models only worsened a bit, so no positive impact was proven by removing them. At the time of writing this, there is only a little over a years worth of data available. My hope is that these currently insignificant features will have a greater impact on the models, as more data is collected as time goes by. 
 
 ## IAC (Terraform)
 The GCP infrastructure is fully managed with Terraform, to ensure that it stays consistent and reproducible, across both dev and prod environments. This is especially important since both the dev and prod infrastructure lives within the same Google Cloud project. Differences between them are the suffix of the created ressources, which are based on the Terraform workspace in use (which are either 'dev' or 'prod'). Example:  
