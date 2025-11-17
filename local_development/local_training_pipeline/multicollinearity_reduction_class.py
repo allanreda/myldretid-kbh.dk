@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s -
 logger = logging.getLogger(__name__)
 
 class MulticollinearityReducer:
-    def __init__(self, target_column, corr_threshold=0.7, vif_threshold=10):
+    def __init__(self, target_column, corr_threshold=0.80, vif_threshold=5):
         self.target_column = target_column
         self.corr_threshold = corr_threshold
         self.vif_threshold = vif_threshold

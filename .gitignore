@@ -274,3 +274,6 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Catboost info
+catboost_info
