@@ -126,6 +126,14 @@ Also, I think it is worth noting that the "morning_travel_time" feature on the a
 
 Some of the features have minimal impact on the models, yet I have still chosen to include them **for now**. When I tried removing them, the models only worsened a bit, so no positive impact was proven by removing them. At the time of writing this, there is only a little over a years worth of data available. My hope is that these currently insignificant features will have a greater impact on the models, as more data is collected as time goes by. 
 
+### Residual Analysis
+I thought it would be informative to look into whether my model currently over- or underpredicts, and by how much (in actual values). At the time of writing this, the dataset is still quite small (a little over a year) so the analysis was done on a sample set of **41 predictions**. The predictions are all from one of the folds of a cross validation done with 10 folds. I chose the 10 fold-cross validation, because that is what is used in production to validate and log model performance.
+
+#### Residual Distribution
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/22022557-3721-42f5-af0d-6d26a9e19d96" />  
+
+Of the 41 samples, 13 were underpredicted while 28 were overpredicted, which shows a tendency to overpredict. In this case, that means that the model is more likely to assume slower traffic compared to reality. 
+
 ## IAC (Terraform)
 The GCP infrastructure is fully managed with Terraform, to ensure that it stays consistent and reproducible, across both dev and prod environments. This is especially important since both the dev and prod infrastructure lives within the same Google Cloud project. Differences between them are the suffix of the created ressources, which are based on the Terraform workspace in use (which are either 'dev' or 'prod'). Example:  
 ```
