@@ -72,6 +72,10 @@ Furthermore, this project also uses the official website of Copenhagen Municipal
 This diagram doesn't include the pipeline architecture behind the data ingestion of the traffic and weather data. That was built earlier as a separate project, which you can read about here: https://github.com/allanreda/Copenhagen-Traffic-and-Weather-ETL-Pipeline  
 
 ## Machine Learning
+
+### Target Variable
+Before diving into the different aspects of the ML-process, one should have a clear idea of what it is we are actually trying to predict here. The target variable is named "current_travel_time" and is an 
+
 ### Feature Engineering and Preprocessing
 Before the data reaches the models, it goes through a series of functions that prepare the data and creates necessary variables. These are as follows:
 
@@ -132,7 +136,11 @@ I thought it would be informative to look into whether my model currently over- 
 #### Residual Distribution
 <img width="700" alt="image" src="https://github.com/user-attachments/assets/22022557-3721-42f5-af0d-6d26a9e19d96" />  
 
-Of the 41 samples, 13 were underpredicted while 28 were overpredicted, which shows a tendency to overpredict. In this case, that means that the model is more likely to assume slower traffic compared to reality. 
+Of the 41 samples, 13 were underpredicted while 28 were overpredicted, which shows a tendency to overpredict. In this case, that means that the model is more likely to assume slower traffic compared to reality. The plot above also shows the residual values, but it would be more informative if we looked into those with a plot where predicted values are also shown.  
+
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/b4d3a6fc-e282-4818-a01d-f9a2bdc577b4" />  
+
+The first thing that becomes apparent when looking at the plot is how the larger residuals, both negative and positive ones, appear on the larger predicted values. When looking at the lower predicted values, no major residuals are present, but as we move above 120, some large residuals occur. In general, this suggests that the model's uncertainty increases when predicting higher travel times. The ability to forecast high travel times is one of the most important features of this tool. Therefore, this is certainly something worth monitoring as data grows, and try to improve in the future.
 
 ## IAC (Terraform)
 The GCP infrastructure is fully managed with Terraform, to ensure that it stays consistent and reproducible, across both dev and prod environments. This is especially important since both the dev and prod infrastructure lives within the same Google Cloud project. Differences between them are the suffix of the created ressources, which are based on the Terraform workspace in use (which are either 'dev' or 'prod'). Example:  
