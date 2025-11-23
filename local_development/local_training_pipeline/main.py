@@ -301,4 +301,28 @@ plt.title("Residuals vs Predicted Values")
 plt.show()
 
 
+# ___________ Descriptive Analysis of Target Variable ___________
 
+# Morning
+y = morning_df['current_travel_time']
+y.skew()
+y.var()
+y.describe()
+
+plt.hist(y, bins=30)
+plt.xlabel('Travel time (seconds)')
+plt.ylabel('Frequency')
+plt.title('Distribution of Travel Time')
+plt.show()
+
+# Afternoon
+y = afternoon_df['current_travel_time']
+y.skew()
+y.var()
+y.describe()
+
+plt.hist(y, bins=30)
+plt.xlabel('Travel time (seconds)')
+plt.ylabel('Frequency')
+plt.title('Distribution of Travel Time')
+plt.show()
