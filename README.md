@@ -98,10 +98,11 @@ This diagram doesn't include the pipeline architecture behind the data ingestion
 ### Target Variable
 Before diving into the different aspects of the ML-process, one should have a clear idea of what it is we are actually trying to predict here. The target variable is named "current_travel_time" and is an average of all the historical travel times captured in all the 20 chosen geographical locations of Copenhagen during rush hours. **The variable is measured in seconds**. 
 
-#### Descriptive Analysis
+#### Descriptive Statistics and Distribution Plots
+We will be looking into the statistics and distribution of the target variable for both the morning and afternoon rush hours separately, since they essentially cover two different models. 
 
-##### Descriptive Statistics
-Morning
+##### Morning Travel Time  
+
 | Statistic | Value   |
 |-----------|---------|
 | Count     | 412     |
@@ -113,8 +114,12 @@ Morning
 | 75%       | 102.467 |
 | Max       | 217.800 |
 
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/893d9f83-251a-45cb-808d-34dce87a377e" />
 
-Afternoon
+When looking at the plot, it looks like most of the values are centered around the lower end of the spectrum, between 80 and 110 seconds. The quartiles and the relatively low standard deviation of 16.5 confirm this. In practice, this means that the travel time in the morning is much more predictable
+
+##### Afternoon Travel Time  
+
 | Statistic | Value   |
 |-----------|---------|
 | Count     | 413     |
@@ -126,12 +131,6 @@ Afternoon
 | 75%       | 124.767 |
 | Max       | 199.850 |
 
-##### Distribution Plots
-
-Morning
-<img width="700" alt="image" src="https://github.com/user-attachments/assets/893d9f83-251a-45cb-808d-34dce87a377e" />
-
-Afternoon
 <img width="700" alt="image" src="https://github.com/user-attachments/assets/c273084d-f6a0-4e09-acbb-179dacbfbd08" />
 
 
