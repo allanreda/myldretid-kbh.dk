@@ -56,7 +56,7 @@ Even though driving through Copenhagen during rush hours will always prolong you
 | **Red**           | A lot slower than average (negative deviation ≤ **–15%**)      |
 
 ### Calculation of Average Travel Time
-The calculation uses the historical travel times of the rush hours captured in all the 20 chosen geographical locations of Copenhagen. The rush hours are defined as 7, 8, and 9 AM for the morning and 3, 4 and 5 PM for the afternoon.  
+The calculation uses the historical travel times captured in all the 20 chosen geographical locations of Copenhagen during rush hours. The rush hours are defined as 7, 8, and 9 AM for the morning and 3, 4 and 5 PM for the afternoon. The geographical locations can be seen in the list below this section.  
 It's important to mention that the average travel time is calculated using only data from the weekdays and thereby excluding the weekends. The main intended use of this service is in the weekdays where Copenhageners are driving to/from work or school during the rush hours. Therefore it would make more sense if the predictions were relative to the weekdays rather than the weekends. Including the weekend in the calculation would also significantly lower the average, which would not be ideal in this case. 
 
 ### Reasoning Behind Update Times
@@ -64,8 +64,30 @@ The predictions currently runs twice every day: at 10 AM and 6 PM.
 These specific times were chosen because they occur after each rush hour period, when the ETL pipeline has collected the latest data. This ensures that the latest data is ready to be used for generating lag variables for the upcoming predictions.
 
 ### Data Sources
-The TomTom Traffic API and OpenWeather API are used to collect traffic and weather data from 20 specific geograpical locations in Copenhagen. You can read more about the ETL pipeline that collects this data, in this repository: https://github.com/allanreda/Copenhagen-Traffic-and-Weather-ETL-Pipeline. The pipeline has been running since the **21st of September 2024**.  
+The TomTom Traffic API and OpenWeather API are used to collect traffic and weather data from 20 specific geographical locations in Copenhagen, which are listed in the section below. You can read more about the ETL pipeline that collects this data, in this repository: https://github.com/allanreda/Copenhagen-Traffic-and-Weather-ETL-Pipeline. The pipeline has been running since the **21st of September 2024**.  
 Furthermore, this project also uses the official website of Copenhagen Municipality as a reliable source of information for past and upcoming school and public holidays.
+
+#### Geographical Locations 
+- Bispeengbuen/Aagade
+- Aaboulevarden/Rosenoerns Allé
+- H.C. Andersens Boulevard/Rådhuspladsen
+- Amagerbrogade/Vermlandsgade
+- Nørrebros Runddel
+- Vesterbrogade/Roskildevej
+- Vesterbrogade/Platanvej
+- Kongens Nytorv
+- Gothersgade/Adelgade
+- Sydhavnsgade
+- Enghavevej/Vigerslev Allé
+- Kalvebod Brygge
+- Frederiksborggade/Nørre Farimagsgade
+- Østerbrogade/Strandboulevarden
+- Lyngbyvej/Rovsingsgade
+- Tagensvej/Jagtvej
+- Vejlands Allé/Ørestads Boulevard
+- Vibenhus Runddel
+- Gammel Køge Landevej/Folehaven
+- Borups Allé/Hulgårdvej
 
 ## Project Diagram
 <img width="1415" height="1238" alt="myldretid-kbh project diagram" src="https://github.com/user-attachments/assets/26fcafd7-beeb-4c99-9762-df9ff7fe85b9" />
@@ -74,7 +96,45 @@ This diagram doesn't include the pipeline architecture behind the data ingestion
 ## Machine Learning
 
 ### Target Variable
-Before diving into the different aspects of the ML-process, one should have a clear idea of what it is we are actually trying to predict here. The target variable is named "current_travel_time" and is an 
+Before diving into the different aspects of the ML-process, one should have a clear idea of what it is we are actually trying to predict here. The target variable is named "current_travel_time" and is an average of all the historical travel times captured in all the 20 chosen geographical locations of Copenhagen during rush hours. **The variable is measured in seconds**. 
+
+#### Descriptive Analysis
+
+##### Descriptive Statistics
+Morning
+| Statistic | Value   |
+|-----------|---------|
+| Count     | 412     |
+| Mean      | 91.266  |
+| Std       | 16.525  |
+| Min       | 71.750  |
+| 25%       | 74.954  |
+| 50%       | 90.817  |
+| 75%       | 102.467 |
+| Max       | 217.800 |
+
+
+Afternoon
+| Statistic | Value   |
+|-----------|---------|
+| Count     | 413     |
+| Mean      | 110.621 |
+| Std       | 22.605  |
+| Min       | 75.233  |
+| 25%       | 91.500  |
+| 50%       | 107.267 |
+| 75%       | 124.767 |
+| Max       | 199.850 |
+
+##### Distribution Plots
+
+Morning
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/893d9f83-251a-45cb-808d-34dce87a377e" />
+
+Afternoon
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/c273084d-f6a0-4e09-acbb-179dacbfbd08" />
+
+
 
 ### Feature Engineering and Preprocessing
 Before the data reaches the models, it goes through a series of functions that prepare the data and creates necessary variables. These are as follows:
