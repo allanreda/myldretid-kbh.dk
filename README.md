@@ -116,7 +116,7 @@ We will be looking into the statistics and distribution of the target variable f
 
 <img width="700" alt="image" src="https://github.com/user-attachments/assets/893d9f83-251a-45cb-808d-34dce87a377e" />
 
-When looking at the plot, it looks like most of the values are centered around the lower end of the spectrum, between 80 and 110 seconds. The quartiles and the relatively low standard deviation of 16.5 confirm this. In practice, this means that the travel time in the morning is much more predictable
+When looking at the plot, it looks like most of the values are centered around the lower end of the spectrum, between 80 and 110 seconds. The quartiles and the relatively low standard deviation of 16.5 confirm this. In practice, this means that the travel time in the morning is relatively predictable most of the time, except for a few extreme outliers. I didn't remove these outliers from the dataset, because those are the days we are most interested in predicting. They represent the days when the traffic is worst during rush hours. 
 
 ##### Afternoon Travel Time  
 
@@ -132,7 +132,7 @@ When looking at the plot, it looks like most of the values are centered around t
 | Max       | 199.850 |
 
 <img width="700" alt="image" src="https://github.com/user-attachments/assets/c273084d-f6a0-4e09-acbb-179dacbfbd08" />
-
+The values for the afternoon rush hours seem to have a bigger spread, compared to the morning values. The largest concentration appears to be between 90 and 120, a bit higher than where the values are centered around in the morning. Contrary to the morning, a sizable amount of the values of the afternoon are larger than 120, indicating more frequent high travel times.
 
 
 ### Feature Engineering and Preprocessing
