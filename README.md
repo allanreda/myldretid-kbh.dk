@@ -20,9 +20,16 @@ Even though driving through Copenhagen during rush hours will always prolong you
   - [Data Sources](#data-sources)
 - [Project Diagram](#project-diagram)
 - [Machine Learning](#machine-learning)
+  - [Target Variable](#target-variable)
+    - [Descriptive Statistics and Distribution Plots](#descriptive-statistics-and-distribution-plots)
+      - [Morning Travel Time](#morning-travel-time)
+      - [Afternoon Travel Time](#afternoon-travel-time)
   - [Feature Engineering and Preprocessing](#feature-engineering-and-preprocessing)
   - [Model Evaluation and Selection](#model-evaluation-and-selection)
   - [Feature Importances](#feature-importances)
+  - [Residual Analysis](#residual-analysis)
+    - [Residual Distribution – Morning Rush Hours](#morning-rush-hours)
+    - [Residual Distribution – Afternoon Rush Hours](#afternoon-rush-hours)
 - [IAC (Terraform)](#iac-terraform)
   - [Modules](#modules)
 - [CI/CD Pipelines](#cicd-pipelines)
@@ -41,6 +48,7 @@ Even though driving through Copenhagen during rush hours will always prolong you
     - [Prod Workflow](#prod-workflow-1)
       - [Triggers](#triggers-3)
       - [Steps](#steps-3)
+
 
 ## User Guide and Useful Info
 ### Gauge Color Explanation
@@ -113,8 +121,7 @@ We will be looking into the statistics and distribution of the target variable f
 | 50%       | 90.817  |
 | 75%       | 102.467 |
 | Max       | 217.800 |
-
-<img width="700" alt="image" src="https://github.com/user-attachments/assets/893d9f83-251a-45cb-808d-34dce87a377e" />
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/893d9f83-251a-45cb-808d-34dce87a377e" />  
 
 When looking at the plot, it looks like most of the values are centered around the lower end of the spectrum, between 80 and 110 seconds. The quartiles and the relatively low standard deviation of 16.5 confirm this. In practice, this means that the travel time in the morning is relatively predictable most of the time, except for a few extreme outliers. I didn't remove these outliers from the dataset, because those are the days we are most interested in predicting. They represent the days when the traffic is worst during rush hours. 
 
@@ -131,9 +138,9 @@ When looking at the plot, it looks like most of the values are centered around t
 | 75%       | 124.767 |
 | Max       | 199.850 |
 
-<img width="700" alt="image" src="https://github.com/user-attachments/assets/c273084d-f6a0-4e09-acbb-179dacbfbd08" />
-The values for the afternoon rush hours seem to have a bigger spread, compared to the morning values. The largest concentration appears to be between 90 and 120, a bit higher than where the values are centered around in the morning. Contrary to the morning, a sizable amount of the values of the afternoon are larger than 120, indicating more frequent high travel times.
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/c273084d-f6a0-4e09-acbb-179dacbfbd08" />  
 
+The values for the afternoon rush hours seem to have a bigger spread, compared to the morning values. The largest concentration appears to be between 90 and 120, a bit higher than where the values are centered around in the morning. Contrary to the morning, a sizable amount of the values of the afternoon are larger than 120, indicating more frequent occurrence of high travel times. This can also be confirmed by the mean value being 110 and the standard deviation of 22. Based on these findings, one could assume that the model trained on the afternoon data would be better at predicting higher travel times, than the model trained on the morning travel times.
 
 ### Feature Engineering and Preprocessing
 Before the data reaches the models, it goes through a series of functions that prepare the data and creates necessary variables. These are as follows:
@@ -193,13 +200,25 @@ Some of the features have minimal impact on the models, yet I have still chosen 
 I thought it would be informative to look into whether my model currently over- or underpredicts, and by how much (in actual values). At the time of writing this, the dataset is still quite small (a little over a year) so the analysis was done on a sample set of **41 predictions**. The predictions are all from one of the folds of a cross validation done with 10 folds. I chose the 10 fold-cross validation, because that is what is used in production to validate and log model performance.
 
 #### Residual Distribution
+
+#### Morning Rush Hours
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/85d7ae46-6380-4b3a-9313-f0ae5f53186e" />  
+
+Most of the residuals are centered around the middle, which is a sign of strong prediction power. Though there are a few predictions that are way off. 
+
+<img width="700" alt="image" src="https://github.com/user-attachments/assets/004d75fd-5993-402f-9490-5931260dc804" />  
+
+When looking at the residuals plotted against the predicted travel times, it can clearly be seen that the large errors occur on the higher side of the predicted travel times. This shows that the model tends to become more uncertain when travel times are higher. Also, it should be noted that the issue seems to be biggest in regards of underpredicting, meaning that the model is more likely to predict a lower travel time when the real travel time is actually higher. 
+
+
+#### Afternoon Rush Hours
 <img width="700" alt="image" src="https://github.com/user-attachments/assets/22022557-3721-42f5-af0d-6d26a9e19d96" />  
 
 Of the 41 samples, 13 were underpredicted while 28 were overpredicted, which shows a tendency to overpredict. In this case, that means that the model is more likely to assume slower traffic compared to reality. The plot above also shows the residual values, but it would be more informative if we looked into those with a plot where predicted values are also shown.  
 
 <img width="700" alt="image" src="https://github.com/user-attachments/assets/b4d3a6fc-e282-4818-a01d-f9a2bdc577b4" />  
 
-The first thing that becomes apparent when looking at the plot is how the larger residuals, both negative and positive ones, appear on the larger predicted values. When looking at the lower predicted values, no major residuals are present, but as we move above 120, some large residuals occur. In general, this suggests that the model's uncertainty increases when predicting higher travel times. The ability to forecast high travel times is one of the most important features of this tool. Therefore, this is certainly something worth monitoring as data grows, and try to improve in the future.
+The first thing that becomes apparent when looking at the plot is how the larger residuals, both negative and positive ones, appear on the larger predicted values. When looking at the lower predicted values, no major residuals are present, but as we move above 120, some large residuals occur. As with the morning model, this suggests that the model's uncertainty increases when predicting higher travel times. The ability to forecast high travel times is one of the most important features of this tool. Therefore, this is certainly something worth monitoring as data grows, and try to improve in the future.
 
 ## IAC (Terraform)
 The GCP infrastructure is fully managed with Terraform, to ensure that it stays consistent and reproducible, across both dev and prod environments. This is especially important since both the dev and prod infrastructure lives within the same Google Cloud project. Differences between them are the suffix of the created ressources, which are based on the Terraform workspace in use (which are either 'dev' or 'prod'). Example:  
