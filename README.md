@@ -3,7 +3,7 @@
 Try out the service live at: https://myldretid-kbh.dk/    
 
 <p align="center">
-  <img width="300" alt="image" src="https://github.com/user-attachments/assets/8e742179-e9f1-42b8-baa1-1f3b045ade36" />
+  <img width="300" alt="image" src="https://github.com/user-attachments/assets/e7181920-dbb4-43a1-b87c-00b87937ba2f" />
 </p>  
 
 ## Introduction
@@ -121,6 +121,7 @@ We will be looking into the statistics and distribution of the target variable f
 | 50%       | 90.817  |
 | 75%       | 102.467 |
 | Max       | 217.800 |
+
 <img width="500" alt="image" src="https://github.com/user-attachments/assets/893d9f83-251a-45cb-808d-34dce87a377e" />  
 
 When looking at the plot, it looks like most of the values are centered around the lower end of the spectrum, between 80 and 110 seconds. The quartiles and the relatively low standard deviation of 16.5 confirm this. In practice, this means that the travel time in the morning is relatively predictable most of the time, except for a few extreme outliers. I didn't remove these outliers from the dataset, because those are the days we are most interested in predicting. They represent the days when the traffic is worst during rush hours. 
@@ -221,7 +222,7 @@ Of the 41 samples, 13 were underpredicted while 28 were overpredicted, which sho
 The first thing that becomes apparent when looking at the plot is how the larger residuals, both negative and positive ones, appear on the larger predicted values. When looking at the lower predicted values, no major residuals are present, but as we move above 120, some large residuals occur. As with the morning model, this suggests that the model's uncertainty increases when predicting higher travel times. The ability to forecast high travel times is one of the most important features of this tool. Therefore, this is certainly something worth monitoring as data grows, and try to improve in the future.
 
 ## IAC (Terraform)
-The GCP infrastructure is fully managed with Terraform, to ensure that it stays consistent and reproducible, across both dev and prod environments. This is especially important since both the dev and prod infrastructure lives within the same Google Cloud project. Differences between them are the suffix of the created ressources, which are based on the Terraform workspace in use (which are either 'dev' or 'prod'). Example:  
+The GCP infrastructure is fully managed with Terraform to ensure that it stays consistent and reproducible across both dev and prod environments. This is especially important since both the dev and prod infrastructure live within the same Google Cloud project. The primary difference between them is the suffix of the created resources, which are based on the Terraform workspace in use (which are either 'dev' or 'prod'). Example:  
 ```
 repository_id = "myldretid-kbh-${terraform.workspace}"
 ```
@@ -314,3 +315,12 @@ Runs on pushes to the "main" branch but only if changes have been made to:
 - Deploy updated prediction image to 'prediction-morning-prod' Cloud Run service
 - Deploy updated prediction image to 'prediction-afternoon-prod' Cloud Run service
 
+## Final Notes
+This project started as a personal frustration with unpredictable rush-hour traffic. It has since turned into a fully automated, production-ready forecasting system powered by real-time data, machine learning, and cloud infrastructure.  
+
+I hope it helps make your commute through Copenhagen a little more predictable.
+
+If you have any questions about the project, collaboration inquiries, or suggestions for improvements, feel free to reach out at allanreda99@gmail.com.
+
+Thanks you for taking the time to read the Readme and for your interest in the project.  
+**-Allan Fattah Reda**
