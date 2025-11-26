@@ -7,8 +7,8 @@ Try out the service live at: https://myldretid-kbh.dk/
 </p>  
 
 ## Introduction
-Copenhagen is a relatively small city compared to other capitals around the world. In most cases, you are able to drive from one end of the city to the other, in less than 30 minutes - except during rush hours. 
-Even though driving through Copenhagen during rush hours will always prolong your travel time, certain conditions will decide whether your drive will take 30 minutes or 60 minutes. At the time of writing this, I live in one end of the city and work on the opposite side of it, meaning I have to drive right through the city center during rush hours. I grew tired of not knowing whether my drive to or from work would take 25 minuttes or over an hour - every drive was a bit of a gamble. "It would be nice to know a day or two in advance, what the traffic levels would look like, so that you could plan ahead" I often thought to myself while being stuck in traffic. This project is the solution to my, and propably a lot of other Copenhageners, problem. It is completely free and publicly available, in hopes that it will make a lot of driving Copenhageners lives a little bit easier.
+Copenhagen is a relatively small city compared to other capitals around the world. In most cases, you are able to drive from one end of the city to the other in less than 30 minutes - except during rush hours. 
+Even though driving through Copenhagen during rush hours will always prolong your travel time, certain conditions will decide whether your drive will take 30 minutes or 60 minutes. At the time of writing this, I live in one end of the city and work on the opposite side of it, meaning I have to drive right through the city center during rush hours. I grew tired of not knowing whether my drive to or from work would take 25 minutes or over an hour - every drive was a bit of a gamble. *"It would be nice to know a day or two in advance what the traffic levels would look like, so that you could plan ahead"* I often thought to myself while being stuck in traffic. This project is the solution to my, and probably a lot of other Copenhageners', problem. It is completely free and publicly available, in hopes that it will make a lot of driving Copenhageners' lives a little bit easier.
 
 ## Table of Contents
 
@@ -65,10 +65,10 @@ Even though driving through Copenhagen during rush hours will always prolong you
 
 ### Calculation of Average Travel Time
 The calculation uses the historical travel times captured in all the 20 chosen geographical locations of Copenhagen during rush hours. The rush hours are defined as 7, 8, and 9 AM for the morning and 3, 4 and 5 PM for the afternoon. The geographical locations can be seen in the list below this section.  
-It's important to mention that the average travel time is calculated using only data from the weekdays and thereby excluding the weekends. The main intended use of this service is in the weekdays where Copenhageners are driving to/from work or school during the rush hours. Therefore it would make more sense if the predictions were relative to the weekdays rather than the weekends. Including the weekend in the calculation would also significantly lower the average, which would not be ideal in this case. 
+It's important to mention that the average travel time is calculated using only data from the weekdays and thereby excluding the weekends. The main intended use of this service is on weekdays when Copenhageners are driving to/from work or school during the rush hours. Therefore, it would make more sense if the predictions were relative to the weekdays rather than the weekends. Including the weekend in the calculation would also significantly lower the average, which would not be ideal in this case. 
 
 ### Reasoning Behind Update Times
-The predictions currently runs twice every day: at 10 AM and 6 PM.  
+The predictions currently run twice every day: at 10 AM and 6 PM.  
 These specific times were chosen because they occur after each rush hour period, when the ETL pipeline has collected the latest data. This ensures that the latest data is ready to be used for generating lag variables for the upcoming predictions.
 
 ### Data Sources
@@ -104,7 +104,7 @@ This diagram doesn't include the pipeline architecture behind the data ingestion
 ## Machine Learning
 
 ### Target Variable
-Before diving into the different aspects of the ML-process, one should have a clear idea of what it is we are actually trying to predict here. The target variable is named "current_travel_time" and is an average of all the historical travel times captured in all the 20 chosen geographical locations of Copenhagen during rush hours. **The variable is measured in seconds**. 
+Before diving into the different aspects of the ML process, it's important to clarify what we are actually trying to predict here. The target variable is named "current_travel_time" and is an average of all the historical travel times captured across the 20 chosen geographical locations of Copenhagen during rush hours. **The variable is measured in seconds**. 
 
 #### Descriptive Statistics and Distribution Plots
 We will be looking into the statistics and distribution of the target variable for both the morning and afternoon rush hours separately, since they essentially cover two different models. 
@@ -140,29 +140,29 @@ When looking at the plot, it looks like most of the values are centered around t
 
 <img width="500" alt="image" src="https://github.com/user-attachments/assets/c273084d-f6a0-4e09-acbb-179dacbfbd08" />  
 
-The values for the afternoon rush hours seem to have a bigger spread, compared to the morning values. The largest concentration appears to be between 90 and 120, a bit higher than where the values are centered around in the morning. Contrary to the morning, a sizable amount of the values of the afternoon are larger than 120, indicating more frequent occurrence of high travel times. This can also be confirmed by the mean value being 110 and the standard deviation of 22. Based on these findings, one could assume that the model trained on the afternoon data would be better at predicting higher travel times, than the model trained on the morning travel times.
+The values for the afternoon rush hours have a noticeably larger spread compared to the morning. The largest concentration appears between 90 and 120, a bit higher than where the values are centered around in the morning. Contrary to the morning, a sizable amount of the values of the afternoon are larger than 120, indicating more frequent high travel times. This is supported by the mean value being 110 and the standard deviation of 22. Based on these findings, one could assume that the model trained on the afternoon data would be better at predicting higher travel times than the model trained on the morning travel times.
 
 ### Feature Engineering and Preprocessing
-Before the data reaches the models, it goes through a series of functions that prepare the data and creates necessary variables. These are as follows:
+Before the data reaches the models, it goes through several preprocessing and feature-engineering steps:
 
-- Grouping by rush hours (splitting into morning and afternoon)
-- Including public holidays in a binary column
+- Group by rush hour (morning/afternoon)
+- Add public holidays as a binary column
 - Create dummy columns from weather data
 - Create dummy columns from weekdays
 - Calculate sunset and sunrise times for each day
 - Add 1 day lag for travel time
 - Add 7 day lag for travel time
-- Calculate rolling average for the past 7 days
+- Compute a 7-day rolling average
 - Convert all boolean values to binary
 - Add morning travel time as a predictor variable for the afternoon
 
 It should be noted that two separate pipelines are run: one for predicting the next 2 rush hours, and one for predicting the 8 rush hours after that. 
-For the latter, it isn't possible to add a 1-day lag or calculate a rolling average for the past 7 days, simply because the data doesn't exist. 
+For the latter, 1-day lags and rolling averages cannot be calculated, simply because the required future data does not yet exist 
 
 Each pipeline produces two datasets: one for the morning rush hour and one for the afternoon. This is done because the predictors have different effects on the target variable, based on the rush hour period. Furthermore, the travel time for the morning rush hour proved to be a strong predictor of the afternoon rush hour. Without splitting up into two models, this nuance would have been lost.
 
 ### Model Evaluation and Selection
-Multiple algorithms were tested and evaluated using K-fold cross validation to identify the model that performed best in predicting unseen data. 
+Multiple algorithms were tested and evaluated using K-fold cross-validation to identify the model that performed best in predicting unseen data. 
 ```python
 models = {
     'Linear Regression': LinearRegression(),
@@ -182,7 +182,7 @@ models = {
 The cross validations were run with 10, 5, and 3 folds to ensure that the model performance remained consistent across different data splits and sample sizes. All models were trained and evaluated using the exact same dataset, and performance was compared using RMSE, MSE, MAE, and R². 
 The **Extra Trees Regressor** proved to be the best overall performer across all evaluation parameters and cross validation setups. Based on these results, it was selected as the final model.  
 
-Seen below is the benchmark for the models trained on the dataset for the afternoon rush hour to predict the next two rush hours.   
+Example: The benchmark for the models trained on the dataset for the afternoon rush hour to predict the next two rush hours.   
 <img width="700" alt="image" src="https://github.com/user-attachments/assets/5022ea88-00a2-4520-8e80-7c4775972cd9" />
 
 ### Feature Importances
@@ -190,11 +190,11 @@ The feature importances for the latest trained models, for the prediction of the
 <img width="700" alt="feature importances morning model" src="https://github.com/user-attachments/assets/19ec19ec-bb94-45f7-82be-dfff63a6ac1b" />  
 <img width="700" alt="feature importances afternoon model" src="https://github.com/user-attachments/assets/add4bd8b-be44-4e1b-a672-39bd73c62282" />  
 
-The "is_holiday" feature has the highest decision power by far on both models. Traffic levels will always be lower on weekends and public holidays, when most people are off from work. 
+The "is_holiday" feature has the highest decision power by far on both models. Traffic levels will always be lower on weekends and public holidays, when most people are off work. 
 
-Also, I think it is worth noting that the "morning_travel_time" feature on the afternoon model has the third-highest decision power. This can probably be explained by the fact that the same people taking the car in the morning also have to take the car home in the afternoon. It makes total sense when you think about it, but is still a fun observation in my opinion. 
+Also, it's worth noting that the "morning_travel_time" feature on the afternoon model has the third-highest decision power. This can probably be explained by the fact that the same people commuting by car in the morning also have to drive home in the afternoon. It makes total sense when you think about it, but is still a fun observation. 
 
-Some of the features have minimal impact on the models, yet I have still chosen to include them **for now**. When I tried removing them, the models only worsened a bit, so no positive impact was proven by removing them. At the time of writing this, there is only a little over a years worth of data available. My hope is that these currently insignificant features will have a greater impact on the models, as more data is collected as time goes by. 
+Some features currently have minimal impact, but I’ve chosen to keep them **for now**. When I tried removing them, model performance slightly worsened - no positive impact was proven by removing them. At the time of writing this, there is only a little over a year's worth of data available. My hope is that these currently insignificant features will have a greater impact on the models, as more data accumulates over time. 
 
 ### Residual Analysis
 I thought it would be informative to look into whether my model currently over- or underpredicts, and by how much (in actual values). At the time of writing this, the dataset is still quite small (a little over a year) so the analysis was done on a sample set of **41 predictions**. The predictions are all from one of the folds of a cross validation done with 10 folds. I chose the 10 fold-cross validation, because that is what is used in production to validate and log model performance.
@@ -295,7 +295,7 @@ Runs on pushes to the "dev" branch but only if changes have been made to:
 - Build and push prediction image
 - Deploy updated training image to 'training-dev' Cloud Run service
 - Deploy updated prediction image to 'prediction-morning-dev' Cloud Run service
-- Deploy updated prediction image to 'prediction-afternoon-prod' Cloud Run service
+- Deploy updated prediction image to 'prediction-afternoon-dev' Cloud Run service
 
 #### Prod Workflow
 ##### Triggers
