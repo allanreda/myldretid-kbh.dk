@@ -48,6 +48,7 @@ Even though driving through Copenhagen during rush hours will always prolong you
     - [Prod Workflow](#prod-workflow-1)
       - [Triggers](#triggers-3)
       - [Steps](#steps-3)
+- [Final Notes](#final-notes)
 
 
 ## User Guide and Useful Info
