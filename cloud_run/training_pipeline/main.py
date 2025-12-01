@@ -1,9 +1,9 @@
 from google.cloud import bigquery, storage, secretmanager
-from multicollinearity_reduction_class import MulticollinearityReducer
-from machine_learning_class import MachineLearning
-from training_pipeline_class import TrainingPipeline
-from shared.cloud_utils_class import CloudUtils
-from shared.preprocessing_class import PreProcessing
+from MulticollinearityReducer import MulticollinearityReducer
+from MachineLearning import MachineLearning
+from TrainingPipeline import TrainingPipeline
+from shared.CloudUtils import CloudUtils
+from shared.PreProcessing import PreProcessing
 from zoneinfo import ZoneInfo 
 from datetime import datetime
 import time
