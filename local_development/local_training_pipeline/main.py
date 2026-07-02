@@ -169,7 +169,7 @@ print(results_df)
 
 #_____________________ Hyperparameter Tuning _______________________
 
-df = afternoon_df
+df = morning_df
 
 # X = features, y = target
 X = df.drop(columns=['current_travel_time'])
@@ -217,6 +217,12 @@ print("Best CV MSE:", -grid.best_score_)
 
 #________________ Single model test setup __________________
 
+df = afternoon_df
+
+# X = features, y = target
+X = df.drop(columns=['current_travel_time'])
+y = df['current_travel_time']
+
 # Cross-validation setup
 cv = KFold(n_splits=10, shuffle=True, random_state=42)
 
@@ -227,6 +233,12 @@ for train_index, test_index in cv.split(X):
     # Split data in traning and test
     X_train, X_test = X.iloc[train_index], X.iloc[test_index]
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+
+
+    # threshold = y_train.quantile(0.9)
+    # oversample_idx = y_train[y_train > threshold].index
+    # X_train = pd.concat([X_train, X_train.loc[oversample_idx]])
+    # y_train = pd.concat([y_train, y_train.loc[oversample_idx]])
 
     # Scale the features 
     scaler = StandardScaler()
